@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIRATES</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --game-width: 900px;
+            --game-height: 700px;
+            --game-border-color: #a37b3f;
+        }
+
+        body {
+            background-color: #2b1d12;
+            color: #fff;
+            font-family: 'Bangers', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .game-wrapper {
+            position: relative;
+            width: var(--game-width);
+            height: var(--game-height);
+            border: 5px solid var(--game-border-color);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: #5d3824;
+            overflow: hidden;
+            background-image: url('https://i.imgur.com/rVrm8m8.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .message-box {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            border: 3px solid var(--game-border-color);
+            text-align: center;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .game-button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Bangers', cursive;
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 6px 0 #8c6a30;
+            transition: all 0.2s;
+            color: white;
+            background-color: #a37b3f;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-button:hover {
+            box-shadow: 0 4px 0 #8c6a30;
+            transform: translateY(2px);
+        }
+
+        .game-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #8c6a30;
+        }
+        
+        .ui-panel {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: space-around;
+            width: 80%;
+            padding: 10px;
+            background: rgba(71, 43, 29, 0.7);
+            border: 2px solid var(--game-border-color);
+            border-radius: 10px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .stat {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: gold;
+        }
+
+        .stat span {
+            margin-left: 5px;
+        }
+
+        .stat img {
+            height: 30px;
+            width: auto;
+            filter: drop-shadow(0 0 5px gold);
+        }
+
+        #captain-image-scoreboard {
+            height: 30px;
+            width: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        /* Marketplace specific styles */
+        .marketplace {
+            width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid var(--game-border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .marketplace-title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ffc107;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        .captain-card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .captain-card {
+            background-color: #3b281f;
+            border: 2px solid #5d3824;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .captain-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .captain-card.active {
+            border: 4px solid gold;
+            box-shadow: 0 0 15px gold;
+        }
+
+        .captain-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--game-border-color);
+            margin-bottom: 10px;
+        }
+
+        .captain-name {
+            font-size: 1.8rem;
+            color: #ffc107;
+        }
+
+        .captain-powerup {
+            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+
+        .captain-cost {
+            font-size: 1.5rem;
+            color: limegreen;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .captain-cost img {
+            height: 20px;
+        }
+        
+        .message-toast {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .message-toast.show {
+            opacity: 1;
+        }
+
+        /* New animated glow effect for homepage text */
+        .glowing-text {
+            animation: glow 1.5s ease-in-out infinite alternate;
+            text-shadow: 0 0 10px gold;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #ffeb3b, 0 0 10px #ffeb3b, 0 0 15px #ffeb3b; }
+            to { text-shadow: 0 0 20px #ffeb3b, 0 0 30px #ffeb3b, 0 0 40px #ffeb3b; }
+        }
+
+        .how-to-play {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid var(--game-border-color);
+            font-size: 1.2rem;
+        }
+
+        /* Game Over Modal */
+        #game-over-modal {
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid gold;
+            text-align: center;
+            font-size: 2rem;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            transform: scale(0.8);
+            opacity: 0;
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        }
+        
+        #game-over-modal.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .conversion-animation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .conversion-animation span {
+            font-size: 3rem;
+            margin: 0 10px;
+        }
+        
+        #shield-indicator {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: cyan;
+            text-shadow: 0 0 10px cyan;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            animation: pulse 1s infinite;
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        .shield-active {
+            filter: drop-shadow(0 0 10px cyan) brightness(1.2);
+        }
+        
+        @media (max-width: 800px) {
+            .game-wrapper {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+                border-radius: 0;
+            }
+            .ui-panel {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- UI Overlays -->
+        <div id="home-screen" class="ui-overlay">
+            <div class="message-box">
+                <div class="glowing-text">PIRATES</div>
+                <p>Tokens: <span id="home-tokens-display">0</span></p>
+                <p>Captain: <span id="captain-name-display">Dave Craige</span></p>
+                <div class="button-container">
+                    <button id="start-game-btn" class="game-button">Start Game</button>
+                    <button id="marketplace-btn" class="game-button">Marketplace</button>
+                </div>
+                <div class="how-to-play">
+                    <h3>How to Play</h3>
+                    <p>Use arrow keys or WASD to move. Press Space or Ctrl to shoot. Press E to use your captain's power-up!</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="marketplace-screen" class="ui-overlay hidden">
+            <div class="marketplace">
+                <h2 class="marketplace-title">Marketplace</h2>
+                <div class="captain-card-container" id="captain-list"></div>
+                <button id="back-to-home-btn" class="game-button" style="margin-top: 20px;">Back to Home</button>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="ui-overlay hidden">
+            <div id="game-over-modal">
+                <h2 class="glowing-text">Game Over!</h2>
+                <p>You collected <span id="treasure-collected">0</span> treasure boxes.</p>
+                <div class="conversion-animation">
+                    <img src="https://imgur.com/eABewP8.png" alt="Treasure" style="height: 50px;">
+                    <span id="conversion-arrow">→</span>
+                    <img src="https://imgur.com/9jsvz90.png" alt="Token" style="height: 50px;">
+                </div>
+                <p id="final-stats"></p>
+                <div class="button-container">
+                    <button id="play-again-btn" class="game-button">Play Again</button>
+                    <button id="home-btn" class="game-button">Home</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- In-game UI -->
+        <div class="ui-panel hidden" id="game-ui">
+            <div class="stat"><img src="https://imgur.com/9jsvz90.png" alt="Pirate Tokens"> <span id="tokens-display">0</span></div>
+            <div class="stat"><img id="captain-image-scoreboard" src="" alt="Captain"><span>Captain:</span> <span id="current-captain-display"></span></div>
+            <div class="stat"><span>Distance:</span> <span id="distance-display">0</span>m</div>
+        </div>
+        
+        <div id="shield-indicator">SHIELD</div>
+        <div id="message-toast" class="message-toast"></div>
+    </div>
+    
+    <!-- Sound Effects -->
+    <audio id="shoot-sound" src="https://www.soundjay.com/buttons/sounds/button-1.mp3"></audio>
+    <audio id="collect-sound" src="https://www.soundjay.com/buttons/sounds/button-2.mp3"></audio>
+    <audio id="explosion-sound" src="https://www.soundjay.com/misc/sounds/wind-gust-1.mp3"></audio>
+    <audio id="conversion-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+
+    <script>
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const shootSound = document.getElementById('shoot-sound');
+        const collectSound = document.getElementById('collect-sound');
+        const explosionSound = document.getElementById('explosion-sound');
+        const conversionSound = document.getElementById('conversion-sound');
+
+        // UI Elements
+        const homeScreen = document.getElementById('home-screen');
+        const marketplaceScreen = document.getElementById('marketplace-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const gameUI = document.getElementById('game-ui');
+        const homeTokensDisplay = document.getElementById('home-tokens-display');
+        const captainNameDisplay = document.getElementById('captain-name-display');
+        const tokensDisplay = document.getElementById('tokens-display');
+        const distanceDisplay = document.getElementById('distance-display');
+        const currentCaptainDisplay = document.getElementById('current-captain-display');
+        const captainImageScoreboard = document.getElementById('captain-image-scoreboard');
+        const captainList = document.getElementById('captain-list');
+        const messageToast = document.getElementById('message-toast');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const treasureCollectedDisplay = document.getElementById('treasure-collected');
+        const shieldIndicator = document.getElementById('shield-indicator');
+
+        // Game State
+        let gameState = 'HOME';
+        let player;
+        let keys = {};
+        
+        let obstacles = [];
+        let treasures = [];
+        let bullets = [];
+        
+        let pirateTokens = 0;
+        let distance = 0;
+        let treasureCount = 0;
+        let shieldActive = false;
+        let shieldCooldown = false;
+
+        const scrollSpeed = 2;
+        const obstacleSpawnInterval = 1500;
+        let lastObstacleTime = 0;
+        
+        // Captains and Player Data
+        const CAPTAINS = [
+            { id: 'dave_craige', name: 'Dave Craige', image: 'https://i.imgur.com/tL3agdT.png', powerUp: 'None', cost: 0, owned: true, default: true },
+            { id: 'alishba', name: 'Alishba', image: 'https://i.imgur.com/R1QZ9Pl.png', powerUp: 'Bullet Speed', cost: 500, owned: false }
+        ];
+
+        let playerData = {
+            tokens: 0,
+            selectedCaptain: 'dave_craige',
+            ownedCaptains: ['dave_craige']
+        };
+
+        const IMAGES = {
+            ship: 'https://imgur.com/Oh5etyy.png',
+            treasureBox: 'https://imgur.com/eABewP8.png',
+            rocks: 'https://imgur.com/dCZE0Z7.png',
+            pirateToken: 'https://imgur.com/9jsvz90.png',
+            bullet: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="5" fill="red"/></svg>'
+        };
+
+        const loadedImages = {};
+
+        function loadImages() {
+            const promises = Object.keys(IMAGES).map(key => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        loadedImages[key] = img;
+                        resolve();
+                    };
+                    img.onerror = () => reject(`Failed to load image: ${IMAGES[key]}`);
+                    img.src = IMAGES[key];
+                });
+            });
+            return Promise.all(promises);
+        }
+
+        // Game objects
+        class Ship {
+            constructor() {
+                this.width = 120;
+                this.height = 120;
+                this.x = canvas.width / 2 - this.width / 2;
+                this.y = canvas.height - this.height - 100;
+                this.velocity = { x: 0, y: 0 };
+                this.maxSpeed = 7;
+                this.wobbleOffset = 0;
+                this.lastShot = 0;
+                this.shotCooldown = 500;
+                this.powerUp = CAPTAINS.find(c => c.id === playerData.selectedCaptain).powerUp;
+            }
+
+            draw() {
+                if (loadedImages.ship) {
+                    ctx.save();
+                    if (shieldActive) {
+                       ctx.filter = 'drop-shadow(0 0 15px cyan) brightness(1.2)';
+                    }
+                    ctx.drawImage(loadedImages.ship, this.x, this.y + Math.sin(this.wobbleOffset) * 5, this.width, this.height);
+                    ctx.restore();
+                }
+            }
+
+            update() {
+                this.wobbleOffset += 0.05;
+                if (keys['arrowleft'] || keys['a']) { this.velocity.x = -this.maxSpeed; }
+                else if (keys['arrowright'] || keys['d']) { this.velocity.x = this.maxSpeed; }
+                else { this.velocity.x = 0; }
+
+                if (keys['arrowup'] || keys['w']) { this.velocity.y = -this.maxSpeed; }
+                else if (keys['arrowdown'] || keys['s']) { this.velocity.y = this.maxSpeed; }
+                else { this.velocity.y = 0; }
+                
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+                if (this.y < 0) this.y = 0;
+                if (this.y + this.height > canvas.height) this.y = canvas.height - this.height;
+            }
+
+            shoot() {
+                if (Date.now() - this.lastShot > this.shotCooldown) {
+                    const bulletSpeedModifier = (this.powerUp === 'Bullet Speed' ? 1.5 : 1);
+                    bullets.push(new Bullet(this.x + this.width / 2, this.y, 10 * bulletSpeedModifier));
+                    shootSound.currentTime = 0;
+                    shootSound.play();
+                    this.lastShot = Date.now();
+                }
+            }
+            
+            usePowerUp() {
+                if (this.powerUp === 'Shield' && !shieldActive && !shieldCooldown) {
+                    shieldActive = true;
+                    shieldIndicator.style.display = 'block';
+                    showToast('Shield Activated!');
+                    setTimeout(() => {
+                        shieldActive = false;
+                        shieldIndicator.style.display = 'none';
+                        showToast('Shield Expired.');
+                        shieldCooldown = true;
+                        setTimeout(() => {
+                           shieldCooldown = false;
+                           showToast('Shield Ready!');
+                        }, 5000); // 5 second cooldown
+                    }, 3000); // 3 second shield duration
+                }
+            }
+
+            collidesWith(obj) {
+                if (shieldActive) return false;
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+        }
+
+        class Bullet {
+            constructor(x, y, speed) {
+                this.x = x;
+                this.y = y;
+                this.width = 15;
+                this.height = 30;
+                this.speed = speed;
+            }
+            draw() {
+                if (loadedImages.bullet) {
+                    ctx.drawImage(loadedImages.bullet, this.x, this.y, this.width, this.height);
+                }
+            }
+            update() { this.y -= this.speed; }
+        }
+
+        class Obstacle {
+            constructor(x, y) {
+                this.width = 80;
+                this.height = 80;
+                this.x = x;
+                this.y = y;
+            }
+            draw() {
+                if (loadedImages.rocks) {
+                    ctx.drawImage(loadedImages.rocks, this.x, this.y, this.width, this.height);
+                }
+            }
+            update() { this.y += scrollSpeed; }
+        }
+
+        class Treasure {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 50;
+                this.height = 50;
+            }
+            draw() {
+                if (loadedImages.treasureBox) {
+                    ctx.drawImage(loadedImages.treasureBox, this.x, this.y, this.width, this.height);
+                }
+            }
+            update() { this.y += scrollSpeed; }
+        }
+
+        function updateUI() {
+            homeTokensDisplay.textContent = playerData.tokens;
+            tokensDisplay.textContent = playerData.tokens;
+            distanceDisplay.textContent = Math.floor(distance);
+            const currentCaptain = CAPTAINS.find(c => c.id === playerData.selectedCaptain);
+            currentCaptainDisplay.textContent = currentCaptain.name;
+            captainNameDisplay.textContent = currentCaptain.name;
+            captainImageScoreboard.src = currentCaptain.image;
+        }
+
+        function showScreen(screen) {
+            homeScreen.classList.add('hidden');
+            marketplaceScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            gameUI.classList.add('hidden');
+
+            switch (screen) {
+                case 'HOME':
+                    homeScreen.classList.remove('hidden');
+                    break;
+                case 'MARKETPLACE':
+                    marketplaceScreen.classList.remove('hidden');
+                    renderMarketplace();
+                    break;
+                case 'GAME_PLAYING':
+                    gameUI.classList.remove('hidden');
+                    break;
+                case 'GAME_OVER':
+                    gameOverScreen.classList.remove('hidden');
+                    break;
+            }
+            gameState = screen;
+        }
+
+        function showToast(message) {
+            messageToast.textContent = message;
+            messageToast.classList.add('show');
+            setTimeout(() => {
+                messageToast.classList.remove('show');
+            }, 2000);
+        }
+
+        function renderMarketplace() {
+            captainList.innerHTML = '';
+            CAPTAINS.forEach(captain => {
+                const isOwned = playerData.ownedCaptains.includes(captain.id);
+                const isActive = playerData.selectedCaptain === captain.id;
+
+                const card = document.createElement('div');
+                card.className = `captain-card ${isActive ? 'active' : ''}`;
+                card.innerHTML = `
+                    <img src="${captain.image}" class="captain-image" alt="${captain.name}">
+                    <div class="captain-name">${captain.name}</div>
+                    <div class="captain-powerup">Power-up: ${captain.powerUp}</div>
+                    <div class="captain-cost">${isOwned ? 'Owned' : `<img src="${IMAGES.pirateToken}" alt="Token"> ${captain.cost}`}</div>
+                `;
+
+                card.addEventListener('click', () => {
+                    if (!isOwned) {
+                        if (playerData.tokens >= captain.cost) {
+                            playerData.tokens -= captain.cost;
+                            playerData.ownedCaptains.push(captain.id);
+                            playerData.selectedCaptain = captain.id;
+                            showToast(`You bought ${captain.name}!`);
+                            updateUI();
+                            renderMarketplace();
+                        } else {
+                            showToast('Not enough pirate tokens!');
+                        }
+                    } else {
+                        playerData.selectedCaptain = captain.id;
+                        showToast(`Selected ${captain.name}!`);
+                        updateUI();
+                        renderMarketplace();
+                    }
+                });
+                captainList.appendChild(card);
+            });
+        }
+
+        function init() {
+            player = new Ship();
+            obstacles = [];
+            treasures = [];
+            bullets = [];
+            distance = 0;
+            treasureCount = 0;
+            updateUI();
+            showScreen('HOME');
+        }
+
+        function startGame() {
+            obstacles = [];
+            treasures = [];
+            bullets = [];
+            distance = 0;
+            treasureCount = 0;
+            lastObstacleTime = Date.now();
+            showScreen('GAME_PLAYING');
+            player = new Ship();
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (gameState !== 'GAME_PLAYING') return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            player.update();
+            player.draw();
+            distance += scrollSpeed / 10;
+
+            drawWater();
+
+            // Spawn entities
+            if (Date.now() - lastObstacleTime > obstacleSpawnInterval) {
+                obstacles.push(new Obstacle(Math.random() * (canvas.width - 80), -80));
+                if (Math.random() > 0.6) {
+                    treasures.push(new Treasure(Math.random() * (canvas.width - 50), -50));
+                }
+                lastObstacleTime = Date.now();
+            }
+
+            // Update & draw bullets
+            bullets.forEach((bullet, bIndex) => {
+                bullet.update();
+                bullet.draw();
+
+                obstacles.forEach((obstacle, oIndex) => {
+                    if (bullet.x < obstacle.x + obstacle.width &&
+                        bullet.x + bullet.width > obstacle.x &&
+                        bullet.y < obstacle.y + obstacle.height &&
+                        bullet.y + bullet.height > obstacle.y) {
+                        
+                        obstacles.splice(oIndex, 1);
+                        bullets.splice(bIndex, 1);
+                        explosionSound.currentTime = 0;
+                        explosionSound.play();
+                    }
+                });
+            });
+
+            // Update & draw obstacles
+            obstacles.forEach(obstacle => {
+                obstacle.update();
+                obstacle.draw();
+                if (player.collidesWith(obstacle)) {
+                    gameOver();
+                }
+            });
+
+            // Update & draw treasures
+            treasures.forEach((treasure, tIndex) => {
+                treasure.update();
+                treasure.draw();
+                if (player.collidesWith(treasure)) {
+                    treasureCount++;
+                    treasures.splice(tIndex, 1);
+                    collectSound.currentTime = 0;
+                    collectSound.play();
+                    updateUI();
+                }
+            });
+
+            bullets = bullets.filter(b => b.y > 0);
+            obstacles = obstacles.filter(o => o.y < canvas.height);
+            treasures = treasures.filter(t => t.y < canvas.height);
+
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function drawWater() {
+            ctx.strokeStyle = 'rgba(0, 100, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            let waveOffset = Math.sin(Date.now() / 200) * 5;
+            for (let x = 0; x < canvas.width; x += 10) {
+                ctx.moveTo(x, canvas.height - 20 + Math.sin((x + distance * 10) / 50) * 5 + waveOffset);
+                ctx.lineTo(x + 10, canvas.height - 20 + Math.sin((x + 10 + distance * 10) / 50) * 5 + waveOffset);
+            }
+            ctx.stroke();
+        }
+
+        function gameOver() {
+            showScreen('GAME_OVER');
+            showGameOverAnimation();
+        }
+        
+        function showGameOverAnimation() {
+            gameOverModal.classList.add('show');
+            treasureCollectedDisplay.textContent = treasureCount;
+            let currentTreasure = treasureCount;
+            let currentTokens = 0;
+            const conversionInterval = setInterval(() => {
+                if (currentTreasure > 0) {
+                    currentTreasure--;
+                    currentTokens++;
+                    playerData.tokens++;
+                    treasureCollectedDisplay.textContent = currentTreasure;
+                    tokensDisplay.textContent = playerData.tokens;
+                    conversionSound.currentTime = 0;
+                    conversionSound.play();
+                } else {
+                    clearInterval(conversionInterval);
+                    document.getElementById('final-stats').innerHTML = `You earned ${currentTokens} Pirate Tokens!`;
+                }
+            }, 100);
+        }
+
+        // Event Listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (gameState === 'GAME_PLAYING' && (e.key === ' ' || e.key === 'control')) {
+                player.shoot();
+            }
+            if (gameState === 'GAME_PLAYING' && e.key.toLowerCase() === 'e') {
+                player.usePowerUp();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        document.getElementById('start-game-btn').addEventListener('click', startGame);
+        document.getElementById('marketplace-btn').addEventListener('click', () => showScreen('MARKETPLACE'));
+        document.getElementById('back-to-home-btn').addEventListener('click', () => showScreen('HOME'));
+        document.getElementById('play-again-btn').addEventListener('click', startGame);
+        document.getElementById('home-btn').addEventListener('click', init);
+
+        // Resize logic
+        function resizeCanvas() {
+            const wrapper = document.querySelector('.game-wrapper');
+            const aspectRatio = 4 / 3;
+            if (window.innerWidth / window.innerHeight > aspectRatio) {
+                wrapper.style.height = '80vh';
+                wrapper.style.width = `calc(80vh * ${aspectRatio})`;
+            } else {
+                wrapper.style.width = '90vw';
+                wrapper.style.height = `calc(90vw / ${aspectRatio})`;
+            }
+            canvas.width = wrapper.clientWidth;
+            canvas.height = wrapper.clientHeight;
+        }
+
+        window.onload = function() {
+            loadImages().then(() => {
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                init();
+            }).catch(error => {
+                console.error(error);
+                document.body.innerHTML = '<h1>Error loading game. Please check the console for details.</h1>';
+            });
+        };
+    </script>
+</body>
+</html>
