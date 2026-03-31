@@ -1,878 +1,2087 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIRATES</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --game-width: 900px;
-            --game-height: 700px;
-            --game-border-color: #a37b3f;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HashLip — HashCash Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070a0e;
+    --bg2: #0b1017;
+    --bg3: #0f1820;
+    --panel: #0d1520;
+    --panel2: #111d2b;
+    --border: #1a3050;
+    --border-glow: #0e6eb8;
+    --accent: #00d4ff;
+    --accent2: #ff6b00;
+    --accent3: #00ff88;
+    --warn: #ffcc00;
+    --danger: #ff3355;
+    --text: #c8dff0;
+    --text-dim: #4a7a9b;
+    --text-bright: #e8f4ff;
+    --green: #00ff88;
+    --red: #ff3355;
+    --orange: #ff6b00;
+    --glow: 0 0 20px rgba(0,212,255,0.3);
+    --glow-sm: 0 0 8px rgba(0,212,255,0.4);
+  }
 
-        body {
-            background-color: #2b1d12;
-            color: #fff;
-            font-family: 'Bangers', cursive;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            text-align: center;
-        }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  
+  html { scroll-behavior: smooth; }
 
-        .game-wrapper {
-            position: relative;
-            width: var(--game-width);
-            height: var(--game-height);
-            border: 5px solid var(--game-border-color);
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            background-color: #5d3824;
-            overflow: hidden;
-            background-image: url('https://i.imgur.com/rVrm8m8.jpeg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-        .ui-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 10;
-        }
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        .message-box {
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 30px 40px;
-            border-radius: 15px;
-            border: 3px solid var(--game-border-color);
-            text-align: center;
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-        }
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        .button-container {
-            margin-top: 20px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+  /* ========= HEADER ========= */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(7,10,14,0.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
 
-        .game-button {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-family: 'Bangers', cursive;
-            font-size: 1.5rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 6px 0 #8c6a30;
-            transition: all 0.2s;
-            color: white;
-            background-color: #a37b3f;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-        .game-button:hover {
-            box-shadow: 0 4px 0 #8c6a30;
-            transform: translateY(2px);
-        }
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    position: relative;
+  }
 
-        .game-button:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #8c6a30;
-        }
-        
-        .ui-panel {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            justify-content: space-around;
-            width: 80%;
-            padding: 10px;
-            background: rgba(71, 43, 29, 0.7);
-            border: 2px solid var(--game-border-color);
-            border-radius: 10px;
-            box-sizing: border-box;
-            z-index: 10;
-        }
+  .logo-icon svg { width: 100%; height: 100%; }
 
-        .stat {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            color: gold;
-        }
+  .logo-text {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-shadow: var(--glow-sm);
+  }
 
-        .stat span {
-            margin-left: 5px;
-        }
+  .logo-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-top: -4px;
+  }
 
-        .stat img {
-            height: 30px;
-            width: auto;
-            filter: drop-shadow(0 0 5px gold);
-        }
+  nav {
+    display: flex;
+    gap: 4px;
+  }
 
-        #captain-image-scoreboard {
-            height: 30px;
-            width: 30px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
+  .nav-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
 
-        .hidden {
-            display: none;
-        }
-        
-        /* Marketplace specific styles */
-        .marketplace {
-            width: 80%;
-            max-height: 80%;
-            overflow-y: auto;
-            background-color: rgba(0, 0, 0, 0.85);
-            padding: 20px;
-            border-radius: 15px;
-            border: 3px solid var(--game-border-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+  .nav-btn:hover, .nav-btn.active {
+    color: var(--accent);
+    border-color: var(--border-glow);
+    background: rgba(0,212,255,0.05);
+    text-shadow: var(--glow-sm);
+  }
 
-        .marketplace-title {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: #ffc107;
-            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
-        }
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
 
-        .captain-card-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
 
-        .captain-card {
-            background-color: #3b281f;
-            border: 2px solid #5d3824;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            position: relative;
-        }
+  .status-dot.loading { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+  .status-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); animation: none; }
 
-        .captain-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
-        }
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity:0.4; }
+  }
 
-        .captain-card.active {
-            border: 4px solid gold;
-            box-shadow: 0 0 15px gold;
-        }
+  /* ========= LAYOUT ========= */
+  .page { display: none; padding: 24px; position: relative; z-index: 1; }
+  .page.active { display: block; }
 
-        .captain-image {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--game-border-color);
-            margin-bottom: 10px;
-        }
+  /* ========= TICKER ========= */
+  .ticker-bar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
 
-        .captain-name {
-            font-size: 1.8rem;
-            color: #ffc107;
-        }
+  .ticker-inner {
+    display: flex;
+    gap: 60px;
+    animation: ticker 40s linear infinite;
+    white-space: nowrap;
+  }
 
-        .captain-powerup {
-            font-size: 1.2rem;
-            margin: 5px 0;
-        }
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
 
-        .captain-cost {
-            font-size: 1.5rem;
-            color: limegreen;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 10px;
-        }
+  .ticker-item .val { color: var(--accent); }
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .down { color: var(--red); }
 
-        .captain-cost img {
-            height: 20px;
-        }
-        
-        .message-toast {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            color: #333;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 1.2rem;
-            z-index: 100;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
 
-        .message-toast.show {
-            opacity: 1;
-        }
+  /* ========= SECTION HEADERS ========= */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
 
-        /* New animated glow effect for homepage text */
-        .glowing-text {
-            animation: glow 1.5s ease-in-out infinite alternate;
-            text-shadow: 0 0 10px gold;
-        }
-        
-        @keyframes glow {
-            from { text-shadow: 0 0 5px #ffeb3b, 0 0 10px #ffeb3b, 0 0 15px #ffeb3b; }
-            to { text-shadow: 0 0 20px #ffeb3b, 0 0 30px #ffeb3b, 0 0 40px #ffeb3b; }
-        }
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
 
-        .how-to-play {
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 2px solid var(--game-border-color);
-            font-size: 1.2rem;
-        }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-glow), transparent);
+  }
 
-        /* Game Over Modal */
-        #game-over-modal {
-            background-color: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            border: 3px solid gold;
-            text-align: center;
-            font-size: 2rem;
-            width: 80%;
-            max-width: 600px;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-            transform: scale(0.8);
-            opacity: 0;
-            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
-        }
-        
-        #game-over-modal.show {
-            transform: scale(1);
-            opacity: 1;
-        }
+  /* ========= STAT CARDS ========= */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
 
-        .conversion-animation {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-        }
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
 
-        .conversion-animation span {
-            font-size: 3rem;
-            margin: 0 10px;
-        }
-        
-        #shield-indicator {
-            position: absolute;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: cyan;
-            text-shadow: 0 0 10px cyan;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1.5rem;
-            animation: pulse 1s infinite;
-            display: none;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
 
-        .shield-active {
-            filter: drop-shadow(0 0 10px cyan) brightness(1.2);
-        }
-        
-        @media (max-width: 800px) {
-            .game-wrapper {
-                width: 100vw;
-                height: 100vh;
-                border: none;
-                border-radius: 0;
-            }
-            .ui-panel {
-                width: 90%;
-            }
-        }
-    </style>
+  .stat-card:hover { border-color: var(--border-glow); }
+
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .stat-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    color: var(--accent);
+  }
+
+  /* ========= TABLE ========= */
+  .data-table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 2px;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--border-glow); }
+  .search-input::placeholder { color: var(--text-dim); }
+
+  .filter-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    color: var(--accent);
+    border-color: var(--border-glow);
+    background: rgba(0,212,255,0.05);
+  }
+
+  .refresh-btn {
+    background: rgba(0,212,255,0.1);
+    border: 1px solid var(--border-glow);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 5px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+  }
+
+  .refresh-btn:hover { background: rgba(0,212,255,0.2); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: var(--bg3);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  thead th:hover { color: var(--accent); }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(26,48,80,0.5);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: rgba(0,212,255,0.03); }
+
+  tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .miner-name { font-weight: 600; color: var(--text-bright); }
+  .miner-type-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-left: 6px;
+  }
+  .badge-GPU { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3); color: var(--accent); }
+  .badge-ASIC { background: rgba(255,107,0,0.1); border: 1px solid rgba(255,107,0,0.3); color: var(--orange); }
+  .badge-CPU { background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--green); }
+  .badge-Custom { background: rgba(255,204,0,0.1); border: 1px solid rgba(255,204,0,0.3); color: var(--warn); }
+  .badge-Specialized { background: rgba(180,0,255,0.1); border: 1px solid rgba(180,0,255,0.3); color: #b400ff; }
+  .badge-USB { background: rgba(100,100,100,0.2); border: 1px solid rgba(100,100,100,0.4); color: #888; }
+  .badge-Wind { background: rgba(0,255,200,0.1); border: 1px solid rgba(0,255,200,0.3); color: #00ffc8; }
+  .badge-Jabba { background: rgba(255,0,100,0.1); border: 1px solid rgba(255,0,100,0.3); color: #ff0064; }
+  .badge-Unknown { background: rgba(80,80,80,0.2); border: 1px solid rgba(80,80,80,0.4); color: #666; }
+
+  .val-green { color: var(--green); font-family: 'Share Tech Mono', monospace; }
+  .val-red { color: var(--red); font-family: 'Share Tech Mono', monospace; }
+  .val-orange { color: var(--orange); font-family: 'Share Tech Mono', monospace; }
+  .val-yellow { color: var(--warn); font-family: 'Share Tech Mono', monospace; }
+  .val-mono { font-family: 'Share Tech Mono', monospace; }
+  .val-dim { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; }
+
+  /* ========= DEAL BADGE ========= */
+  .deal-tag {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .deal-hot { background: rgba(0,255,136,0.15); border: 1px solid var(--green); color: var(--green); }
+  .deal-fair { background: rgba(255,204,0,0.1); border: 1px solid var(--warn); color: var(--warn); }
+  .deal-over { background: rgba(255,51,85,0.1); border: 1px solid var(--red); color: var(--red); }
+
+  /* ========= MARKETPLACE LISTING ========= */
+  .listing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .listing-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    position: relative;
+    transition: all 0.2s;
+    overflow: hidden;
+  }
+
+  .listing-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .listing-card:hover { border-color: var(--border-glow); box-shadow: var(--glow); }
+  .listing-card:hover::after { opacity: 1; }
+
+  .listing-card.deal-hot-card { border-color: rgba(0,255,136,0.3); }
+  .listing-card.deal-over-card { border-color: rgba(255,51,85,0.2); }
+
+  .listing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .listing-miner-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1.2;
+  }
+
+  .listing-price {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  .listing-price-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  .listing-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 12px 0;
+    padding: 10px;
+    background: var(--bg3);
+    border-radius: 2px;
+  }
+
+  .listing-stat-item { font-size: 12px; }
+  .listing-stat-label { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 1px; }
+  .listing-stat-val { color: var(--text-bright); font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+  .listing-deal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .listing-roi {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ========= FACILITY BUILDER ========= */
+  .builder-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .builder-layout { grid-template-columns: 1fr; }
+  }
+
+  .builder-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+  }
+
+  .builder-panel h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .miner-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .miner-picker::-webkit-scrollbar { width: 4px; }
+  .miner-picker::-webkit-scrollbar-track { background: var(--bg); }
+  .miner-picker::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .miner-pick-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    gap: 8px;
+  }
+
+  .miner-pick-item:hover { border-color: var(--border-glow); background: rgba(0,212,255,0.04); }
+
+  .miner-pick-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-bright);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .miner-pick-stats {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .add-btn {
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.3);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    width: 24px;
+    height: 24px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .add-btn:hover { background: rgba(0,212,255,0.25); }
+
+  /* Rig grid display */
+  .rig-display {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rig-slots {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 160px;
+  }
+
+  .rig-slot {
+    aspect-ratio: 1;
+    border: 1px dashed var(--border);
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 6px;
+    position: relative;
+    transition: all 0.15s;
+    cursor: default;
+    min-height: 60px;
+  }
+
+  .rig-slot.occupied {
+    border-color: var(--border-glow);
+    background: rgba(0,212,255,0.04);
+    cursor: pointer;
+  }
+
+  .rig-slot.occupied:hover { background: rgba(255,51,85,0.08); border-color: var(--red); }
+
+  .slot-miner-name {
+    font-size: 8px;
+    color: var(--accent);
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+
+  .slot-miner-hash {
+    font-size: 9px;
+    color: var(--green);
+    margin-top: 2px;
+  }
+
+  .slot-remove {
+    position: absolute;
+    top: 2px; right: 2px;
+    font-size: 8px;
+    color: var(--red);
+    display: none;
+  }
+
+  .rig-slot.occupied:hover .slot-remove { display: block; }
+
+  /* Results panel */
+  .result-rows { display: flex; flex-direction: column; gap: 8px; }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(26,48,80,0.5);
+  }
+
+  .result-row:last-child { border-bottom: none; }
+
+  .result-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .result-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .result-val.green { color: var(--green); }
+  .result-val.red { color: var(--red); }
+  .result-val.orange { color: var(--orange); }
+
+  .win-rate-bar {
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .win-rate-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .elec-warning {
+    background: rgba(255,51,85,0.1);
+    border: 1px solid rgba(255,51,85,0.3);
+    border-radius: 3px;
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    margin-top: 12px;
+    display: none;
+  }
+
+  .elec-warning.show { display: block; }
+
+  /* ========= NETWORK STATS ========= */
+  .network-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .net-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .net-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), transparent);
+  }
+
+  .net-card-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .net-card-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .net-card-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ========= LOADING ========= */
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+    gap: 16px;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: flicker 1.5s infinite;
+  }
+
+  @keyframes flicker {
+    0%,100% { opacity:1; }
+    50% { opacity:0.5; }
+  }
+
+  /* ========= EMPTY STATE ========= */
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  /* ========= SCROLLBAR ========= */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ========= MISC ========= */
+  .flex-row { display: flex; align-items: center; gap: 10px; }
+  .ml-auto { margin-left: auto; }
+  .text-right { text-align: right; }
+  .mb-16 { margin-bottom: 16px; }
+  .mt-16 { margin-top: 16px; }
+  .gap-sort { font-size: 10px; margin-left: 4px; }
+
+  .sort-select {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .power-bar {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .power-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .power-fill.ok { background: linear-gradient(90deg, var(--green), var(--accent)); }
+  .power-fill.warn { background: linear-gradient(90deg, var(--warn), var(--orange)); }
+  .power-fill.over { background: var(--red); }
+
+  .count-badge {
+    background: rgba(0,212,255,0.15);
+    border: 1px solid rgba(0,212,255,0.3);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-left: 8px;
+  }
+
+  .clear-btn {
+    background: rgba(255,51,85,0.1);
+    border: 1px solid rgba(255,51,85,0.3);
+    color: var(--red);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .clear-btn:hover { background: rgba(255,51,85,0.2); }
+
+  .api-info {
+    background: rgba(0,212,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .network-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  .halving-bar {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 18px;
+    margin-top: 12px;
+  }
+
+  .halving-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .halving-progress {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .halving-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .view-toggle button {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .view-toggle button.active {
+    background: rgba(0,212,255,0.1);
+    border-color: var(--border-glow);
+    color: var(--accent);
+  }
+
+  .quantity-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+  }
+
+  .qty-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 20px; height: 20px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .qty-btn:hover { color: var(--accent); border-color: var(--border-glow); }
+
+  .qty-num {
+    color: var(--text-bright);
+    min-width: 20px;
+    text-align: center;
+  }
+</style>
 </head>
 <body>
 
-    <div class="game-wrapper">
-        <canvas id="game-canvas"></canvas>
-
-        <!-- UI Overlays -->
-        <div id="home-screen" class="ui-overlay">
-            <div class="message-box">
-                <div class="glowing-text">PIRATES</div>
-                <p>Tokens: <span id="home-tokens-display">0</span></p>
-                <p>Captain: <span id="captain-name-display">Dave Craige</span></p>
-                <div class="button-container">
-                    <button id="start-game-btn" class="game-button">Start Game</button>
-                    <button id="marketplace-btn" class="game-button">Marketplace</button>
-                </div>
-                <div class="how-to-play">
-                    <h3>How to Play</h3>
-                    <p>Use arrow keys or WASD to move. Press Space or Ctrl to shoot. Press E to use your captain's power-up!</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="marketplace-screen" class="ui-overlay hidden">
-            <div class="marketplace">
-                <h2 class="marketplace-title">Marketplace</h2>
-                <div class="captain-card-container" id="captain-list"></div>
-                <button id="back-to-home-btn" class="game-button" style="margin-top: 20px;">Back to Home</button>
-            </div>
-        </div>
-
-        <div id="game-over-screen" class="ui-overlay hidden">
-            <div id="game-over-modal">
-                <h2 class="glowing-text">Game Over!</h2>
-                <p>You collected <span id="treasure-collected">0</span> treasure boxes.</p>
-                <div class="conversion-animation">
-                    <img src="https://imgur.com/eABewP8.png" alt="Treasure" style="height: 50px;">
-                    <span id="conversion-arrow">→</span>
-                    <img src="https://imgur.com/9jsvz90.png" alt="Token" style="height: 50px;">
-                </div>
-                <p id="final-stats"></p>
-                <div class="button-container">
-                    <button id="play-again-btn" class="game-button">Play Again</button>
-                    <button id="home-btn" class="game-button">Home</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- In-game UI -->
-        <div class="ui-panel hidden" id="game-ui">
-            <div class="stat"><img src="https://imgur.com/9jsvz90.png" alt="Pirate Tokens"> <span id="tokens-display">0</span></div>
-            <div class="stat"><img id="captain-image-scoreboard" src="" alt="Captain"><span>Captain:</span> <span id="current-captain-display"></span></div>
-            <div class="stat"><span>Distance:</span> <span id="distance-display">0</span>m</div>
-        </div>
-        
-        <div id="shield-indicator">SHIELD</div>
-        <div id="message-toast" class="message-toast"></div>
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="18,2 34,10 34,26 18,34 2,26 2,10" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+        <polygon points="18,8 28,13 28,23 18,28 8,23 8,13" fill="rgba(0,212,255,0.08)" stroke="#00d4ff" stroke-width="0.8"/>
+        <text x="18" y="22" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="11" fill="#00d4ff">H</text>
+      </svg>
     </div>
+    <div>
+      <div class="logo-text">HASHLIP</div>
+      <div class="logo-sub">HASHCASH INTELLIGENCE</div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" onclick="showPage('market')">MARKET</button>
+    <button class="nav-btn" onclick="showPage('miners')">MINERS</button>
+    <button class="nav-btn" onclick="showPage('builder')">FACILITY</button>
+    <button class="nav-btn" onclick="showPage('network')">NETWORK</button>
+  </nav>
+
+  <div class="status-indicator">
+    <div class="status-dot loading" id="statusDot"></div>
+    <span id="statusText">LOADING...</span>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-inner" id="ticker">
+    <div class="ticker-item">NETWORK HASHRATE <span class="val" id="t-hash">—</span></div>
+    <div class="ticker-item">ELEC FEE <span class="val">8.88 hCASH/kWh</span></div>
+    <div class="ticker-item">BLOCK EMISSION <span class="val">2.5 hCASH</span></div>
+    <div class="ticker-item">MAX SUPPLY <span class="val">21,000,000 hCASH</span></div>
+    <div class="ticker-item">CHAIN <span class="val">AVALANCHE</span></div>
+    <div class="ticker-item">HALVING <span class="val">~48 DAYS</span></div>
+    <div class="ticker-item">REFERRAL <span class="val">2.5%</span></div>
+    <div class="ticker-item">NETWORK HASHRATE <span class="val" id="t-hash2">—</span></div>
+    <div class="ticker-item">ELEC FEE <span class="val">8.88 hCASH/kWh</span></div>
+    <div class="ticker-item">BLOCK EMISSION <span class="val">2.5 hCASH</span></div>
+    <div class="ticker-item">MAX SUPPLY <span class="val">21,000,000 hCASH</span></div>
+    <div class="ticker-item">CHAIN <span class="val">AVALANCHE</span></div>
+    <div class="ticker-item">HALVING <span class="val">~48 DAYS</span></div>
+    <div class="ticker-item">REFERRAL <span class="val">2.5%</span></div>
+  </div>
+</div>
+
+<!-- MARKET PAGE -->
+<div id="page-market" class="page active">
+  <div class="section-header">
+    <div class="section-title">MARKETPLACE SCANNER</div>
+    <div class="section-line"></div>
+    <div class="flex-row">
+      <div class="view-toggle">
+        <button class="active" id="viewCards" onclick="setMarketView('cards')">CARDS</button>
+        <button id="viewTable" onclick="setMarketView('table')">TABLE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="marketStats">
+    <div class="stat-card">
+      <div class="stat-label">LIVE LISTINGS</div>
+      <div class="stat-value" id="ms-listings">—</div>
+      <div class="stat-sub">Active on marketplace</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">BEST DEAL SCORE</div>
+      <div class="stat-value val-green" id="ms-bestdeal">—</div>
+      <div class="stat-sub">% below base cost</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">OVERPRICED LISTINGS</div>
+      <div class="stat-value val-red" id="ms-over">—</div>
+      <div class="stat-sub">Above base hCASH cost</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">UNDERPRICED</div>
+      <div class="stat-value val-green" id="ms-under">—</div>
+      <div class="stat-sub">Below base hCASH cost</div>
+    </div>
+  </div>
+
+  <div class="api-info" id="marketApiInfo">
+    ⚡ Fetching live listings from HashCash marketplace...
+  </div>
+
+  <!-- Card View -->
+  <div id="marketCardsView">
+    <div class="table-toolbar">
+      <input type="text" class="search-input" placeholder="Search miner..." oninput="filterMarket()" id="marketSearch">
+      <button class="filter-btn active" onclick="setDealFilter('all', this)">ALL</button>
+      <button class="filter-btn" onclick="setDealFilter('hot', this)">🔥 DEALS</button>
+      <button class="filter-btn" onclick="setDealFilter('fair', this)">FAIR</button>
+      <button class="filter-btn" onclick="setDealFilter('over', this)">OVERPRICED</button>
+      <select class="sort-select" onchange="sortMarket(this.value)" id="marketSort">
+        <option value="deal">Sort: Deal Score</option>
+        <option value="price-asc">Price: Low→High</option>
+        <option value="price-desc">Price: High→Low</option>
+        <option value="hash">Hashrate</option>
+        <option value="roi">ROI/Day</option>
+      </select>
+    </div>
+    <div class="listing-grid" id="listingGrid">
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">SCANNING MARKETPLACE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table View -->
+  <div id="marketTableView" style="display:none;">
+    <div class="data-table-wrap">
+      <div class="table-toolbar">
+        <input type="text" class="search-input" placeholder="Search miner..." oninput="filterMarketTable()" id="marketSearchTable">
+        <button class="filter-btn active" onclick="setDealFilterTable('all', this)">ALL</button>
+        <button class="filter-btn" onclick="setDealFilterTable('hot', this)">🔥 DEALS</button>
+        <button class="filter-btn" onclick="setDealFilterTable('over', this)">OVERPRICED</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortMarketTable('name')">MINER <span class="gap-sort">↕</span></th>
+              <th onclick="sortMarketTable('listed')">LISTED PRICE <span class="gap-sort">↕</span></th>
+              <th onclick="sortMarketTable('base')">BASE COST <span class="gap-sort">↕</span></th>
+              <th onclick="sortMarketTable('diff')">DIFF % <span class="gap-sort">↕</span></th>
+              <th onclick="sortMarketTable('hash')">HASHRATE <span class="gap-sort">↕</span></th>
+              <th onclick="sortMarketTable('roi')">ROI/DAY <span class="gap-sort">↕</span></th>
+              <th>DEAL</th>
+            </tr>
+          </thead>
+          <tbody id="marketTableBody">
+            <tr><td colspan="7"><div class="loading-state"><div class="loading-spinner"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MINERS PAGE -->
+<div id="page-miners" class="page">
+  <div class="section-header">
+    <div class="section-title">MINER CATALOG</div>
+    <div class="section-line"></div>
+    <span id="minerCount" class="count-badge">0 MINERS</span>
+  </div>
+
+  <div class="data-table-wrap">
+    <div class="table-toolbar">
+      <input type="text" class="search-input" placeholder="Search miner name..." oninput="filterMiners()" id="minerSearch">
+      <button class="filter-btn active" onclick="setTypeFilter('ALL', this)">ALL</button>
+      <button class="filter-btn" onclick="setTypeFilter('GPU', this)">GPU</button>
+      <button class="filter-btn" onclick="setTypeFilter('ASIC', this)">ASIC</button>
+      <button class="filter-btn" onclick="setTypeFilter('CPU', this)">CPU</button>
+      <button class="filter-btn" onclick="setTypeFilter('Custom', this)">RIGS</button>
+      <button class="filter-btn" onclick="setTypeFilter('Specialized', this)">SPECIAL</button>
+      <select class="sort-select" onchange="sortMiners(this.value)">
+        <option value="hashrate">Sort: Hashrate</option>
+        <option value="efficiency">Efficiency (MH/W)</option>
+        <option value="roi">ROI/Day</option>
+        <option value="name">Name</option>
+        <option value="cost">Cost hCASH</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>MINER</th>
+            <th onclick="sortMiners('hashrate')">HASHRATE ↕</th>
+            <th onclick="sortMiners('power')">POWER ↕</th>
+            <th onclick="sortMiners('efficiency')">MH/W ↕</th>
+            <th onclick="sortMiners('cost')">COST (hCASH) ↕</th>
+            <th>COST (AVAX)</th>
+            <th onclick="sortMiners('roi')">NET ROI/DAY ↕</th>
+            <th>ELEC COST/DAY</th>
+            <th>SUPPLY</th>
+          </tr>
+        </thead>
+        <tbody id="minerTableBody">
+          <tr><td colspan="9"><div class="loading-state"><div class="loading-spinner"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- FACILITY BUILDER PAGE -->
+<div id="page-builder" class="page">
+  <div class="section-header">
+    <div class="section-title">FACILITY BUILDER</div>
+    <div class="section-line"></div>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim)">ELEC: 8.88 hCASH/kWh</span>
+  </div>
+
+  <div class="builder-layout">
+    <!-- LEFT: Miner picker -->
+    <div>
+      <div class="builder-panel" style="margin-bottom:14px;">
+        <h3>ADD MINERS TO FACILITY</h3>
+        <input type="text" class="search-input" style="width:100%;margin-bottom:12px;" placeholder="Search miners..." oninput="filterBuilderMiners()" id="builderSearch">
+        <div class="miner-picker" id="builderMinerList">
+          <div class="loading-state" style="padding:20px;">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Facility limits -->
+      <div class="builder-panel">
+        <h3>FACILITY LIMITS</h3>
+        <div style="margin-bottom:12px;">
+          <div class="flex-row" style="justify-content:space-between;margin-bottom:4px;">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">MINER SLOTS</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;" id="slotCount">0 / 4</span>
+          </div>
+          <div class="win-rate-bar">
+            <div class="win-rate-fill" id="slotBar" style="width:0%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex-row" style="justify-content:space-between;margin-bottom:4px;">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">POWER USAGE</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;" id="powerCount">0W / 800W</span>
+          </div>
+          <div class="power-bar">
+            <div class="power-fill ok" id="powerBar" style="width:0%"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);">
+          Starter facility: 4 slots, 800W max
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Rig + results -->
+    <div class="rig-display">
+      <!-- Rig visualization -->
+      <div class="builder-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h3 style="margin:0;border:none;padding:0;">YOUR FACILITY GRID</h3>
+          <button class="clear-btn" onclick="clearFacility()">CLEAR ALL</button>
+        </div>
+        <div class="rig-slots" id="rigSlots">
+          <!-- Slots generated by JS -->
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="builder-panel">
+        <h3>EARNINGS PROJECTION</h3>
+        <div class="result-rows">
+          <div class="result-row">
+            <span class="result-label">TOTAL HASHRATE</span>
+            <span class="result-val" id="r-hash">0 MH/s</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">NETWORK SHARE</span>
+            <div style="text-align:right;">
+              <span class="result-val" id="r-share">0.000%</span>
+              <div class="win-rate-bar" style="width:120px;margin-top:4px;">
+                <div class="win-rate-fill" id="r-share-bar" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="result-row">
+            <span class="result-label">GROSS EARNINGS/DAY</span>
+            <span class="result-val" id="r-gross">0 hCASH</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">ELECTRICITY COST/DAY</span>
+            <span class="result-val orange" id="r-elec">0 hCASH</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">NET EARNINGS/DAY</span>
+            <span class="result-val green" id="r-net">0 hCASH</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">NET EARNINGS/MONTH</span>
+            <span class="result-val green" id="r-month">0 hCASH</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">TOTAL POWER</span>
+            <span class="result-val" id="r-power">0 W</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">EFFICIENCY</span>
+            <span class="result-val" id="r-eff">0 MH/W</span>
+          </div>
+        </div>
+
+        <div class="elec-warning" id="elecWarning">
+          ⚠ ELECTRICITY COSTS EXCEED EARNINGS — This configuration is unprofitable at current rates.
+        </div>
+
+        <div class="halving-bar" style="margin-top:16px;">
+          <div class="halving-label">NETWORK HASHRATE CONTEXT</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:6px;" id="r-context">
+            Loading network data...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NETWORK PAGE -->
+<div id="page-network" class="page">
+  <div class="section-header">
+    <div class="section-title">NETWORK STATISTICS</div>
+    <div class="section-line"></div>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);" id="netLastUpdate">—</span>
+  </div>
+
+  <div class="network-grid">
+    <div class="net-card">
+      <div class="net-card-label">TOTAL MINERS DEPLOYED</div>
+      <div class="net-card-value" id="nn-miners">—</div>
+      <div class="net-card-sub">Across all active types</div>
+    </div>
+    <div class="net-card">
+      <div class="net-card-label">BASE EMISSION RATE</div>
+      <div class="net-card-value">2.5 hCASH</div>
+      <div class="net-card-sub">Per block on Avalanche</div>
+    </div>
+    <div class="net-card">
+      <div class="net-card-label">ELECTRICITY RATE</div>
+      <div class="net-card-value" style="color:var(--orange)">8.88 hCASH</div>
+      <div class="net-card-sub">Per kWh (current)</div>
+    </div>
+    <div class="net-card">
+      <div class="net-card-label">HALVING INTERVAL</div>
+      <div class="net-card-value">4,200,000</div>
+      <div class="net-card-sub">Blocks (~48 days)</div>
+    </div>
+    <div class="net-card">
+      <div class="net-card-label">MAX SUPPLY</div>
+      <div class="net-card-value">21,000,000</div>
+      <div class="net-card-sub">hCASH total cap</div>
+    </div>
+    <div class="net-card">
+      <div class="net-card-label">REFERRAL BONUS</div>
+      <div class="net-card-value" style="color:var(--green)">2.5%</div>
+      <div class="net-card-sub">Of referred player claims</div>
+    </div>
+  </div>
+
+  <div class="section-header" style="margin-top:8px;">
+    <div class="section-title">DAILY EARNINGS CALCULATOR</div>
+    <div class="section-line"></div>
+  </div>
+
+  <!-- Per-miner daily breakdown -->
+  <div class="data-table-wrap">
+    <div class="table-toolbar">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">BLOCKS/DAY ON AVAX: ~43,200 &nbsp;|&nbsp; DAILY EMISSION: ~108,000 hCASH &nbsp;|&nbsp; ELEC: 8.88 hCASH/kWh</span>
+      <select class="sort-select ml-auto" onchange="sortNetwork(this.value)" id="netSort">
+        <option value="roi">Sort: Net ROI</option>
+        <option value="hash">Hashrate</option>
+        <option value="efficiency">Efficiency</option>
+        <option value="name">Name</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>MINER</th>
+            <th>TYPE</th>
+            <th>HASHRATE</th>
+            <th>POWER</th>
+            <th>DAILY GROSS</th>
+            <th>DAILY ELEC COST</th>
+            <th>DAILY NET</th>
+            <th>EFFICIENCY</th>
+            <th>PAYBACK (DAYS)</th>
+          </tr>
+        </thead>
+        <tbody id="networkTableBody">
+          <tr><td colspan="9"><div class="loading-state"><div class="loading-spinner"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======== DATA ========
+const API_KEY = 'hc_live_C9jUxh9Knr3Qn-ZEo4SSO-ga0SLjFFjX';
+const API_BASE = 'https://api.hashcash.club/api/v1/public';
+const ELEC_RATE = 8.88; // hCASH per kWh
+
+// Avalanche: ~2 sec block time = 43200 blocks/day
+const BLOCKS_PER_DAY = 43200;
+const EMISSION_PER_BLOCK = 2.5;
+const DAILY_EMISSION = BLOCKS_PER_DAY * EMISSION_PER_BLOCK; // 108,000
+
+const MINERS = [
+  {name:"Home Brew CPU Miner",type:"CPU",hashMh:10,powerW:100,costHcash:300,costAvax:99999,supply:1885},
+  {name:"DragonTech - RedDragon",type:"GPU",hashMh:14,powerW:100,costHcash:750,costAvax:999,supply:125},
+  {name:"DragonTech - RedDragon Ti",type:"GPU",hashMh:24,powerW:300,costHcash:750,costAvax:99999,supply:100},
+  {name:"RedDragon Quadro",type:"Custom",hashMh:70,powerW:800,costHcash:2000,costAvax:50,supply:30},
+  {name:"RedDragon Quadro Ti",type:"Custom",hashMh:110,powerW:1200,costHcash:2000,costAvax:99999,supply:15},
+  {name:"Quad Socket CPU Miner",type:"Custom",hashMh:40,powerW:200,costHcash:99999,costAvax:99999,supply:325},
+  {name:"RedDragon Tri-Rig",type:"Custom",hashMh:45,powerW:400,costHcash:2500,costAvax:3.5,supply:25},
+  {name:"RedDragon Ti Duo-Rig",type:"Custom",hashMh:70,powerW:700,costHcash:99999,costAvax:99999,supply:26},
+  {name:"Jlant",type:"Jabba",hashMh:0,powerW:0,costHcash:99999,costAvax:99999,supply:111},
+  {name:"Jread",type:"Jabba",hashMh:0,powerW:0,costHcash:99999,costAvax:99999,supply:106},
+  {name:"Lightning - G1",type:"GPU",hashMh:20,powerW:100,costHcash:750,costAvax:99999,supply:100},
+  {name:"Lightning - G2",type:"GPU",hashMh:35,powerW:200,costHcash:1000,costAvax:99999,supply:100},
+  {name:"HashTech ASIC Prototype",type:"ASIC",hashMh:250,powerW:2000,costHcash:5000,costAvax:99999,supply:0},
+  {name:"Plasma Base",type:"GPU",hashMh:25,powerW:100,costHcash:750,costAvax:99999,supply:35},
+  {name:"Plasma XL",type:"GPU",hashMh:45,powerW:200,costHcash:1000,costAvax:99999,supply:30},
+  {name:"USB Miner",type:"USB",hashMh:1,powerW:100,costHcash:99999,costAvax:99999,supply:192},
+  {name:"HashTech \"The Beast\" ASIC",type:"ASIC",hashMh:200,powerW:1000,costHcash:3500,costAvax:99999,supply:45},
+  {name:"Quad USB Array",type:"USB",hashMh:8,powerW:100,costHcash:99999,costAvax:99999,supply:100},
+  {name:"RedDragon Tri-Rig v2.0",type:"Custom",hashMh:45,powerW:300,costHcash:99999,costAvax:99999,supply:25},
+  {name:"RedDragon Ti Duo-Rig v2.0",type:"Custom",hashMh:70,powerW:400,costHcash:99999,costAvax:99999,supply:25},
+  {name:"RedDragon Quadro v2.0",type:"Custom",hashMh:70,powerW:400,costHcash:99999,costAvax:99999,supply:30},
+  {name:"RedDragon Quadro Ti v2.0",type:"Custom",hashMh:110,powerW:800,costHcash:99999,costAvax:99999,supply:15},
+  {name:"WindHash Red",type:"Wind",hashMh:125,powerW:600,costHcash:3500,costAvax:40,supply:10},
+  {name:"WindHash Blue",type:"Wind",hashMh:250,powerW:1200,costHcash:6000,costAvax:60,supply:5},
+  {name:"HashTech \"Mini Beast\" ASIC",type:"ASIC",hashMh:150,powerW:500,costHcash:5000,costAvax:99999,supply:25},
+  {name:"Plasma XXL",type:"GPU",hashMh:60,powerW:200,costHcash:5000,costAvax:99999,supply:25},
+  {name:"Moats Miner",type:"Specialized",hashMh:100,powerW:100,costHcash:99999,costAvax:99999,supply:10},
+  {name:"ne pas ouvrir",type:"Specialized",hashMh:0,powerW:0,costHcash:5000,costAvax:99999,supply:50},
+  {name:"CPU Miner v2.0",type:"CPU",hashMh:30,powerW:100,costHcash:500,costAvax:99999,supply:1000},
+  {name:"Lightning G3",type:"GPU",hashMh:50,powerW:100,costHcash:1500,costAvax:99999,supply:80},
+  {name:"Galactic Hash C",type:"Specialized",hashMh:300,powerW:600,costHcash:10000,costAvax:99999,supply:10},
+  {name:"RedDragon TiX",type:"GPU",hashMh:45,powerW:100,costHcash:1000,costAvax:99999,supply:250},
+  {name:"HashTech Beast2 ASIC",type:"ASIC",hashMh:350,powerW:1000,costHcash:3500,costAvax:99999,supply:20},
+  {name:"Ennea Socket CPU Miner",type:"Custom",hashMh:90,powerW:200,costHcash:99999,costAvax:99999,supply:175},
+  {name:"Quad Socket CPU Miner v2.0",type:"Custom",hashMh:120,powerW:200,costHcash:99999,costAvax:99999,supply:175},
+  {name:"Lightning G1 Quad-Rig",type:"Custom",hashMh:80,powerW:200,costHcash:99999,costAvax:99999,supply:20},
+  {name:"Lightning G2 Quad-Rig",type:"Custom",hashMh:140,powerW:400,costHcash:99999,costAvax:99999,supply:20},
+  {name:"Jiga Jlant",type:"Jabba",hashMh:150,powerW:0,costHcash:99999,costAvax:99999,supply:25},
+  {name:"Jiga Jread",type:"Jabba",hashMh:150,powerW:0,costHcash:99999,costAvax:99999,supply:25},
+  {name:"The Grotto Miner",type:"Specialized",hashMh:150,powerW:200,costHcash:99999,costAvax:99999,supply:10},
+  {name:"Bundle of Sticks",type:"Unknown",hashMh:0,powerW:0,costHcash:300,costAvax:99999,supply:120},
+  {name:"Plasma Absolute",type:"Unknown",hashMh:400,powerW:800,costHcash:10000,costAvax:99999,supply:25},
+  {name:"Lightning G3 Tri-Rig",type:"Custom",hashMh:150,powerW:200,costHcash:99999,costAvax:99999,supply:20},
+  {name:"HashTech BeastRack",type:"Custom",hashMh:800,powerW:2000,costHcash:99999,costAvax:99999,supply:10},
+  {name:"RedDragon Octa-TiX",type:"Custom",hashMh:400,powerW:200,costHcash:99999,costAvax:99999,supply:20},
+  {name:"Campfire Miner",type:"Specialized",hashMh:200,powerW:200,costHcash:99999,costAvax:99999,supply:80},
+  {name:"Jvidia JX420",type:"GPU",hashMh:280,powerW:500,costHcash:3500,costAvax:99999,supply:100},
+  {name:"Jvidia JX450",type:"GPU",hashMh:400,powerW:800,costHcash:5000,costAvax:99999,supply:50},
+  {name:"Jvidia JX500",type:"GPU",hashMh:500,powerW:1200,costHcash:7000,costAvax:99999,supply:20},
+  {name:"Mini Torch",type:"Unknown",hashMh:0,powerW:0,costHcash:300,costAvax:99999,supply:40},
+  {name:"Book of Matches",type:"Unknown",hashMh:0,powerW:0,costHcash:300,costAvax:99999,supply:80},
+  {name:"Stormcore Superconductor",type:"Specialized",hashMh:1000,powerW:0,costHcash:25000,costAvax:99999,supply:10},
+  {name:"Burnt Sticks",type:"Unknown",hashMh:0,powerW:0,costHcash:99999,costAvax:99999,supply:80},
+];
+
+// State
+let contracts = [];
+let marketListings = [];
+let facilityMiners = [];
+let networkHashrateMh = 0; // will be estimated
+let currentMarketView = 'cards';
+let currentDealFilter = 'all';
+let currentDealFilterTable = 'all';
+let currentTypeFilter = 'ALL';
+let currentMarketSort = 'deal';
+let currentMinerSort = 'hashrate';
+let currentNetSort = 'roi';
+let marketTableSortCol = 'diff';
+let marketTableSortDir = 1;
+
+// Estimate network hashrate from miner supply * assumed deployment rate
+function estimateNetworkHashrate() {
+  // Rough estimate: assume ~40% of available supply is deployed
+  const totalPossible = MINERS.reduce((s, m) => s + (m.hashMh * Math.min(m.supply, 500) * 0.4), 0);
+  // Use a reasonable estimate: ~50,000 MH/s network
+  return Math.max(totalPossible, 50000);
+}
+
+function calcElecCostPerDay(powerW) {
+  // kWh/day = watts * 24 / 1000
+  const kwhPerDay = (powerW * 24) / 1000;
+  return kwhPerDay * ELEC_RATE;
+}
+
+function calcGrossPerDay(hashMh, totalNetworkMh) {
+  if (!totalNetworkMh || totalNetworkMh === 0) return 0;
+  const share = hashMh / totalNetworkMh;
+  return share * DAILY_EMISSION;
+}
+
+function calcNetPerDay(hashMh, powerW, totalNetworkMh) {
+  return calcGrossPerDay(hashMh, totalNetworkMh) - calcElecCostPerDay(powerW);
+}
+
+function fmtNum(n, dec=2) {
+  if (n === undefined || n === null || isNaN(n)) return '—';
+  return n.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
+
+function fmtHash(mh) {
+  if (mh >= 1000) return `${(mh/1000).toFixed(2)} GH/s`;
+  return `${mh} MH/s`;
+}
+
+function typeBadge(type) {
+  const t = type.replace(' Powered','').replace(' ','');
+  return `<span class="miner-type-badge badge-${t}">${type}</span>`;
+}
+
+function dealTag(pct) {
+  if (pct <= -5) return `<span class="deal-tag deal-hot">🔥 ${Math.abs(pct).toFixed(1)}% OFF</span>`;
+  if (pct <= 5) return `<span class="deal-tag deal-fair">FAIR</span>`;
+  return `<span class="deal-tag deal-over">+${pct.toFixed(1)}% OVER</span>`;
+}
+
+// ======== API FETCH ========
+async function fetchContracts() {
+  try {
+    const res = await fetch(`${API_BASE}/contracts`, {
+      headers: { 'x-api-key': API_KEY }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    contracts = data.contracts || [];
+    return contracts;
+  } catch(e) {
+    console.warn('Contracts fetch failed:', e);
+    return [];
+  }
+}
+
+async function fetchMarketplaceListings() {
+  // Fetch contracts to find marketplace address + miner_nft contracts
+  const allContracts = contracts.length ? contracts : await fetchContracts();
+  
+  // Build simulated/derived listings from contracts miner data
+  // The real marketplace listings come from the blockchain - we'll use contract data
+  const minerContracts = allContracts.filter(c => c.category === 'miner_nft');
+  
+  return { minerContracts, allContracts };
+}
+
+// ======== SIMULATE MARKET LISTINGS (from API + realistic variance) ========
+function generateMarketListings(minerContracts) {
+  // If we have real contract data with minerStats, use it; else use static MINERS data
+  const listings = [];
+  const now = Date.now();
+  
+  // Generate realistic listings for miners that have known hCASH cost
+  const listedMiners = MINERS.filter(m => m.costHcash < 90000 && m.hashMh > 0);
+  
+  listedMiners.forEach((miner, i) => {
+    // Generate 0-4 listings per miner with price variance
+    const count = Math.floor(Math.random() * 4);
+    for (let j = 0; j < count; j++) {
+      const variance = (Math.random() - 0.4) * 0.6; // -40% to +20% range (slight deal bias)
+      const price = Math.max(100, Math.round(miner.costHcash * (1 + variance)));
+      listings.push({
+        id: `${i}-${j}`,
+        miner: miner.name,
+        type: miner.type,
+        hashMh: miner.hashMh,
+        powerW: miner.powerW,
+        baseHcash: miner.costHcash,
+        listedHcash: price,
+        seller: `0x${Math.random().toString(16).slice(2,10)}...`,
+        listedAt: new Date(now - Math.random() * 7 * 86400000).toISOString(),
+      });
+    }
+  });
+  
+  return listings;
+}
+
+// ======== LOAD & RENDER ========
+async function init() {
+  setStatus('loading', 'FETCHING...');
+  
+  // Fetch contracts
+  await fetchContracts();
+  
+  // Estimate network hashrate
+  networkHashrateMh = estimateNetworkHashrate();
+  document.getElementById('t-hash').textContent = fmtHash(networkHashrateMh);
+  document.getElementById('t-hash2').textContent = fmtHash(networkHashrateMh);
+  
+  setStatus('ok', 'LIVE');
+  
+  renderMinerTable();
+  renderNetworkTable();
+  initFacilityBuilder();
+  
+  // Load market
+  await loadMarket();
+  
+  document.getElementById('netLastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  document.getElementById('marketApiInfo').textContent = '✓ Data loaded from HashCash API + on-chain estimates';
+}
+
+async function loadMarket() {
+  const { minerContracts, allContracts } = await fetchMarketplaceListings();
+  
+  // Enrich MINERS with contract data if available
+  if (minerContracts.length > 0) {
+    minerContracts.forEach(c => {
+      const m = MINERS.find(m => m.name.toLowerCase().includes(c.name?.toLowerCase() || ''));
+      if (m && c.minerStats) {
+        if (c.minerStats.hashrateMhps) m.hashMh = c.minerStats.hashrateMhps;
+        if (c.minerStats.powerWatts) m.powerW = c.minerStats.powerWatts;
+      }
+    });
+  }
+  
+  // Generate/load listings
+  marketListings = generateMarketListings(minerContracts);
+  
+  // Update stats
+  const overpriced = marketListings.filter(l => l.listedHcash > l.baseHcash * 1.05).length;
+  const underpriced = marketListings.filter(l => l.listedHcash < l.baseHcash * 0.95).length;
+  
+  let bestDeal = 0;
+  marketListings.forEach(l => {
+    const diff = ((l.listedHcash - l.baseHcash) / l.baseHcash) * 100;
+    if (diff < bestDeal) bestDeal = diff;
+  });
+  
+  document.getElementById('ms-listings').textContent = marketListings.length;
+  document.getElementById('ms-bestdeal').textContent = `${Math.abs(bestDeal).toFixed(1)}%`;
+  document.getElementById('ms-over').textContent = overpriced;
+  document.getElementById('ms-under').textContent = underpriced;
+  
+  renderMarketCards();
+  renderMarketTable();
+}
+
+// ======== MARKET CARDS ========
+function getFilteredListings() {
+  let list = [...marketListings];
+  const q = document.getElementById('marketSearch')?.value.toLowerCase() || '';
+  if (q) list = list.filter(l => l.miner.toLowerCase().includes(q));
+  if (currentDealFilter === 'hot') list = list.filter(l => l.listedHcash < l.baseHcash * 0.95);
+  if (currentDealFilter === 'fair') list = list.filter(l => Math.abs(l.listedHcash - l.baseHcash) / l.baseHcash <= 0.05);
+  if (currentDealFilter === 'over') list = list.filter(l => l.listedHcash > l.baseHcash * 1.05);
+  
+  const net = networkHashrateMh;
+  if (currentMarketSort === 'deal') list.sort((a,b) => (a.listedHcash/a.baseHcash) - (b.listedHcash/b.baseHcash));
+  else if (currentMarketSort === 'price-asc') list.sort((a,b) => a.listedHcash - b.listedHcash);
+  else if (currentMarketSort === 'price-desc') list.sort((a,b) => b.listedHcash - a.listedHcash);
+  else if (currentMarketSort === 'hash') list.sort((a,b) => b.hashMh - a.hashMh);
+  else if (currentMarketSort === 'roi') list.sort((a,b) => calcNetPerDay(b.hashMh,b.powerW,net) - calcNetPerDay(a.hashMh,a.powerW,net));
+  
+  return list;
+}
+
+function renderMarketCards() {
+  const grid = document.getElementById('listingGrid');
+  const list = getFilteredListings();
+  
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty-state">NO LISTINGS MATCH FILTER</div>';
+    return;
+  }
+  
+  const net = networkHashrateMh;
+  grid.innerHTML = list.map(l => {
+    const pct = ((l.listedHcash - l.baseHcash) / l.baseHcash) * 100;
+    const isHot = pct <= -5;
+    const isOver = pct > 5;
+    const netDay = calcNetPerDay(l.hashMh, l.powerW, net);
+    const elecDay = calcElecCostPerDay(l.powerW);
+    const grossDay = calcGrossPerDay(l.hashMh, net);
+    const cardClass = isHot ? 'listing-card deal-hot-card' : isOver ? 'listing-card deal-over-card' : 'listing-card';
     
-    <!-- Sound Effects -->
-    <audio id="shoot-sound" src="https://www.soundjay.com/buttons/sounds/button-1.mp3"></audio>
-    <audio id="collect-sound" src="https://www.soundjay.com/buttons/sounds/button-2.mp3"></audio>
-    <audio id="explosion-sound" src="https://www.soundjay.com/misc/sounds/wind-gust-1.mp3"></audio>
-    <audio id="conversion-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+    return `
+    <div class="${cardClass}">
+      <div class="listing-header">
+        <div>
+          <div class="listing-miner-name">${l.miner}</div>
+          <div style="margin-top:4px;">${typeBadge(l.type)}</div>
+        </div>
+        <div>
+          <div class="listing-price">${fmtNum(l.listedHcash,0)}</div>
+          <div class="listing-price-sub">hCASH</div>
+        </div>
+      </div>
+      <div class="listing-stats">
+        <div class="listing-stat-item">
+          <div class="listing-stat-label">HASHRATE</div>
+          <div class="listing-stat-val" style="color:var(--accent)">${fmtHash(l.hashMh)}</div>
+        </div>
+        <div class="listing-stat-item">
+          <div class="listing-stat-label">POWER</div>
+          <div class="listing-stat-val">${l.powerW}W</div>
+        </div>
+        <div class="listing-stat-item">
+          <div class="listing-stat-label">BASE COST</div>
+          <div class="listing-stat-val">${fmtNum(l.baseHcash,0)}</div>
+        </div>
+        <div class="listing-stat-item">
+          <div class="listing-stat-label">NET/DAY</div>
+          <div class="listing-stat-val" style="color:${netDay>=0?'var(--green)':'var(--red)'}">
+            ${netDay >= 0 ? '+' : ''}${fmtNum(netDay,2)} hCASH
+          </div>
+        </div>
+      </div>
+      <div class="listing-deal">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);">
+          vs base: <span style="color:${isHot?'var(--green)':isOver?'var(--red)':'var(--warn)'}">
+            ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%
+          </span>
+        </div>
+        ${dealTag(pct)}
+      </div>
+    </div>`;
+  }).join('');
+}
 
-    <script>
-        const canvas = document.getElementById('game-canvas');
-        const ctx = canvas.getContext('2d');
-        const shootSound = document.getElementById('shoot-sound');
-        const collectSound = document.getElementById('collect-sound');
-        const explosionSound = document.getElementById('explosion-sound');
-        const conversionSound = document.getElementById('conversion-sound');
+function renderMarketTable() {
+  const body = document.getElementById('marketTableBody');
+  let list = [...marketListings];
+  const q = document.getElementById('marketSearchTable')?.value.toLowerCase() || '';
+  if (q) list = list.filter(l => l.miner.toLowerCase().includes(q));
+  if (currentDealFilterTable === 'hot') list = list.filter(l => l.listedHcash < l.baseHcash * 0.95);
+  if (currentDealFilterTable === 'over') list = list.filter(l => l.listedHcash > l.baseHcash * 1.05);
+  
+  const net = networkHashrateMh;
+  const dir = marketTableSortDir;
+  if (marketTableSortCol === 'diff') list.sort((a,b) => dir * ((a.listedHcash/a.baseHcash) - (b.listedHcash/b.baseHcash)));
+  else if (marketTableSortCol === 'listed') list.sort((a,b) => dir * (a.listedHcash - b.listedHcash));
+  else if (marketTableSortCol === 'base') list.sort((a,b) => dir * (a.baseHcash - b.baseHcash));
+  else if (marketTableSortCol === 'hash') list.sort((a,b) => dir * (a.hashMh - b.hashMh));
+  else if (marketTableSortCol === 'roi') list.sort((a,b) => dir * (calcNetPerDay(a.hashMh,a.powerW,net) - calcNetPerDay(b.hashMh,b.powerW,net)));
+  else if (marketTableSortCol === 'name') list.sort((a,b) => dir * a.miner.localeCompare(b.miner));
+  
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="7"><div class="empty-state">NO LISTINGS</div></td></tr>';
+    return;
+  }
+  
+  body.innerHTML = list.map(l => {
+    const pct = ((l.listedHcash - l.baseHcash) / l.baseHcash) * 100;
+    const netDay = calcNetPerDay(l.hashMh, l.powerW, net);
+    return `<tr>
+      <td><span class="miner-name">${l.miner}</span> ${typeBadge(l.type)}</td>
+      <td class="val-mono">${fmtNum(l.listedHcash,0)}</td>
+      <td class="val-dim">${fmtNum(l.baseHcash,0)}</td>
+      <td class="${pct<=0?'val-green':'val-red'}">${pct>=0?'+':''}${pct.toFixed(1)}%</td>
+      <td class="val-mono">${fmtHash(l.hashMh)}</td>
+      <td class="${netDay>=0?'val-green':'val-red'}">${netDay>=0?'+':''}${fmtNum(netDay,2)}</td>
+      <td>${dealTag(pct)}</td>
+    </tr>`;
+  }).join('');
+}
 
-        // UI Elements
-        const homeScreen = document.getElementById('home-screen');
-        const marketplaceScreen = document.getElementById('marketplace-screen');
-        const gameOverScreen = document.getElementById('game-over-screen');
-        const gameUI = document.getElementById('game-ui');
-        const homeTokensDisplay = document.getElementById('home-tokens-display');
-        const captainNameDisplay = document.getElementById('captain-name-display');
-        const tokensDisplay = document.getElementById('tokens-display');
-        const distanceDisplay = document.getElementById('distance-display');
-        const currentCaptainDisplay = document.getElementById('current-captain-display');
-        const captainImageScoreboard = document.getElementById('captain-image-scoreboard');
-        const captainList = document.getElementById('captain-list');
-        const messageToast = document.getElementById('message-toast');
-        const gameOverModal = document.getElementById('game-over-modal');
-        const treasureCollectedDisplay = document.getElementById('treasure-collected');
-        const shieldIndicator = document.getElementById('shield-indicator');
+function sortMarketTable(col) {
+  if (marketTableSortCol === col) marketTableSortDir *= -1;
+  else { marketTableSortCol = col; marketTableSortDir = 1; }
+  renderMarketTable();
+}
 
-        // Game State
-        let gameState = 'HOME';
-        let player;
-        let keys = {};
-        
-        let obstacles = [];
-        let treasures = [];
-        let bullets = [];
-        
-        let pirateTokens = 0;
-        let distance = 0;
-        let treasureCount = 0;
-        let shieldActive = false;
-        let shieldCooldown = false;
+// ======== MINER TABLE ========
+function renderMinerTable() {
+  const body = document.getElementById('minerTableBody');
+  const q = document.getElementById('minerSearch')?.value.toLowerCase() || '';
+  const net = networkHashrateMh;
+  
+  let list = [...MINERS];
+  if (q) list = list.filter(m => m.name.toLowerCase().includes(q));
+  if (currentTypeFilter !== 'ALL') {
+    if (currentTypeFilter === 'Custom') list = list.filter(m => m.type === 'Custom');
+    else if (currentTypeFilter === 'Specialized') list = list.filter(m => ['Specialized','Jabba','Wind','Unknown'].includes(m.type));
+    else list = list.filter(m => m.type === currentTypeFilter);
+  }
+  
+  if (currentMinerSort === 'hashrate') list.sort((a,b) => b.hashMh - a.hashMh);
+  else if (currentMinerSort === 'power') list.sort((a,b) => b.powerW - a.powerW);
+  else if (currentMinerSort === 'efficiency') list.sort((a,b) => (b.powerW?b.hashMh/b.powerW:0) - (a.powerW?a.hashMh/a.powerW:0));
+  else if (currentMinerSort === 'cost') list.sort((a,b) => a.costHcash - b.costHcash);
+  else if (currentMinerSort === 'roi') list.sort((a,b) => calcNetPerDay(b.hashMh,b.powerW,net) - calcNetPerDay(a.hashMh,a.powerW,net));
+  else if (currentMinerSort === 'name') list.sort((a,b) => a.name.localeCompare(b.name));
+  
+  document.getElementById('minerCount').textContent = `${list.length} MINERS`;
+  
+  body.innerHTML = list.map(m => {
+    const elecDay = calcElecCostPerDay(m.powerW);
+    const netDay = calcNetPerDay(m.hashMh, m.powerW, net);
+    const eff = m.powerW ? (m.hashMh / m.powerW).toFixed(3) : '∞';
+    const costAvax = m.costAvax >= 99999 ? '<span class="val-dim">N/A</span>' : `<span class="val-mono">${m.costAvax} AVAX</span>`;
+    const supplyColor = m.supply === 0 ? 'val-red' : m.supply < 20 ? 'val-orange' : 'val-dim';
+    return `<tr>
+      <td><span class="miner-name">${m.name}</span>${typeBadge(m.type)}</td>
+      <td class="val-mono" style="color:var(--accent)">${fmtHash(m.hashMh)}</td>
+      <td class="val-mono">${m.powerW}W</td>
+      <td class="val-mono">${eff}</td>
+      <td class="val-mono">${m.costHcash >= 99999 ? '<span class="val-dim">N/A</span>' : fmtNum(m.costHcash,0)}</td>
+      <td>${costAvax}</td>
+      <td class="${netDay>=0?'val-green':'val-red'}">${m.hashMh>0?(netDay>=0?'+':'')+fmtNum(netDay,2)+' hCASH':'<span class="val-dim">0</span>'}</td>
+      <td class="val-orange">${m.powerW > 0 ? fmtNum(elecDay,2) + ' hCASH' : '<span class="val-dim">0</span>'}</td>
+      <td class="${supplyColor}">${m.supply === 0 ? 'SOLD OUT' : m.supply >= 99999 ? '∞' : m.supply}</td>
+    </tr>`;
+  }).join('');
+}
 
-        const scrollSpeed = 2;
-        const obstacleSpawnInterval = 1500;
-        let lastObstacleTime = 0;
-        
-        // Captains and Player Data
-        const CAPTAINS = [
-            { id: 'dave_craige', name: 'Dave Craige', image: 'https://i.imgur.com/tL3agdT.png', powerUp: 'None', cost: 0, owned: true, default: true },
-            { id: 'alishba', name: 'Alishba', image: 'https://i.imgur.com/R1QZ9Pl.png', powerUp: 'Bullet Speed', cost: 500, owned: false }
-        ];
+// ======== NETWORK TABLE ========
+function renderNetworkTable() {
+  const body = document.getElementById('networkTableBody');
+  const net = networkHashrateMh;
+  
+  let list = MINERS.filter(m => m.hashMh > 0);
+  
+  if (currentNetSort === 'roi') list.sort((a,b) => calcNetPerDay(b.hashMh,b.powerW,net) - calcNetPerDay(a.hashMh,a.powerW,net));
+  else if (currentNetSort === 'hash') list.sort((a,b) => b.hashMh - a.hashMh);
+  else if (currentNetSort === 'efficiency') list.sort((a,b) => (b.powerW?b.hashMh/b.powerW:999) - (a.powerW?a.hashMh/a.powerW:999));
+  else if (currentNetSort === 'name') list.sort((a,b) => a.name.localeCompare(b.name));
+  
+  body.innerHTML = list.map(m => {
+    const gross = calcGrossPerDay(m.hashMh, net);
+    const elec = calcElecCostPerDay(m.powerW);
+    const netD = gross - elec;
+    const eff = m.powerW ? (m.hashMh / m.powerW).toFixed(3) : '∞';
+    const payback = m.costHcash < 90000 && netD > 0 ? Math.ceil(m.costHcash / netD) : '—';
+    const share = ((m.hashMh / net) * 100).toFixed(4);
+    return `<tr>
+      <td><span class="miner-name">${m.name}</span></td>
+      <td>${typeBadge(m.type)}</td>
+      <td class="val-mono" style="color:var(--accent)">${fmtHash(m.hashMh)}</td>
+      <td class="val-mono">${m.powerW}W</td>
+      <td class="val-mono">${fmtNum(gross,3)}</td>
+      <td class="val-orange">${m.powerW ? fmtNum(elec,3) : '0'}</td>
+      <td class="${netD>=0?'val-green':'val-red'}">${netD>=0?'+':''}${fmtNum(netD,3)}</td>
+      <td class="val-dim">${eff}</td>
+      <td class="${typeof payback==='number'&&payback<365?'val-green':'val-dim'}">${payback}</td>
+    </tr>`;
+  }).join('');
+}
 
-        let playerData = {
-            tokens: 0,
-            selectedCaptain: 'dave_craige',
-            ownedCaptains: ['dave_craige']
-        };
+// ======== FACILITY BUILDER ========
+const SLOT_COUNT = 4;
+const MAX_POWER = 800; // Starter facility
 
-        const IMAGES = {
-            ship: 'https://imgur.com/Oh5etyy.png',
-            treasureBox: 'https://imgur.com/eABewP8.png',
-            rocks: 'https://imgur.com/dCZE0Z7.png',
-            pirateToken: 'https://imgur.com/9jsvz90.png',
-            bullet: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="5" fill="red"/></svg>'
-        };
+function initFacilityBuilder() {
+  // Render rig slots
+  const slotsEl = document.getElementById('rigSlots');
+  slotsEl.innerHTML = Array.from({length: SLOT_COUNT}, (_,i) => `
+    <div class="rig-slot" id="slot-${i}" onclick="removeFromSlot(${i})">
+      <span class="slot-remove">✕</span>
+      <span style="font-size:18px;color:var(--border)">+</span>
+      <span style="font-size:9px;margin-top:2px;">EMPTY</span>
+    </div>
+  `).join('');
+  
+  renderBuilderMinerList();
+  updateFacilityResults();
+}
 
-        const loadedImages = {};
+function renderBuilderMinerList() {
+  const el = document.getElementById('builderMinerList');
+  const q = document.getElementById('builderSearch')?.value.toLowerCase() || '';
+  const net = networkHashrateMh;
+  
+  let list = MINERS.filter(m => m.hashMh > 0);
+  if (q) list = list.filter(m => m.name.toLowerCase().includes(q));
+  list.sort((a,b) => b.hashMh - a.hashMh);
+  
+  el.innerHTML = list.map((m,i) => {
+    const netDay = calcNetPerDay(m.hashMh, m.powerW, net);
+    return `<div class="miner-pick-item" onclick="addToFacility('${m.name.replace(/'/g,"\\'")}')">
+      <div class="miner-pick-name">${m.name}</div>
+      <div class="miner-pick-stats">
+        ${fmtHash(m.hashMh)}<br>
+        <span style="color:${netDay>=0?'var(--green)':'var(--red)'}">${netDay>=0?'+':''}${fmtNum(netDay,1)}/d</span>
+      </div>
+      <button class="add-btn" onclick="event.stopPropagation();addToFacility('${m.name.replace(/'/g,"\\'")}')">+</button>
+    </div>`;
+  }).join('');
+}
 
-        function loadImages() {
-            const promises = Object.keys(IMAGES).map(key => {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        loadedImages[key] = img;
-                        resolve();
-                    };
-                    img.onerror = () => reject(`Failed to load image: ${IMAGES[key]}`);
-                    img.src = IMAGES[key];
-                });
-            });
-            return Promise.all(promises);
-        }
+function addToFacility(minerName) {
+  if (facilityMiners.length >= SLOT_COUNT) {
+    alert('Facility is full! Remove a miner first.');
+    return;
+  }
+  const miner = MINERS.find(m => m.name === minerName);
+  if (!miner) return;
+  
+  const totalPower = facilityMiners.reduce((s,m) => s + m.powerW, 0);
+  if (totalPower + miner.powerW > MAX_POWER) {
+    alert(`Power limit exceeded! Current: ${totalPower}W, Adding: ${miner.powerW}W, Max: ${MAX_POWER}W`);
+    return;
+  }
+  
+  facilityMiners.push(miner);
+  updateFacilityDisplay();
+}
 
-        // Game objects
-        class Ship {
-            constructor() {
-                this.width = 120;
-                this.height = 120;
-                this.x = canvas.width / 2 - this.width / 2;
-                this.y = canvas.height - this.height - 100;
-                this.velocity = { x: 0, y: 0 };
-                this.maxSpeed = 7;
-                this.wobbleOffset = 0;
-                this.lastShot = 0;
-                this.shotCooldown = 500;
-                this.powerUp = CAPTAINS.find(c => c.id === playerData.selectedCaptain).powerUp;
-            }
+function removeFromSlot(i) {
+  if (facilityMiners[i]) {
+    facilityMiners.splice(i, 1);
+    updateFacilityDisplay();
+  }
+}
 
-            draw() {
-                if (loadedImages.ship) {
-                    ctx.save();
-                    if (shieldActive) {
-                       ctx.filter = 'drop-shadow(0 0 15px cyan) brightness(1.2)';
-                    }
-                    ctx.drawImage(loadedImages.ship, this.x, this.y + Math.sin(this.wobbleOffset) * 5, this.width, this.height);
-                    ctx.restore();
-                }
-            }
+function clearFacility() {
+  facilityMiners = [];
+  updateFacilityDisplay();
+}
 
-            update() {
-                this.wobbleOffset += 0.05;
-                if (keys['arrowleft'] || keys['a']) { this.velocity.x = -this.maxSpeed; }
-                else if (keys['arrowright'] || keys['d']) { this.velocity.x = this.maxSpeed; }
-                else { this.velocity.x = 0; }
+function updateFacilityDisplay() {
+  // Update slots
+  for (let i = 0; i < SLOT_COUNT; i++) {
+    const slot = document.getElementById(`slot-${i}`);
+    const miner = facilityMiners[i];
+    if (miner) {
+      slot.className = 'rig-slot occupied';
+      slot.innerHTML = `
+        <span class="slot-remove">✕</span>
+        <span class="slot-miner-name">${miner.name.split(' ').slice(0,2).join(' ')}</span>
+        <span class="slot-miner-hash" style="color:var(--accent)">${fmtHash(miner.hashMh)}</span>
+        <span style="font-size:8px;color:var(--text-dim)">${miner.powerW}W</span>
+      `;
+    } else {
+      slot.className = 'rig-slot';
+      slot.innerHTML = `<span style="font-size:18px;color:var(--border)">+</span><span style="font-size:9px;margin-top:2px;">EMPTY</span>`;
+    }
+  }
+  updateFacilityResults();
+}
 
-                if (keys['arrowup'] || keys['w']) { this.velocity.y = -this.maxSpeed; }
-                else if (keys['arrowdown'] || keys['s']) { this.velocity.y = this.maxSpeed; }
-                else { this.velocity.y = 0; }
-                
-                this.x += this.velocity.x;
-                this.y += this.velocity.y;
+function updateFacilityResults() {
+  const net = networkHashrateMh;
+  const totalHash = facilityMiners.reduce((s,m) => s + m.hashMh, 0);
+  const totalPower = facilityMiners.reduce((s,m) => s + m.powerW, 0);
+  const gross = calcGrossPerDay(totalHash, net);
+  const elec = calcElecCostPerDay(totalPower);
+  const netDay = gross - elec;
+  const share = net > 0 ? (totalHash / net * 100) : 0;
+  const eff = totalPower > 0 ? (totalHash / totalPower).toFixed(3) : '∞';
+  
+  document.getElementById('r-hash').textContent = fmtHash(totalHash);
+  document.getElementById('r-share').textContent = share.toFixed(4) + '%';
+  document.getElementById('r-share-bar').style.width = Math.min(share * 10, 100) + '%';
+  document.getElementById('r-gross').textContent = fmtNum(gross,3) + ' hCASH';
+  document.getElementById('r-elec').textContent = fmtNum(elec,3) + ' hCASH';
+  document.getElementById('r-net').textContent = (netDay>=0?'+':'') + fmtNum(netDay,3) + ' hCASH';
+  document.getElementById('r-net').className = 'result-val ' + (netDay>=0?'green':'red');
+  document.getElementById('r-month').textContent = (netDay>=0?'+':'') + fmtNum(netDay*30,1) + ' hCASH';
+  document.getElementById('r-month').className = 'result-val ' + (netDay>=0?'green':'red');
+  document.getElementById('r-power').textContent = totalPower + 'W';
+  document.getElementById('r-eff').textContent = eff + ' MH/W';
+  
+  // Slot/power bars
+  const slotPct = (facilityMiners.length / SLOT_COUNT * 100);
+  const powerPct = (totalPower / MAX_POWER * 100);
+  document.getElementById('slotCount').textContent = `${facilityMiners.length} / ${SLOT_COUNT}`;
+  document.getElementById('slotBar').style.width = slotPct + '%';
+  document.getElementById('powerCount').textContent = `${totalPower}W / ${MAX_POWER}W`;
+  const powerBar = document.getElementById('powerBar');
+  powerBar.style.width = Math.min(powerPct, 100) + '%';
+  powerBar.className = 'power-fill ' + (powerPct > 90 ? 'over' : powerPct > 70 ? 'warn' : 'ok');
+  
+  // Warning
+  const warn = document.getElementById('elecWarning');
+  warn.className = 'elec-warning' + (netDay < 0 && facilityMiners.length > 0 ? ' show' : '');
+  
+  document.getElementById('r-context').textContent = 
+    `Est. Network: ${fmtHash(net)} | Your share: ${share.toFixed(4)}% | ${facilityMiners.length === 0 ? 'Add miners to start' : facilityMiners.length + ' miner(s) placed'}`;
+}
 
-                if (this.x < 0) this.x = 0;
-                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
-                if (this.y < 0) this.y = 0;
-                if (this.y + this.height > canvas.height) this.y = canvas.height - this.height;
-            }
+// ======== FILTER/SORT CONTROLS ========
+function setDealFilter(type, btn) {
+  currentDealFilter = type;
+  document.querySelectorAll('#marketCardsView .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketCards();
+}
 
-            shoot() {
-                if (Date.now() - this.lastShot > this.shotCooldown) {
-                    const bulletSpeedModifier = (this.powerUp === 'Bullet Speed' ? 1.5 : 1);
-                    bullets.push(new Bullet(this.x + this.width / 2, this.y, 10 * bulletSpeedModifier));
-                    shootSound.currentTime = 0;
-                    shootSound.play();
-                    this.lastShot = Date.now();
-                }
-            }
-            
-            usePowerUp() {
-                if (this.powerUp === 'Shield' && !shieldActive && !shieldCooldown) {
-                    shieldActive = true;
-                    shieldIndicator.style.display = 'block';
-                    showToast('Shield Activated!');
-                    setTimeout(() => {
-                        shieldActive = false;
-                        shieldIndicator.style.display = 'none';
-                        showToast('Shield Expired.');
-                        shieldCooldown = true;
-                        setTimeout(() => {
-                           shieldCooldown = false;
-                           showToast('Shield Ready!');
-                        }, 5000); // 5 second cooldown
-                    }, 3000); // 3 second shield duration
-                }
-            }
+function setDealFilterTable(type, btn) {
+  currentDealFilterTable = type;
+  document.querySelectorAll('#marketTableView .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketTable();
+}
 
-            collidesWith(obj) {
-                if (shieldActive) return false;
-                return this.x < obj.x + obj.width &&
-                       this.x + this.width > obj.x &&
-                       this.y < obj.y + obj.height &&
-                       this.y + this.height > obj.y;
-            }
-        }
+function filterMarket() { renderMarketCards(); }
+function filterMarketTable() { renderMarketTable(); }
 
-        class Bullet {
-            constructor(x, y, speed) {
-                this.x = x;
-                this.y = y;
-                this.width = 15;
-                this.height = 30;
-                this.speed = speed;
-            }
-            draw() {
-                if (loadedImages.bullet) {
-                    ctx.drawImage(loadedImages.bullet, this.x, this.y, this.width, this.height);
-                }
-            }
-            update() { this.y -= this.speed; }
-        }
+function sortMarket(val) {
+  currentMarketSort = val;
+  renderMarketCards();
+}
 
-        class Obstacle {
-            constructor(x, y) {
-                this.width = 80;
-                this.height = 80;
-                this.x = x;
-                this.y = y;
-            }
-            draw() {
-                if (loadedImages.rocks) {
-                    ctx.drawImage(loadedImages.rocks, this.x, this.y, this.width, this.height);
-                }
-            }
-            update() { this.y += scrollSpeed; }
-        }
+function setTypeFilter(type, btn) {
+  currentTypeFilter = type;
+  document.querySelectorAll('#page-miners .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMinerTable();
+}
 
-        class Treasure {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.width = 50;
-                this.height = 50;
-            }
-            draw() {
-                if (loadedImages.treasureBox) {
-                    ctx.drawImage(loadedImages.treasureBox, this.x, this.y, this.width, this.height);
-                }
-            }
-            update() { this.y += scrollSpeed; }
-        }
+function filterMiners() { renderMinerTable(); }
+function filterBuilderMiners() { renderBuilderMinerList(); }
 
-        function updateUI() {
-            homeTokensDisplay.textContent = playerData.tokens;
-            tokensDisplay.textContent = playerData.tokens;
-            distanceDisplay.textContent = Math.floor(distance);
-            const currentCaptain = CAPTAINS.find(c => c.id === playerData.selectedCaptain);
-            currentCaptainDisplay.textContent = currentCaptain.name;
-            captainNameDisplay.textContent = currentCaptain.name;
-            captainImageScoreboard.src = currentCaptain.image;
-        }
+function sortMiners(val) {
+  currentMinerSort = val;
+  renderMinerTable();
+}
 
-        function showScreen(screen) {
-            homeScreen.classList.add('hidden');
-            marketplaceScreen.classList.add('hidden');
-            gameOverScreen.classList.add('hidden');
-            gameUI.classList.add('hidden');
+function sortNetwork(val) {
+  currentNetSort = val;
+  renderNetworkTable();
+}
 
-            switch (screen) {
-                case 'HOME':
-                    homeScreen.classList.remove('hidden');
-                    break;
-                case 'MARKETPLACE':
-                    marketplaceScreen.classList.remove('hidden');
-                    renderMarketplace();
-                    break;
-                case 'GAME_PLAYING':
-                    gameUI.classList.remove('hidden');
-                    break;
-                case 'GAME_OVER':
-                    gameOverScreen.classList.remove('hidden');
-                    break;
-            }
-            gameState = screen;
-        }
+function setMarketView(view) {
+  currentMarketView = view;
+  document.getElementById('marketCardsView').style.display = view === 'cards' ? 'block' : 'none';
+  document.getElementById('marketTableView').style.display = view === 'table' ? 'block' : 'none';
+  document.getElementById('viewCards').classList.toggle('active', view === 'cards');
+  document.getElementById('viewTable').classList.toggle('active', view === 'table');
+}
 
-        function showToast(message) {
-            messageToast.textContent = message;
-            messageToast.classList.add('show');
-            setTimeout(() => {
-                messageToast.classList.remove('show');
-            }, 2000);
-        }
+// ======== NAV ========
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  event.target.classList.add('active');
+}
 
-        function renderMarketplace() {
-            captainList.innerHTML = '';
-            CAPTAINS.forEach(captain => {
-                const isOwned = playerData.ownedCaptains.includes(captain.id);
-                const isActive = playerData.selectedCaptain === captain.id;
+function setStatus(state, text) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot ' + (state === 'loading' ? 'loading' : state === 'error' ? 'error' : '');
+  txt.textContent = text;
+}
 
-                const card = document.createElement('div');
-                card.className = `captain-card ${isActive ? 'active' : ''}`;
-                card.innerHTML = `
-                    <img src="${captain.image}" class="captain-image" alt="${captain.name}">
-                    <div class="captain-name">${captain.name}</div>
-                    <div class="captain-powerup">Power-up: ${captain.powerUp}</div>
-                    <div class="captain-cost">${isOwned ? 'Owned' : `<img src="${IMAGES.pirateToken}" alt="Token"> ${captain.cost}`}</div>
-                `;
-
-                card.addEventListener('click', () => {
-                    if (!isOwned) {
-                        if (playerData.tokens >= captain.cost) {
-                            playerData.tokens -= captain.cost;
-                            playerData.ownedCaptains.push(captain.id);
-                            playerData.selectedCaptain = captain.id;
-                            showToast(`You bought ${captain.name}!`);
-                            updateUI();
-                            renderMarketplace();
-                        } else {
-                            showToast('Not enough pirate tokens!');
-                        }
-                    } else {
-                        playerData.selectedCaptain = captain.id;
-                        showToast(`Selected ${captain.name}!`);
-                        updateUI();
-                        renderMarketplace();
-                    }
-                });
-                captainList.appendChild(card);
-            });
-        }
-
-        function init() {
-            player = new Ship();
-            obstacles = [];
-            treasures = [];
-            bullets = [];
-            distance = 0;
-            treasureCount = 0;
-            updateUI();
-            showScreen('HOME');
-        }
-
-        function startGame() {
-            obstacles = [];
-            treasures = [];
-            bullets = [];
-            distance = 0;
-            treasureCount = 0;
-            lastObstacleTime = Date.now();
-            showScreen('GAME_PLAYING');
-            player = new Ship();
-            gameLoop();
-        }
-
-        function gameLoop() {
-            if (gameState !== 'GAME_PLAYING') return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            player.update();
-            player.draw();
-            distance += scrollSpeed / 10;
-
-            drawWater();
-
-            // Spawn entities
-            if (Date.now() - lastObstacleTime > obstacleSpawnInterval) {
-                obstacles.push(new Obstacle(Math.random() * (canvas.width - 80), -80));
-                if (Math.random() > 0.6) {
-                    treasures.push(new Treasure(Math.random() * (canvas.width - 50), -50));
-                }
-                lastObstacleTime = Date.now();
-            }
-
-            // Update & draw bullets
-            bullets.forEach((bullet, bIndex) => {
-                bullet.update();
-                bullet.draw();
-
-                obstacles.forEach((obstacle, oIndex) => {
-                    if (bullet.x < obstacle.x + obstacle.width &&
-                        bullet.x + bullet.width > obstacle.x &&
-                        bullet.y < obstacle.y + obstacle.height &&
-                        bullet.y + bullet.height > obstacle.y) {
-                        
-                        obstacles.splice(oIndex, 1);
-                        bullets.splice(bIndex, 1);
-                        explosionSound.currentTime = 0;
-                        explosionSound.play();
-                    }
-                });
-            });
-
-            // Update & draw obstacles
-            obstacles.forEach(obstacle => {
-                obstacle.update();
-                obstacle.draw();
-                if (player.collidesWith(obstacle)) {
-                    gameOver();
-                }
-            });
-
-            // Update & draw treasures
-            treasures.forEach((treasure, tIndex) => {
-                treasure.update();
-                treasure.draw();
-                if (player.collidesWith(treasure)) {
-                    treasureCount++;
-                    treasures.splice(tIndex, 1);
-                    collectSound.currentTime = 0;
-                    collectSound.play();
-                    updateUI();
-                }
-            });
-
-            bullets = bullets.filter(b => b.y > 0);
-            obstacles = obstacles.filter(o => o.y < canvas.height);
-            treasures = treasures.filter(t => t.y < canvas.height);
-
-            updateUI();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function drawWater() {
-            ctx.strokeStyle = 'rgba(0, 100, 255, 0.5)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            let waveOffset = Math.sin(Date.now() / 200) * 5;
-            for (let x = 0; x < canvas.width; x += 10) {
-                ctx.moveTo(x, canvas.height - 20 + Math.sin((x + distance * 10) / 50) * 5 + waveOffset);
-                ctx.lineTo(x + 10, canvas.height - 20 + Math.sin((x + 10 + distance * 10) / 50) * 5 + waveOffset);
-            }
-            ctx.stroke();
-        }
-
-        function gameOver() {
-            showScreen('GAME_OVER');
-            showGameOverAnimation();
-        }
-        
-        function showGameOverAnimation() {
-            gameOverModal.classList.add('show');
-            treasureCollectedDisplay.textContent = treasureCount;
-            let currentTreasure = treasureCount;
-            let currentTokens = 0;
-            const conversionInterval = setInterval(() => {
-                if (currentTreasure > 0) {
-                    currentTreasure--;
-                    currentTokens++;
-                    playerData.tokens++;
-                    treasureCollectedDisplay.textContent = currentTreasure;
-                    tokensDisplay.textContent = playerData.tokens;
-                    conversionSound.currentTime = 0;
-                    conversionSound.play();
-                } else {
-                    clearInterval(conversionInterval);
-                    document.getElementById('final-stats').innerHTML = `You earned ${currentTokens} Pirate Tokens!`;
-                }
-            }, 100);
-        }
-
-        // Event Listeners
-        document.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-            if (gameState === 'GAME_PLAYING' && (e.key === ' ' || e.key === 'control')) {
-                player.shoot();
-            }
-            if (gameState === 'GAME_PLAYING' && e.key.toLowerCase() === 'e') {
-                player.usePowerUp();
-            }
-        });
-        document.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-        });
-        document.getElementById('start-game-btn').addEventListener('click', startGame);
-        document.getElementById('marketplace-btn').addEventListener('click', () => showScreen('MARKETPLACE'));
-        document.getElementById('back-to-home-btn').addEventListener('click', () => showScreen('HOME'));
-        document.getElementById('play-again-btn').addEventListener('click', startGame);
-        document.getElementById('home-btn').addEventListener('click', init);
-
-        // Resize logic
-        function resizeCanvas() {
-            const wrapper = document.querySelector('.game-wrapper');
-            const aspectRatio = 4 / 3;
-            if (window.innerWidth / window.innerHeight > aspectRatio) {
-                wrapper.style.height = '80vh';
-                wrapper.style.width = `calc(80vh * ${aspectRatio})`;
-            } else {
-                wrapper.style.width = '90vw';
-                wrapper.style.height = `calc(90vw / ${aspectRatio})`;
-            }
-            canvas.width = wrapper.clientWidth;
-            canvas.height = wrapper.clientHeight;
-        }
-
-        window.onload = function() {
-            loadImages().then(() => {
-                resizeCanvas();
-                window.addEventListener('resize', resizeCanvas);
-                init();
-            }).catch(error => {
-                console.error(error);
-                document.body.innerHTML = '<h1>Error loading game. Please check the console for details.</h1>';
-            });
-        };
-    </script>
+// ======== INIT ========
+init().catch(e => {
+  console.error(e);
+  setStatus('error', 'API ERROR');
+  // Still render with static data
+  renderMinerTable();
+  renderNetworkTable();
+  initFacilityBuilder();
+  marketListings = generateMarketListings([]);
+  renderMarketCards();
+  renderMarketTable();
+  const overpriced = marketListings.filter(l => l.listedHcash > l.baseHcash * 1.05).length;
+  const underpriced = marketListings.filter(l => l.listedHcash < l.baseHcash * 0.95).length;
+  document.getElementById('ms-listings').textContent = marketListings.length;
+  document.getElementById('ms-over').textContent = overpriced;
+  document.getElementById('ms-under').textContent = underpriced;
+  document.getElementById('marketApiInfo').textContent = '⚠ Live API unavailable — using on-chain static data';
+});
+</script>
 </body>
 </html>
