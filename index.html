@@ -5,1167 +5,258 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HashLip — HashCash Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #070a0e;
-    --bg2: #0b1017;
-    --bg3: #0f1820;
-    --panel: #0d1520;
-    --panel2: #111d2b;
-    --border: #1a3050;
-    --border-glow: #0e6eb8;
-    --accent: #00d4ff;
-    --accent2: #ff6b00;
-    --accent3: #00ff88;
-    --warn: #ffcc00;
-    --danger: #ff3355;
-    --text: #c8dff0;
-    --text-dim: #4a7a9b;
-    --text-bright: #e8f4ff;
-    --green: #00ff88;
-    --red: #ff3355;
-    --orange: #ff6b00;
-    --glow: 0 0 20px rgba(0,212,255,0.3);
-    --glow-sm: 0 0 8px rgba(0,212,255,0.4);
-  }
-
-  * { margin:0; padding:0; box-sizing:border-box; }
-  
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 15px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Animated grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Scanline overlay */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.04) 2px,
-      rgba(0,0,0,0.04) 4px
-    );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ========= HEADER ========= */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(7,10,14,0.95);
-    border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(12px);
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 60px;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    position: relative;
-  }
-
-  .logo-icon svg { width: 100%; height: 100%; }
-
-  .logo-text {
-    font-family: 'Orbitron', monospace;
-    font-weight: 900;
-    font-size: 22px;
-    letter-spacing: 3px;
-    color: var(--accent);
-    text-shadow: var(--glow-sm);
-  }
-
-  .logo-sub {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    margin-top: -4px;
-  }
-
-  nav {
-    display: flex;
-    gap: 4px;
-  }
-
-  .nav-btn {
-    background: none;
-    border: 1px solid transparent;
-    color: var(--text-dim);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 6px 16px;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: all 0.2s;
-  }
-
-  .nav-btn:hover, .nav-btn.active {
-    color: var(--accent);
-    border-color: var(--border-glow);
-    background: rgba(0,212,255,0.05);
-    text-shadow: var(--glow-sm);
-  }
-
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s infinite;
-  }
-
-  .status-dot.loading { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
-  .status-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); animation: none; }
-
-  @keyframes pulse {
-    0%,100% { opacity:1; }
-    50% { opacity:0.4; }
-  }
-
-  /* ========= LAYOUT ========= */
-  .page { display: none; padding: 24px; position: relative; z-index: 1; }
-  .page.active { display: block; }
-
-  /* ========= TICKER ========= */
-  .ticker-bar {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 6px 0;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;
-  }
-
-  .ticker-inner {
-    display: flex;
-    gap: 60px;
-    animation: ticker 40s linear infinite;
-    white-space: nowrap;
-  }
-
-  .ticker-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .ticker-item .val { color: var(--accent); }
-  .ticker-item .up { color: var(--green); }
-  .ticker-item .down { color: var(--red); }
-
-  @keyframes ticker {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-
-  /* ========= SECTION HEADERS ========= */
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .section-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-
-  .section-line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--border-glow), transparent);
-  }
-
-  /* ========= STAT CARDS ========= */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-
-  .stat-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 16px 20px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), transparent);
-  }
-
-  .stat-card:hover { border-color: var(--border-glow); }
-
-  .stat-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .stat-value {
-    font-family: 'Orbitron', monospace;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-  }
-
-  .stat-sub {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-
-  .stat-badge {
-    position: absolute;
-    top: 12px; right: 12px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 2px;
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.2);
-    color: var(--accent);
-  }
-
-  /* ========= TABLE ========= */
-  .data-table-wrap {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .table-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg3);
-    flex-wrap: wrap;
-  }
-
-  .search-input {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    padding: 6px 12px;
-    border-radius: 2px;
-    outline: none;
-    width: 220px;
-    transition: border-color 0.2s;
-  }
-
-  .search-input:focus { border-color: var(--border-glow); }
-  .search-input::placeholder { color: var(--text-dim); }
-
-  .filter-btn {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    padding: 5px 12px;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-  }
-
-  .filter-btn:hover, .filter-btn.active {
-    color: var(--accent);
-    border-color: var(--border-glow);
-    background: rgba(0,212,255,0.05);
-  }
-
-  .refresh-btn {
-    background: rgba(0,212,255,0.1);
-    border: 1px solid var(--border-glow);
-    color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    padding: 5px 14px;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-left: auto;
-  }
-
-  .refresh-btn:hover { background: rgba(0,212,255,0.2); }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  thead th {
-    background: var(--bg3);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    white-space: nowrap;
-    user-select: none;
-  }
-
-  thead th:hover { color: var(--accent); }
-
-  tbody tr {
-    border-bottom: 1px solid rgba(26,48,80,0.5);
-    transition: background 0.15s;
-  }
-
-  tbody tr:hover { background: rgba(0,212,255,0.03); }
-
-  tbody td {
-    padding: 10px 14px;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-
-  .miner-name { font-weight: 600; color: var(--text-bright); }
-  .miner-type-badge {
-    display: inline-block;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 2px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-left: 6px;
-  }
-  .badge-GPU { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3); color: var(--accent); }
-  .badge-ASIC { background: rgba(255,107,0,0.1); border: 1px solid rgba(255,107,0,0.3); color: var(--orange); }
-  .badge-CPU { background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--green); }
-  .badge-Custom { background: rgba(255,204,0,0.1); border: 1px solid rgba(255,204,0,0.3); color: var(--warn); }
-  .badge-Specialized { background: rgba(180,0,255,0.1); border: 1px solid rgba(180,0,255,0.3); color: #b400ff; }
-  .badge-USB { background: rgba(100,100,100,0.2); border: 1px solid rgba(100,100,100,0.4); color: #888; }
-  .badge-Wind { background: rgba(0,255,200,0.1); border: 1px solid rgba(0,255,200,0.3); color: #00ffc8; }
-  .badge-Jabba { background: rgba(255,0,100,0.1); border: 1px solid rgba(255,0,100,0.3); color: #ff0064; }
-  .badge-Unknown { background: rgba(80,80,80,0.2); border: 1px solid rgba(80,80,80,0.4); color: #666; }
-
-  .val-green { color: var(--green); font-family: 'Share Tech Mono', monospace; }
-  .val-red { color: var(--red); font-family: 'Share Tech Mono', monospace; }
-  .val-orange { color: var(--orange); font-family: 'Share Tech Mono', monospace; }
-  .val-yellow { color: var(--warn); font-family: 'Share Tech Mono', monospace; }
-  .val-mono { font-family: 'Share Tech Mono', monospace; }
-  .val-dim { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; }
-
-  /* ========= DEAL BADGE ========= */
-  .deal-tag {
-    display: inline-block;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 2px;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
-  .deal-hot { background: rgba(0,255,136,0.15); border: 1px solid var(--green); color: var(--green); }
-  .deal-fair { background: rgba(255,204,0,0.1); border: 1px solid var(--warn); color: var(--warn); }
-  .deal-over { background: rgba(255,51,85,0.1); border: 1px solid var(--red); color: var(--red); }
-
-  /* ========= MARKETPLACE LISTING ========= */
-  .listing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 14px;
-    margin-top: 16px;
-  }
-
-  .listing-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 16px;
-    position: relative;
-    transition: all 0.2s;
-    overflow: hidden;
-  }
-
-  .listing-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .listing-card:hover { border-color: var(--border-glow); box-shadow: var(--glow); }
-  .listing-card:hover::after { opacity: 1; }
-
-  .listing-card.deal-hot-card { border-color: rgba(0,255,136,0.3); }
-  .listing-card.deal-over-card { border-color: rgba(255,51,85,0.2); }
-
-  .listing-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-  }
-
-  .listing-miner-name {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-bright);
-    line-height: 1.2;
-  }
-
-  .listing-price {
-    font-family: 'Orbitron', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent);
-    text-align: right;
-  }
-
-  .listing-price-sub {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    text-align: right;
-  }
-
-  .listing-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin: 12px 0;
-    padding: 10px;
-    background: var(--bg3);
-    border-radius: 2px;
-  }
-
-  .listing-stat-item { font-size: 12px; }
-  .listing-stat-label { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 1px; }
-  .listing-stat-val { color: var(--text-bright); font-family: 'Share Tech Mono', monospace; font-size: 12px; }
-
-  .listing-deal {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .listing-roi {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  /* ========= FACILITY BUILDER ========= */
-  .builder-layout {
-    display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: 20px;
-  }
-
-  @media (max-width: 900px) {
-    .builder-layout { grid-template-columns: 1fr; }
-  }
-
-  .builder-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 20px;
-  }
-
-  .builder-panel h3 {
-    font-family: 'Orbitron', monospace;
-    font-size: 12px;
-    letter-spacing: 2px;
-    color: var(--accent);
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .miner-picker {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-
-  .miner-picker::-webkit-scrollbar { width: 4px; }
-  .miner-picker::-webkit-scrollbar-track { background: var(--bg); }
-  .miner-picker::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .miner-pick-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.15s;
-    gap: 8px;
-  }
-
-  .miner-pick-item:hover { border-color: var(--border-glow); background: rgba(0,212,255,0.04); }
-
-  .miner-pick-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-bright);
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .miner-pick-stats {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    text-align: right;
-    white-space: nowrap;
-  }
-
-  .add-btn {
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.3);
-    color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    width: 24px;
-    height: 24px;
-    border-radius: 2px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.15s;
-  }
-
-  .add-btn:hover { background: rgba(0,212,255,0.25); }
-
-  /* Rig grid display */
-  .rig-display {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .rig-slots {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    padding: 16px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    min-height: 160px;
-  }
-
-  .rig-slot {
-    aspect-ratio: 1;
-    border: 1px dashed var(--border);
-    border-radius: 3px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    color: var(--text-dim);
-    text-align: center;
-    padding: 6px;
-    position: relative;
-    transition: all 0.15s;
-    cursor: default;
-    min-height: 60px;
-  }
-
-  .rig-slot.occupied {
-    border-color: var(--border-glow);
-    background: rgba(0,212,255,0.04);
-    cursor: pointer;
-  }
-
-  .rig-slot.occupied:hover { background: rgba(255,51,85,0.08); border-color: var(--red); }
-
-  .slot-miner-name {
-    font-size: 8px;
-    color: var(--accent);
-    text-align: center;
-    line-height: 1.2;
-    word-break: break-word;
-  }
-
-  .slot-miner-hash {
-    font-size: 9px;
-    color: var(--green);
-    margin-top: 2px;
-  }
-
-  .slot-remove {
-    position: absolute;
-    top: 2px; right: 2px;
-    font-size: 8px;
-    color: var(--red);
-    display: none;
-  }
-
-  .rig-slot.occupied:hover .slot-remove { display: block; }
-
-  /* Results panel */
-  .result-rows { display: flex; flex-direction: column; gap: 8px; }
-
-  .result-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(26,48,80,0.5);
-  }
-
-  .result-row:last-child { border-bottom: none; }
-
-  .result-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
-
-  .result-val {
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--accent);
-  }
-
-  .result-val.green { color: var(--green); }
-  .result-val.red { color: var(--red); }
-  .result-val.orange { color: var(--orange); }
-
-  .win-rate-bar {
-    height: 6px;
-    background: var(--bg3);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-
-  .win-rate-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--green));
-    border-radius: 3px;
-    transition: width 0.5s ease;
-  }
-
-  .elec-warning {
-    background: rgba(255,51,85,0.1);
-    border: 1px solid rgba(255,51,85,0.3);
-    border-radius: 3px;
-    padding: 10px 14px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--red);
-    margin-top: 12px;
-    display: none;
-  }
-
-  .elec-warning.show { display: block; }
-
-  /* ========= NETWORK STATS ========= */
-  .network-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-
-  .net-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 18px 20px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .net-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, var(--accent), transparent);
-  }
-
-  .net-card-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .net-card-value {
-    font-family: 'Orbitron', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-bright);
-  }
-
-  .net-card-sub {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-
-  /* ========= LOADING ========= */
-  .loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: var(--text-dim);
-    gap: 16px;
-  }
-
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-text {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    animation: flicker 1.5s infinite;
-  }
-
-  @keyframes flicker {
-    0%,100% { opacity:1; }
-    50% { opacity:0.5; }
-  }
-
-  /* ========= EMPTY STATE ========= */
-  .empty-state {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 2px;
-  }
-
-  /* ========= SCROLLBAR ========= */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* ========= MISC ========= */
-  .flex-row { display: flex; align-items: center; gap: 10px; }
-  .ml-auto { margin-left: auto; }
-  .text-right { text-align: right; }
-  .mb-16 { margin-bottom: 16px; }
-  .mt-16 { margin-top: 16px; }
-  .gap-sort { font-size: 10px; margin-left: 4px; }
-
-  .sort-select {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    padding: 5px 10px;
-    border-radius: 2px;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .power-bar {
-    height: 4px;
-    background: var(--bg3);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-
-  .power-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.4s ease;
-  }
-
-  .power-fill.ok { background: linear-gradient(90deg, var(--green), var(--accent)); }
-  .power-fill.warn { background: linear-gradient(90deg, var(--warn), var(--orange)); }
-  .power-fill.over { background: var(--red); }
-
-  .count-badge {
-    background: rgba(0,212,255,0.15);
-    border: 1px solid rgba(0,212,255,0.3);
-    color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 2px;
-    margin-left: 8px;
-  }
-
-  .clear-btn {
-    background: rgba(255,51,85,0.1);
-    border: 1px solid rgba(255,51,85,0.3);
-    color: var(--red);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    padding: 4px 10px;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .clear-btn:hover { background: rgba(255,51,85,0.2); }
-
-  .api-info {
-    background: rgba(0,212,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 10px 14px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-  }
-
-  .network-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-bright);
-    margin-bottom: 4px;
-  }
-
-  .halving-bar {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 14px 18px;
-    margin-top: 12px;
-  }
-
-  .halving-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
-  .halving-progress {
-    height: 8px;
-    background: var(--bg);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .halving-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    border-radius: 4px;
-    transition: width 0.5s ease;
-  }
-
-  .view-toggle {
-    display: flex;
-    gap: 4px;
-    margin-left: auto;
-  }
-
-  .view-toggle button {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    padding: 4px 10px;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: all 0.15s;
-  }
-
-  .view-toggle button.active {
-    background: rgba(0,212,255,0.1);
-    border-color: var(--border-glow);
-    color: var(--accent);
-  }
-
-  .quantity-ctrl {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-  }
-
-  .qty-btn {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    width: 20px; height: 20px;
-    border-radius: 2px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-
-  .qty-btn:hover { color: var(--accent); border-color: var(--border-glow); }
-
-  .qty-num {
-    color: var(--text-bright);
-    min-width: 20px;
-    text-align: center;
-  }
+:root{--bg:#06090d;--bg2:#0a1019;--bg3:#0e1822;--panel:#0c1620;--border:#162840;--border-glow:#0d5a9e;--accent:#00d4ff;--accent2:#ff6b00;--warn:#ffcc00;--text:#b8d4e8;--text-dim:#3d6a8a;--text-bright:#deeeff;--green:#00ff88;--red:#ff3355;--orange:#ff8c00;--glow:0 0 24px rgba(0,212,255,.28);--glow-sm:0 0 8px rgba(0,212,255,.4)}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:0}
+header{position:sticky;top:0;z-index:200;background:rgba(6,9,13,.96);border-bottom:1px solid var(--border);backdrop-filter:blur(14px);padding:0 20px;display:flex;align-items:center;gap:20px;height:58px}
+.logo{display:flex;align-items:center;gap:10px}.logo-text{font-family:'Orbitron',monospace;font-weight:900;font-size:20px;letter-spacing:3px;color:var(--accent);text-shadow:var(--glow-sm)}.logo-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-top:-3px}
+nav{display:flex;gap:2px;margin-left:auto}
+.nb{background:none;border:1px solid transparent;color:var(--text-dim);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;cursor:pointer;border-radius:2px;transition:all .18s}
+.nb:hover,.nb.active{color:var(--accent);border-color:var(--border-glow);background:rgba(0,212,255,.06);text-shadow:var(--glow-sm)}
+.hst{display:flex;align-items:center;gap:7px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);white-space:nowrap}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
+.sdot.loading{background:var(--warn);box-shadow:0 0 7px var(--warn)}.sdot.error{background:var(--red);box-shadow:0 0 7px var(--red);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.ticker-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:5px 0;overflow:hidden;position:relative;z-index:1}
+.ticker-inner{display:flex;gap:56px;animation:tick 55s linear infinite;white-space:nowrap}
+.ti{display:inline-flex;align-items:center;gap:7px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)}
+.ti .v{color:var(--accent)}.ti .g{color:var(--green)}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.page{display:none;padding:20px;position:relative;z-index:1;min-height:calc(100vh - 110px)}.page.active{display:block}
+.sh{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.sh-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;white-space:nowrap}
+.sh-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border-glow),transparent)}
+.sh-right{display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:22px}
+.sc{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:14px 18px;position:relative;overflow:hidden;transition:border-color .2s}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent-c,var(--accent)),transparent)}
+.sc:hover{border-color:var(--border-glow)}
+.sc-l{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:7px}
+.sc-v{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--accent-c,var(--accent));line-height:1}
+.sc-s{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:3px}
+.toolbar{display:flex;align-items:center;gap:7px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3);flex-wrap:wrap}
+.srch{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:5px 11px;border-radius:2px;outline:none;width:190px;transition:border-color .2s}
+.srch:focus{border-color:var(--border-glow)}.srch::placeholder{color:var(--text-dim)}
+.fb{background:var(--bg2);border:1px solid var(--border);color:var(--text-dim);font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:2px;cursor:pointer;transition:all .18s;text-transform:uppercase}
+.fb:hover,.fb.active{color:var(--accent);border-color:var(--border-glow);background:rgba(0,212,255,.06)}
+.sel{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 9px;border-radius:2px;outline:none;cursor:pointer}
+.ml{margin-left:auto}
+.rbtn{background:rgba(0,212,255,.1);border:1px solid var(--border-glow);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 13px;border-radius:2px;cursor:pointer;transition:all .18s}
+.rbtn:hover{background:rgba(0,212,255,.2)}
+.dtw{background:var(--panel);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--bg3);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;user-select:none}
+thead th:hover{color:var(--accent)}
+tbody tr{border-bottom:1px solid rgba(22,40,64,.6);transition:background .12s}
+tbody tr:hover{background:rgba(0,212,255,.03)}
+tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
+.mn{font-weight:700;color:var(--text-bright)}
+.tb{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:8px;padding:1px 5px;border-radius:2px;letter-spacing:1px;text-transform:uppercase;margin-left:5px}
+.tb-GPU{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent)}
+.tb-ASIC{background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3);color:var(--orange)}
+.tb-CPU{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);color:var(--green)}
+.tb-Custom,.tb-Rig{background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);color:var(--warn)}
+.tb-Specialized{background:rgba(180,0,255,.1);border:1px solid rgba(180,0,255,.3);color:#b400ff}
+.tb-USB{background:rgba(120,120,120,.15);border:1px solid rgba(120,120,120,.3);color:#999}
+.tb-Wind{background:rgba(0,255,200,.1);border:1px solid rgba(0,255,200,.3);color:#00ffc8}
+.tb-Jabba{background:rgba(255,0,100,.1);border:1px solid rgba(255,0,100,.3);color:#ff0064}
+.tb-Unknown{background:rgba(80,80,80,.2);border:1px solid rgba(80,80,80,.4);color:#666}
+.vg{color:var(--green);font-family:'Share Tech Mono',monospace}.vr{color:var(--red);font-family:'Share Tech Mono',monospace}
+.vo{color:var(--orange);font-family:'Share Tech Mono',monospace}.vy{color:var(--warn);font-family:'Share Tech Mono',monospace}
+.vm{font-family:'Share Tech Mono',monospace}.vd{color:var(--text-dim);font-family:'Share Tech Mono',monospace}
+.dt-hot{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;background:rgba(0,255,136,.15);border:1px solid var(--green);color:var(--green);font-weight:700;letter-spacing:1px}
+.dt-fair{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;background:rgba(255,204,0,.1);border:1px solid var(--warn);color:var(--warn)}
+.dt-over{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;background:rgba(255,51,85,.1);border:1px solid var(--red);color:var(--red)}
+.mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:12px;margin-top:14px}
+.mc{background:var(--panel);border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:all .2s;position:relative}
+.mc:hover{border-color:var(--border-glow);box-shadow:var(--glow)}
+.mc.hot{border-color:rgba(0,255,136,.4)}.mc.over{border-color:rgba(255,51,85,.25)}
+.mc-img-wrap{width:100%;height:155px;overflow:hidden;background:var(--bg3);position:relative}
+.mc-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .3s}
+.mc-ph{width:100%;height:155px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),var(--bg2));font-family:'Orbitron',monospace;font-size:36px;color:rgba(0,212,255,.1)}
+.mc-tok{position:absolute;top:8px;right:8px;background:rgba(6,9,13,.85);font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);padding:2px 7px;border-radius:2px;z-index:1}
+.mc-live{position:absolute;top:8px;left:8px;background:rgba(0,255,136,.15);border:1px solid rgba(0,255,136,.4);font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--green);padding:2px 7px;border-radius:2px;z-index:1}
+.mc-demo{position:absolute;top:8px;left:8px;background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--warn);padding:2px 7px;border-radius:2px;z-index:1}
+.mc-body{padding:13px}
+.mc-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text-bright);line-height:1.2;margin-bottom:4px}
+.mc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.mc-price{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--accent)}
+.mc-psub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim)}
+.mc-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:9px;background:var(--bg3);border-radius:2px;margin-bottom:10px}
+.mcs-l{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:1px}
+.mcs-v{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-bright)}
+.mc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border)}
+.mc-seller{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim)}
+.builder-wrap{display:grid;grid-template-columns:360px 1fr;gap:18px}
+@media(max-width:900px){.builder-wrap{grid-template-columns:1fr}}
+.bp{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:18px}
+.bp h3{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;color:var(--accent);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.mp-list{display:flex;flex-direction:column;gap:5px;max-height:360px;overflow-y:auto;padding-right:3px}
+.mp-list::-webkit-scrollbar{width:3px}.mp-list::-webkit-scrollbar-track{background:var(--bg)}.mp-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.mpi{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .15s}
+.mpi:hover{border-color:var(--border-glow);background:rgba(0,212,255,.04)}
+.mpi-img{width:34px;height:34px;border-radius:2px;object-fit:cover;background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-dim)}
+.mpi-name{font-size:12px;font-weight:600;color:var(--text-bright);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mpi-stats{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);text-align:right;white-space:nowrap}
+.add-b{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent);width:22px;height:22px;border-radius:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;transition:all .15s}
+.add-b:hover{background:rgba(0,212,255,.25)}
+.rig-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:3px}
+.rs{aspect-ratio:1;border:1px dashed var(--border);border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);text-align:center;padding:5px;position:relative;transition:all .15s;cursor:default;min-height:70px}
+.rs.occ{border-color:var(--border-glow);background:rgba(0,212,255,.04);cursor:pointer}
+.rs.occ:hover{background:rgba(255,51,85,.08);border-color:var(--red)}
+.rs-name{font-size:7px;color:var(--accent);text-align:center;line-height:1.2;word-break:break-word;margin-top:2px}
+.rs-hash{font-size:8px;color:var(--green);margin-top:1px}
+.rs-rm{position:absolute;top:2px;right:3px;font-size:7px;color:var(--red);display:none}
+.rs.occ:hover .rs-rm{display:block}
+.rs-img{width:30px;height:30px;border-radius:1px;object-fit:cover}
+.rr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(22,40,64,.5)}
+.rr:last-child{border-bottom:none}
+.rl{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1px}
+.rv{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--accent)}
+.rv.g{color:var(--green)}.rv.r{color:var(--red)}.rv.o{color:var(--orange)}
+.wb{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:3px}
+.wf{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:3px;transition:width .5s ease}
+.pw-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.pw-ok{background:linear-gradient(90deg,var(--green),var(--accent))}.pw-warn{background:linear-gradient(90deg,var(--warn),var(--orange))}.pw-over{background:var(--red)}
+.pw-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:3px}
+.ew{background:rgba(255,51,85,.1);border:1px solid rgba(255,51,85,.3);border-radius:2px;padding:9px 13px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);margin-top:11px;display:none}
+.ew.show{display:block}
+.clr-btn{background:rgba(255,51,85,.1);border:1px solid rgba(255,51,85,.3);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 9px;border-radius:2px;cursor:pointer;transition:all .15s}
+.clr-btn:hover{background:rgba(255,51,85,.22)}
+.net-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:22px}
+.nc{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:16px 18px;position:relative;overflow:hidden}
+.nc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),transparent)}
+.nc-l{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:7px}
+.nc-v{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:var(--text-bright)}
+.nc-s{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:3px}
+.ls{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;color:var(--text-dim);gap:14px}
+.lsp{width:36px;height:36px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ltx{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;animation:flk 1.5s infinite}
+@keyframes flk{0%,100%{opacity:1}50%{opacity:.45}}
+.emp{text-align:center;padding:38px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px}
+.api-ban{background:rgba(0,212,255,.04);border:1px solid var(--border);border-radius:2px;padding:8px 13px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.api-ban .dot{width:6px;height:6px;border-radius:50%;background:var(--warn);flex-shrink:0;animation:pulse 2s infinite}
+.api-ban .dot.ok{background:var(--green);animation:none}.api-ban .dot.err{background:var(--red);animation:none}
+.cbadge{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:9px;padding:1px 6px;border-radius:2px;margin-left:7px}
+.vtog{display:flex;gap:3px}.vtog button{background:var(--bg2);border:1px solid var(--border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 9px;cursor:pointer;border-radius:2px;transition:all .15s}
+.vtog button.active{background:rgba(0,212,255,.1);border-color:var(--border-glow);color:var(--accent)}
+.pager{display:flex;justify-content:center;gap:6px;margin-top:16px;flex-wrap:wrap}
+.pg-btn{background:var(--bg2);border:1px solid var(--border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;border-radius:2px;cursor:pointer;transition:all .15s}
+.pg-btn.active,.pg-btn:hover{background:rgba(0,212,255,.1);border-color:var(--border-glow);color:var(--accent)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="18,2 34,10 34,26 18,34 2,26 2,10" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
-        <polygon points="18,8 28,13 28,23 18,28 8,23 8,13" fill="rgba(0,212,255,0.08)" stroke="#00d4ff" stroke-width="0.8"/>
-        <text x="18" y="22" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="11" fill="#00d4ff">H</text>
-      </svg>
-    </div>
-    <div>
-      <div class="logo-text">HASHLIP</div>
-      <div class="logo-sub">HASHCASH INTELLIGENCE</div>
-    </div>
+    <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+      <polygon points="17,1.5 32,9.5 32,24.5 17,32.5 2,24.5 2,9.5" fill="none" stroke="#00d4ff" stroke-width="1.4"/>
+      <polygon points="17,7 26.5,12.5 26.5,21.5 17,27 7.5,21.5 7.5,12.5" fill="rgba(0,212,255,.07)" stroke="#00d4ff" stroke-width=".7"/>
+      <text x="17" y="21" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="10" fill="#00d4ff">H</text>
+    </svg>
+    <div><div class="logo-text">HASHLIP</div><div class="logo-sub">HASHCASH INTELLIGENCE</div></div>
   </div>
-
   <nav>
-    <button class="nav-btn active" onclick="showPage('market')">MARKET</button>
-    <button class="nav-btn" onclick="showPage('miners')">MINERS</button>
-    <button class="nav-btn" onclick="showPage('builder')">FACILITY</button>
-    <button class="nav-btn" onclick="showPage('network')">NETWORK</button>
+    <button class="nb active" onclick="showPage('market',this)">MARKET</button>
+    <button class="nb" onclick="showPage('miners',this)">MINERS</button>
+    <button class="nb" onclick="showPage('builder',this)">FACILITY</button>
+    <button class="nb" onclick="showPage('network',this)">NETWORK</button>
   </nav>
-
-  <div class="status-indicator">
-    <div class="status-dot loading" id="statusDot"></div>
-    <span id="statusText">LOADING...</span>
-  </div>
+  <div class="hst"><div class="sdot loading" id="sdot"></div><span id="stxt">CONNECTING...</span></div>
 </header>
 
-<!-- TICKER -->
 <div class="ticker-bar">
-  <div class="ticker-inner" id="ticker">
-    <div class="ticker-item">NETWORK HASHRATE <span class="val" id="t-hash">—</span></div>
-    <div class="ticker-item">ELEC FEE <span class="val">8.88 hCASH/kWh</span></div>
-    <div class="ticker-item">BLOCK EMISSION <span class="val">2.5 hCASH</span></div>
-    <div class="ticker-item">MAX SUPPLY <span class="val">21,000,000 hCASH</span></div>
-    <div class="ticker-item">CHAIN <span class="val">AVALANCHE</span></div>
-    <div class="ticker-item">HALVING <span class="val">~48 DAYS</span></div>
-    <div class="ticker-item">REFERRAL <span class="val">2.5%</span></div>
-    <div class="ticker-item">NETWORK HASHRATE <span class="val" id="t-hash2">—</span></div>
-    <div class="ticker-item">ELEC FEE <span class="val">8.88 hCASH/kWh</span></div>
-    <div class="ticker-item">BLOCK EMISSION <span class="val">2.5 hCASH</span></div>
-    <div class="ticker-item">MAX SUPPLY <span class="val">21,000,000 hCASH</span></div>
-    <div class="ticker-item">CHAIN <span class="val">AVALANCHE</span></div>
-    <div class="ticker-item">HALVING <span class="val">~48 DAYS</span></div>
-    <div class="ticker-item">REFERRAL <span class="val">2.5%</span></div>
+  <div class="ticker-inner">
+    <span class="ti">NETWORK HASHRATE <span class="v" id="t1">...</span></span>
+    <span class="ti">ELEC RATE <span class="v">8.88 hCASH/kWh</span></span>
+    <span class="ti">BLOCK EMISSION <span class="v">2.5 hCASH</span></span>
+    <span class="ti">DAILY EMISSION <span class="v">~108,000 hCASH</span></span>
+    <span class="ti">MAX SUPPLY <span class="v">21,000,000 hCASH</span></span>
+    <span class="ti">CHAIN <span class="v">AVALANCHE C-CHAIN</span></span>
+    <span class="ti">HALVING <span class="v">~4.2M BLOCKS</span></span>
+    <span class="ti">LISTINGS <span class="v" id="t2">...</span></span>
+    <span class="ti">NETWORK HASHRATE <span class="v" id="t3">...</span></span>
+    <span class="ti">ELEC RATE <span class="v">8.88 hCASH/kWh</span></span>
+    <span class="ti">BLOCK EMISSION <span class="v">2.5 hCASH</span></span>
+    <span class="ti">DAILY EMISSION <span class="v">~108,000 hCASH</span></span>
+    <span class="ti">MAX SUPPLY <span class="v">21,000,000 hCASH</span></span>
+    <span class="ti">CHAIN <span class="v">AVALANCHE C-CHAIN</span></span>
+    <span class="ti">HALVING <span class="v">~4.2M BLOCKS</span></span>
+    <span class="ti">LISTINGS <span class="v" id="t4">...</span></span>
   </div>
 </div>
 
 <!-- MARKET PAGE -->
 <div id="page-market" class="page active">
-  <div class="section-header">
-    <div class="section-title">MARKETPLACE SCANNER</div>
-    <div class="section-line"></div>
-    <div class="flex-row">
-      <div class="view-toggle">
-        <button class="active" id="viewCards" onclick="setMarketView('cards')">CARDS</button>
-        <button id="viewTable" onclick="setMarketView('table')">TABLE</button>
+  <div class="sh">
+    <div class="sh-title">MARKETPLACE SCANNER</div>
+    <div class="sh-line"></div>
+    <div class="sh-right">
+      <div class="vtog">
+        <button class="active" id="vCards" onclick="setView('cards')">CARDS</button>
+        <button id="vTable" onclick="setView('table')">TABLE</button>
       </div>
+      <button class="rbtn" onclick="reloadMarket()">↺ REFRESH</button>
     </div>
   </div>
-
-  <div class="stats-grid" id="marketStats">
-    <div class="stat-card">
-      <div class="stat-label">LIVE LISTINGS</div>
-      <div class="stat-value" id="ms-listings">—</div>
-      <div class="stat-sub">Active on marketplace</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">BEST DEAL SCORE</div>
-      <div class="stat-value val-green" id="ms-bestdeal">—</div>
-      <div class="stat-sub">% below base cost</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">OVERPRICED LISTINGS</div>
-      <div class="stat-value val-red" id="ms-over">—</div>
-      <div class="stat-sub">Above base hCASH cost</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">UNDERPRICED</div>
-      <div class="stat-value val-green" id="ms-under">—</div>
-      <div class="stat-sub">Below base hCASH cost</div>
-    </div>
+  <div class="stats-grid">
+    <div class="sc"><div class="sc-l">LIVE LISTINGS</div><div class="sc-v" id="ms-tot">—</div><div class="sc-s" id="ms-src">Loading...</div></div>
+    <div class="sc" style="--accent-c:var(--green)"><div class="sc-l">BEST DEAL</div><div class="sc-v" id="ms-best">—</div><div class="sc-s" id="ms-bn">% below base cost</div></div>
+    <div class="sc" style="--accent-c:var(--red)"><div class="sc-l">OVERPRICED</div><div class="sc-v" id="ms-over">—</div><div class="sc-s">Above base hCASH cost</div></div>
+    <div class="sc"><div class="sc-l">UNDERPRICED</div><div class="sc-v" id="ms-und">—</div><div class="sc-s">Below base hCASH cost</div></div>
+    <div class="sc"><div class="sc-l">AVG PRICE</div><div class="sc-v" id="ms-avg">—</div><div class="sc-s">hCASH avg listing</div></div>
   </div>
+  <div class="api-ban"><div class="dot" id="banDot"></div><span id="banTxt">Connecting to HashCash API...</span></div>
 
-  <div class="api-info" id="marketApiInfo">
-    ⚡ Fetching live listings from HashCash marketplace...
-  </div>
-
-  <!-- Card View -->
-  <div id="marketCardsView">
-    <div class="table-toolbar">
-      <input type="text" class="search-input" placeholder="Search miner..." oninput="filterMarket()" id="marketSearch">
-      <button class="filter-btn active" onclick="setDealFilter('all', this)">ALL</button>
-      <button class="filter-btn" onclick="setDealFilter('hot', this)">🔥 DEALS</button>
-      <button class="filter-btn" onclick="setDealFilter('fair', this)">FAIR</button>
-      <button class="filter-btn" onclick="setDealFilter('over', this)">OVERPRICED</button>
-      <select class="sort-select" onchange="sortMarket(this.value)" id="marketSort">
-        <option value="deal">Sort: Deal Score</option>
-        <option value="price-asc">Price: Low→High</option>
-        <option value="price-desc">Price: High→Low</option>
-        <option value="hash">Hashrate</option>
-        <option value="roi">ROI/Day</option>
+  <!-- Cards view -->
+  <div id="cardsView">
+    <div class="toolbar">
+      <input class="srch" placeholder="Search miner..." oninput="cardPage=0;renderCards()" id="csrch">
+      <button class="fb active" onclick="setDealF('all',this,'c')">ALL</button>
+      <button class="fb" onclick="setDealF('hot',this,'c')">🔥 DEALS</button>
+      <button class="fb" onclick="setDealF('fair',this,'c')">FAIR</button>
+      <button class="fb" onclick="setDealF('over',this,'c')">OVERPRICED</button>
+      <select class="sel ml" onchange="cSort=this.value;cardPage=0;renderCards()">
+        <option value="deal">Deal Score</option>
+        <option value="pa">Price ↑</option>
+        <option value="pd">Price ↓</option>
+        <option value="hash">Hashrate ↓</option>
+        <option value="roi">Net ROI ↓</option>
+        <option value="new">Newest</option>
       </select>
     </div>
-    <div class="listing-grid" id="listingGrid">
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">SCANNING MARKETPLACE</div>
-      </div>
-    </div>
+    <div class="mkt-grid" id="mktGrid"><div class="ls" style="grid-column:1/-1"><div class="lsp"></div><div class="ltx">SCANNING</div></div></div>
+    <div class="pager" id="mktPager"></div>
   </div>
 
-  <!-- Table View -->
-  <div id="marketTableView" style="display:none;">
-    <div class="data-table-wrap">
-      <div class="table-toolbar">
-        <input type="text" class="search-input" placeholder="Search miner..." oninput="filterMarketTable()" id="marketSearchTable">
-        <button class="filter-btn active" onclick="setDealFilterTable('all', this)">ALL</button>
-        <button class="filter-btn" onclick="setDealFilterTable('hot', this)">🔥 DEALS</button>
-        <button class="filter-btn" onclick="setDealFilterTable('over', this)">OVERPRICED</button>
+  <!-- Table view -->
+  <div id="tableView" style="display:none">
+    <div class="dtw">
+      <div class="toolbar">
+        <input class="srch" placeholder="Search..." oninput="renderTbl()" id="tsrch">
+        <button class="fb active" onclick="setDealF('all',this,'t')">ALL</button>
+        <button class="fb" onclick="setDealF('hot',this,'t')">🔥 DEALS</button>
+        <button class="fb" onclick="setDealF('over',this,'t')">OVERPRICED</button>
       </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th onclick="sortMarketTable('name')">MINER <span class="gap-sort">↕</span></th>
-              <th onclick="sortMarketTable('listed')">LISTED PRICE <span class="gap-sort">↕</span></th>
-              <th onclick="sortMarketTable('base')">BASE COST <span class="gap-sort">↕</span></th>
-              <th onclick="sortMarketTable('diff')">DIFF % <span class="gap-sort">↕</span></th>
-              <th onclick="sortMarketTable('hash')">HASHRATE <span class="gap-sort">↕</span></th>
-              <th onclick="sortMarketTable('roi')">ROI/DAY <span class="gap-sort">↕</span></th>
-              <th>DEAL</th>
-            </tr>
-          </thead>
-          <tbody id="marketTableBody">
-            <tr><td colspan="7"><div class="loading-state"><div class="loading-spinner"></div></div></td></tr>
-          </tbody>
-        </table>
+      <div style="overflow-x:auto">
+        <table><thead><tr>
+          <th onclick="ts('name')">MINER ↕</th>
+          <th onclick="ts('tok')">TOKEN ID</th>
+          <th onclick="ts('price')">LISTED (hCASH) ↕</th>
+          <th onclick="ts('base')">BASE COST ↕</th>
+          <th onclick="ts('diff')">DIFF % ↕</th>
+          <th onclick="ts('hash')">HASHRATE ↕</th>
+          <th onclick="ts('nd')">NET ROI/DAY ↕</th>
+          <th>SELLER</th>
+          <th>DEAL</th>
+        </tr></thead>
+        <tbody id="tblBody"><tr><td colspan="9"><div class="ls"><div class="lsp"></div></div></td></tr></tbody></table>
       </div>
     </div>
   </div>
@@ -1173,166 +264,85 @@
 
 <!-- MINERS PAGE -->
 <div id="page-miners" class="page">
-  <div class="section-header">
-    <div class="section-title">MINER CATALOG</div>
-    <div class="section-line"></div>
-    <span id="minerCount" class="count-badge">0 MINERS</span>
-  </div>
-
-  <div class="data-table-wrap">
-    <div class="table-toolbar">
-      <input type="text" class="search-input" placeholder="Search miner name..." oninput="filterMiners()" id="minerSearch">
-      <button class="filter-btn active" onclick="setTypeFilter('ALL', this)">ALL</button>
-      <button class="filter-btn" onclick="setTypeFilter('GPU', this)">GPU</button>
-      <button class="filter-btn" onclick="setTypeFilter('ASIC', this)">ASIC</button>
-      <button class="filter-btn" onclick="setTypeFilter('CPU', this)">CPU</button>
-      <button class="filter-btn" onclick="setTypeFilter('Custom', this)">RIGS</button>
-      <button class="filter-btn" onclick="setTypeFilter('Specialized', this)">SPECIAL</button>
-      <select class="sort-select" onchange="sortMiners(this.value)">
-        <option value="hashrate">Sort: Hashrate</option>
-        <option value="efficiency">Efficiency (MH/W)</option>
-        <option value="roi">ROI/Day</option>
+  <div class="sh"><div class="sh-title">MINER CATALOG</div><div class="sh-line"></div><span class="cbadge" id="mCnt">0</span></div>
+  <div class="dtw">
+    <div class="toolbar">
+      <input class="srch" placeholder="Search miner..." oninput="renderMinerTbl()" id="mSrch">
+      <button class="fb active" onclick="setTF('ALL',this)">ALL</button>
+      <button class="fb" onclick="setTF('GPU',this)">GPU</button>
+      <button class="fb" onclick="setTF('ASIC',this)">ASIC</button>
+      <button class="fb" onclick="setTF('CPU',this)">CPU</button>
+      <button class="fb" onclick="setTF('Custom',this)">RIGS</button>
+      <button class="fb" onclick="setTF('Specialized',this)">SPECIAL</button>
+      <select class="sel ml" onchange="mSort=this.value;renderMinerTbl()">
+        <option value="hash">Hashrate ↓</option>
+        <option value="eff">Efficiency</option>
+        <option value="roi">Net ROI</option>
+        <option value="cost">Cost ↑</option>
         <option value="name">Name</option>
-        <option value="cost">Cost hCASH</option>
       </select>
     </div>
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>MINER</th>
-            <th onclick="sortMiners('hashrate')">HASHRATE ↕</th>
-            <th onclick="sortMiners('power')">POWER ↕</th>
-            <th onclick="sortMiners('efficiency')">MH/W ↕</th>
-            <th onclick="sortMiners('cost')">COST (hCASH) ↕</th>
-            <th>COST (AVAX)</th>
-            <th onclick="sortMiners('roi')">NET ROI/DAY ↕</th>
-            <th>ELEC COST/DAY</th>
-            <th>SUPPLY</th>
-          </tr>
-        </thead>
-        <tbody id="minerTableBody">
-          <tr><td colspan="9"><div class="loading-state"><div class="loading-spinner"></div></div></td></tr>
-        </tbody>
-      </table>
-    </div>
+    <div style="overflow-x:auto"><table><thead><tr>
+      <th>MINER</th><th>IMG</th>
+      <th onclick="mSort='hash';renderMinerTbl()">HASHRATE ↕</th>
+      <th>POWER</th>
+      <th onclick="mSort='eff';renderMinerTbl()">MH/W ↕</th>
+      <th onclick="mSort='cost';renderMinerTbl()">BASE (hCASH) ↕</th>
+      <th>BASE (AVAX)</th>
+      <th onclick="mSort='roi';renderMinerTbl()">NET ROI/DAY ↕</th>
+      <th>ELEC/DAY</th>
+      <th>SUPPLY</th>
+    </tr></thead>
+    <tbody id="mTbl"><tr><td colspan="10"><div class="ls"><div class="lsp"></div></div></td></tr></tbody></table></div>
   </div>
 </div>
 
-<!-- FACILITY BUILDER PAGE -->
+<!-- FACILITY BUILDER -->
 <div id="page-builder" class="page">
-  <div class="section-header">
-    <div class="section-title">FACILITY BUILDER</div>
-    <div class="section-line"></div>
-    <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim)">ELEC: 8.88 hCASH/kWh</span>
+  <div class="sh"><div class="sh-title">FACILITY BUILDER</div><div class="sh-line"></div>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">8.88 hCASH/kWh · 4 SLOTS · 800W MAX</span>
   </div>
-
-  <div class="builder-layout">
-    <!-- LEFT: Miner picker -->
+  <div class="builder-wrap">
     <div>
-      <div class="builder-panel" style="margin-bottom:14px;">
-        <h3>ADD MINERS TO FACILITY</h3>
-        <input type="text" class="search-input" style="width:100%;margin-bottom:12px;" placeholder="Search miners..." oninput="filterBuilderMiners()" id="builderSearch">
-        <div class="miner-picker" id="builderMinerList">
-          <div class="loading-state" style="padding:20px;">
-            <div class="loading-spinner"></div>
-          </div>
-        </div>
+      <div class="bp" style="margin-bottom:12px">
+        <h3>ADD MINERS</h3>
+        <input class="srch" style="width:100%;margin-bottom:10px" placeholder="Search..." oninput="renderBldList()" id="bSrch">
+        <div class="mp-list" id="bldList"><div class="ls" style="padding:20px"><div class="lsp"></div></div></div>
       </div>
-
-      <!-- Facility limits -->
-      <div class="builder-panel">
-        <h3>FACILITY LIMITS</h3>
-        <div style="margin-bottom:12px;">
-          <div class="flex-row" style="justify-content:space-between;margin-bottom:4px;">
-            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">MINER SLOTS</span>
-            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;" id="slotCount">0 / 4</span>
-          </div>
-          <div class="win-rate-bar">
-            <div class="win-rate-fill" id="slotBar" style="width:0%"></div>
-          </div>
+      <div class="bp">
+        <h3>USAGE</h3>
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">SLOTS</span><span style="font-family:'Share Tech Mono',monospace;font-size:10px" id="bSlots">0/4</span></div>
+          <div class="wb"><div class="wf" id="bSBar" style="width:0%"></div></div>
         </div>
         <div>
-          <div class="flex-row" style="justify-content:space-between;margin-bottom:4px;">
-            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">POWER USAGE</span>
-            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;" id="powerCount">0W / 800W</span>
-          </div>
-          <div class="power-bar">
-            <div class="power-fill ok" id="powerBar" style="width:0%"></div>
-          </div>
-        </div>
-        <div style="margin-top:12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);">
-          Starter facility: 4 slots, 800W max
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">POWER</span><span style="font-family:'Share Tech Mono',monospace;font-size:10px" id="bPow">0/800W</span></div>
+          <div class="pw-bar"><div class="pw-fill pw-ok" id="bPBar" style="width:0%"></div></div>
         </div>
       </div>
     </div>
-
-    <!-- RIGHT: Rig + results -->
-    <div class="rig-display">
-      <!-- Rig visualization -->
-      <div class="builder-panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <h3 style="margin:0;border:none;padding:0;">YOUR FACILITY GRID</h3>
-          <button class="clear-btn" onclick="clearFacility()">CLEAR ALL</button>
+    <div>
+      <div class="bp" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <h3 style="margin:0;border:none;padding:0">FACILITY GRID</h3>
+          <button class="clr-btn" onclick="clearF()">CLEAR ALL</button>
         </div>
-        <div class="rig-slots" id="rigSlots">
-          <!-- Slots generated by JS -->
-        </div>
+        <div class="rig-slots" id="rigSlots"></div>
       </div>
-
-      <!-- Results -->
-      <div class="builder-panel">
+      <div class="bp">
         <h3>EARNINGS PROJECTION</h3>
-        <div class="result-rows">
-          <div class="result-row">
-            <span class="result-label">TOTAL HASHRATE</span>
-            <span class="result-val" id="r-hash">0 MH/s</span>
-          </div>
-          <div class="result-row">
-            <span class="result-label">NETWORK SHARE</span>
-            <div style="text-align:right;">
-              <span class="result-val" id="r-share">0.000%</span>
-              <div class="win-rate-bar" style="width:120px;margin-top:4px;">
-                <div class="win-rate-fill" id="r-share-bar" style="width:0%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="result-row">
-            <span class="result-label">GROSS EARNINGS/DAY</span>
-            <span class="result-val" id="r-gross">0 hCASH</span>
-          </div>
-          <div class="result-row">
-            <span class="result-label">ELECTRICITY COST/DAY</span>
-            <span class="result-val orange" id="r-elec">0 hCASH</span>
-          </div>
-          <div class="result-row">
-            <span class="result-label">NET EARNINGS/DAY</span>
-            <span class="result-val green" id="r-net">0 hCASH</span>
-          </div>
-          <div class="result-row">
-            <span class="result-label">NET EARNINGS/MONTH</span>
-            <span class="result-val green" id="r-month">0 hCASH</span>
-          </div>
-          <div class="result-row">
-            <span class="result-label">TOTAL POWER</span>
-            <span class="result-val" id="r-power">0 W</span>
-          </div>
-          <div class="result-row">
-            <span class="result-label">EFFICIENCY</span>
-            <span class="result-val" id="r-eff">0 MH/W</span>
-          </div>
+        <div>
+          <div class="rr"><span class="rl">TOTAL HASHRATE</span><span class="rv" id="b-h">0 MH/s</span></div>
+          <div class="rr"><span class="rl">NETWORK SHARE</span><div style="text-align:right"><span class="rv" id="b-sh">0.0000%</span><div class="wb" style="width:130px;margin-top:3px"><div class="wf" id="b-shb" style="width:0%"></div></div></div></div>
+          <div class="rr"><span class="rl">GROSS/DAY</span><span class="rv" id="b-gr">0 hCASH</span></div>
+          <div class="rr"><span class="rl">ELECTRICITY/DAY</span><span class="rv o" id="b-el">0 hCASH</span></div>
+          <div class="rr"><span class="rl">NET/DAY</span><span class="rv g" id="b-nd">0 hCASH</span></div>
+          <div class="rr"><span class="rl">NET/MONTH</span><span class="rv g" id="b-nm">0 hCASH</span></div>
+          <div class="rr"><span class="rl">TOTAL POWER</span><span class="rv" id="b-pw">0W</span></div>
+          <div class="rr" style="border:none"><span class="rl">EFFICIENCY</span><span class="rv" id="b-ef">— MH/W</span></div>
         </div>
-
-        <div class="elec-warning" id="elecWarning">
-          ⚠ ELECTRICITY COSTS EXCEED EARNINGS — This configuration is unprofitable at current rates.
-        </div>
-
-        <div class="halving-bar" style="margin-top:16px;">
-          <div class="halving-label">NETWORK HASHRATE CONTEXT</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:6px;" id="r-context">
-            Loading network data...
-          </div>
-        </div>
+        <div class="ew" id="bWarn">⚠ ELECTRICITY EXCEEDS EARNINGS — unprofitable at current rate.</div>
+        <div style="margin-top:13px;padding-top:11px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)" id="bCtx">Add miners to see projections.</div>
       </div>
     </div>
   </div>
@@ -1340,747 +350,712 @@
 
 <!-- NETWORK PAGE -->
 <div id="page-network" class="page">
-  <div class="section-header">
-    <div class="section-title">NETWORK STATISTICS</div>
-    <div class="section-line"></div>
-    <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);" id="netLastUpdate">—</span>
+  <div class="sh"><div class="sh-title">NETWORK STATS</div><div class="sh-line"></div><span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim)" id="netUpd">—</span></div>
+  <div class="net-grid">
+    <div class="nc"><div class="nc-l">BASE EMISSION</div><div class="nc-v">2.5 hCASH</div><div class="nc-s">Per Avalanche block</div></div>
+    <div class="nc"><div class="nc-l">BLOCKS/DAY</div><div class="nc-v">~43,200</div><div class="nc-s">~2s block time</div></div>
+    <div class="nc"><div class="nc-l">DAILY EMISSION</div><div class="nc-v">~108,000</div><div class="nc-s">hCASH per day</div></div>
+    <div class="nc"><div class="nc-l">ELECTRICITY</div><div class="nc-v" style="color:var(--orange)">8.88 hCASH</div><div class="nc-s">Per kWh (current rate)</div></div>
+    <div class="nc"><div class="nc-l">HALVING</div><div class="nc-v">4,200,000</div><div class="nc-s">Blocks (~48 days)</div></div>
+    <div class="nc"><div class="nc-l">MAX SUPPLY</div><div class="nc-v">21,000,000</div><div class="nc-s">hCASH hard cap</div></div>
+    <div class="nc"><div class="nc-l">REFERRAL</div><div class="nc-v" style="color:var(--green)">2.5%</div><div class="nc-s">Of referred player claims</div></div>
+    <div class="nc"><div class="nc-l">EST. NETWORK HASH</div><div class="nc-v" id="nn-h">—</div><div class="nc-s" id="nn-hs">From contracts + deployment rate</div></div>
   </div>
-
-  <div class="network-grid">
-    <div class="net-card">
-      <div class="net-card-label">TOTAL MINERS DEPLOYED</div>
-      <div class="net-card-value" id="nn-miners">—</div>
-      <div class="net-card-sub">Across all active types</div>
-    </div>
-    <div class="net-card">
-      <div class="net-card-label">BASE EMISSION RATE</div>
-      <div class="net-card-value">2.5 hCASH</div>
-      <div class="net-card-sub">Per block on Avalanche</div>
-    </div>
-    <div class="net-card">
-      <div class="net-card-label">ELECTRICITY RATE</div>
-      <div class="net-card-value" style="color:var(--orange)">8.88 hCASH</div>
-      <div class="net-card-sub">Per kWh (current)</div>
-    </div>
-    <div class="net-card">
-      <div class="net-card-label">HALVING INTERVAL</div>
-      <div class="net-card-value">4,200,000</div>
-      <div class="net-card-sub">Blocks (~48 days)</div>
-    </div>
-    <div class="net-card">
-      <div class="net-card-label">MAX SUPPLY</div>
-      <div class="net-card-value">21,000,000</div>
-      <div class="net-card-sub">hCASH total cap</div>
-    </div>
-    <div class="net-card">
-      <div class="net-card-label">REFERRAL BONUS</div>
-      <div class="net-card-value" style="color:var(--green)">2.5%</div>
-      <div class="net-card-sub">Of referred player claims</div>
-    </div>
+  <div class="sh" style="margin-top:8px"><div class="sh-title">DAILY EARNINGS BY MINER</div><div class="sh-line"></div>
+    <select class="sel" onchange="nSort=this.value;renderNetTbl()"><option value="roi">Net ROI</option><option value="hash">Hashrate</option><option value="eff">Efficiency</option><option value="name">Name</option></select>
   </div>
-
-  <div class="section-header" style="margin-top:8px;">
-    <div class="section-title">DAILY EARNINGS CALCULATOR</div>
-    <div class="section-line"></div>
-  </div>
-
-  <!-- Per-miner daily breakdown -->
-  <div class="data-table-wrap">
-    <div class="table-toolbar">
-      <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">BLOCKS/DAY ON AVAX: ~43,200 &nbsp;|&nbsp; DAILY EMISSION: ~108,000 hCASH &nbsp;|&nbsp; ELEC: 8.88 hCASH/kWh</span>
-      <select class="sort-select ml-auto" onchange="sortNetwork(this.value)" id="netSort">
-        <option value="roi">Sort: Net ROI</option>
-        <option value="hash">Hashrate</option>
-        <option value="efficiency">Efficiency</option>
-        <option value="name">Name</option>
-      </select>
-    </div>
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>MINER</th>
-            <th>TYPE</th>
-            <th>HASHRATE</th>
-            <th>POWER</th>
-            <th>DAILY GROSS</th>
-            <th>DAILY ELEC COST</th>
-            <th>DAILY NET</th>
-            <th>EFFICIENCY</th>
-            <th>PAYBACK (DAYS)</th>
-          </tr>
-        </thead>
-        <tbody id="networkTableBody">
-          <tr><td colspan="9"><div class="loading-state"><div class="loading-spinner"></div></div></td></tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="dtw">
+    <div class="toolbar"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">DAILY EMISSION 108,000 hCASH · ELEC 8.88 hCASH/kWh · AVAX ~2s blocks</span></div>
+    <div style="overflow-x:auto"><table><thead><tr>
+      <th>MINER</th><th>IMG</th><th>TYPE</th><th>HASHRATE</th><th>POWER</th>
+      <th>GROSS/DAY</th><th>ELEC/DAY</th><th>NET/DAY</th><th>MH/W</th><th>PAYBACK DAYS</th>
+    </tr></thead>
+    <tbody id="nTbl"><tr><td colspan="10"><div class="ls"><div class="lsp"></div></div></td></tr></tbody></table></div>
   </div>
 </div>
 
 <script>
-// ======== DATA ========
-const API_KEY = 'hc_live_C9jUxh9Knr3Qn-ZEo4SSO-ga0SLjFFjX';
-const API_BASE = 'https://api.hashcash.club/api/v1/public';
-const ELEC_RATE = 8.88; // hCASH per kWh
+// ─── CONFIG ────────────────────────────────────────────
+const API_KEY  = 'hc_live_C9jUxh9Knr3Qn-ZEo4SSO-ga0SLjFFjX';
+const BASE     = 'https://api.hashcash.club/api/v1/public';
+const RPC      = 'https://api.avax.network/ext/bc/C/rpc';
+const ELEC_R   = 8.88;
+const BLKDAY   = 43200;
+const EM_BLK   = 2.5;
+const DAILY_EM = BLKDAY * EM_BLK;   // 108000
+const MAX_SL   = 4;
+const MAX_PW   = 800;
+const PG_SZ    = 24;
+const HCASH_D  = 18;                 // hCASH decimals
 
-// Avalanche: ~2 sec block time = 43200 blocks/day
-const BLOCKS_PER_DAY = 43200;
-const EMISSION_PER_BLOCK = 2.5;
-const DAILY_EMISSION = BLOCKS_PER_DAY * EMISSION_PER_BLOCK; // 108,000
-
-const MINERS = [
-  {name:"Home Brew CPU Miner",type:"CPU",hashMh:10,powerW:100,costHcash:300,costAvax:99999,supply:1885},
-  {name:"DragonTech - RedDragon",type:"GPU",hashMh:14,powerW:100,costHcash:750,costAvax:999,supply:125},
-  {name:"DragonTech - RedDragon Ti",type:"GPU",hashMh:24,powerW:300,costHcash:750,costAvax:99999,supply:100},
-  {name:"RedDragon Quadro",type:"Custom",hashMh:70,powerW:800,costHcash:2000,costAvax:50,supply:30},
-  {name:"RedDragon Quadro Ti",type:"Custom",hashMh:110,powerW:1200,costHcash:2000,costAvax:99999,supply:15},
-  {name:"Quad Socket CPU Miner",type:"Custom",hashMh:40,powerW:200,costHcash:99999,costAvax:99999,supply:325},
-  {name:"RedDragon Tri-Rig",type:"Custom",hashMh:45,powerW:400,costHcash:2500,costAvax:3.5,supply:25},
-  {name:"RedDragon Ti Duo-Rig",type:"Custom",hashMh:70,powerW:700,costHcash:99999,costAvax:99999,supply:26},
-  {name:"Jlant",type:"Jabba",hashMh:0,powerW:0,costHcash:99999,costAvax:99999,supply:111},
-  {name:"Jread",type:"Jabba",hashMh:0,powerW:0,costHcash:99999,costAvax:99999,supply:106},
-  {name:"Lightning - G1",type:"GPU",hashMh:20,powerW:100,costHcash:750,costAvax:99999,supply:100},
-  {name:"Lightning - G2",type:"GPU",hashMh:35,powerW:200,costHcash:1000,costAvax:99999,supply:100},
-  {name:"HashTech ASIC Prototype",type:"ASIC",hashMh:250,powerW:2000,costHcash:5000,costAvax:99999,supply:0},
-  {name:"Plasma Base",type:"GPU",hashMh:25,powerW:100,costHcash:750,costAvax:99999,supply:35},
-  {name:"Plasma XL",type:"GPU",hashMh:45,powerW:200,costHcash:1000,costAvax:99999,supply:30},
-  {name:"USB Miner",type:"USB",hashMh:1,powerW:100,costHcash:99999,costAvax:99999,supply:192},
-  {name:"HashTech \"The Beast\" ASIC",type:"ASIC",hashMh:200,powerW:1000,costHcash:3500,costAvax:99999,supply:45},
-  {name:"Quad USB Array",type:"USB",hashMh:8,powerW:100,costHcash:99999,costAvax:99999,supply:100},
-  {name:"RedDragon Tri-Rig v2.0",type:"Custom",hashMh:45,powerW:300,costHcash:99999,costAvax:99999,supply:25},
-  {name:"RedDragon Ti Duo-Rig v2.0",type:"Custom",hashMh:70,powerW:400,costHcash:99999,costAvax:99999,supply:25},
-  {name:"RedDragon Quadro v2.0",type:"Custom",hashMh:70,powerW:400,costHcash:99999,costAvax:99999,supply:30},
-  {name:"RedDragon Quadro Ti v2.0",type:"Custom",hashMh:110,powerW:800,costHcash:99999,costAvax:99999,supply:15},
-  {name:"WindHash Red",type:"Wind",hashMh:125,powerW:600,costHcash:3500,costAvax:40,supply:10},
-  {name:"WindHash Blue",type:"Wind",hashMh:250,powerW:1200,costHcash:6000,costAvax:60,supply:5},
-  {name:"HashTech \"Mini Beast\" ASIC",type:"ASIC",hashMh:150,powerW:500,costHcash:5000,costAvax:99999,supply:25},
-  {name:"Plasma XXL",type:"GPU",hashMh:60,powerW:200,costHcash:5000,costAvax:99999,supply:25},
-  {name:"Moats Miner",type:"Specialized",hashMh:100,powerW:100,costHcash:99999,costAvax:99999,supply:10},
-  {name:"ne pas ouvrir",type:"Specialized",hashMh:0,powerW:0,costHcash:5000,costAvax:99999,supply:50},
-  {name:"CPU Miner v2.0",type:"CPU",hashMh:30,powerW:100,costHcash:500,costAvax:99999,supply:1000},
-  {name:"Lightning G3",type:"GPU",hashMh:50,powerW:100,costHcash:1500,costAvax:99999,supply:80},
-  {name:"Galactic Hash C",type:"Specialized",hashMh:300,powerW:600,costHcash:10000,costAvax:99999,supply:10},
-  {name:"RedDragon TiX",type:"GPU",hashMh:45,powerW:100,costHcash:1000,costAvax:99999,supply:250},
-  {name:"HashTech Beast2 ASIC",type:"ASIC",hashMh:350,powerW:1000,costHcash:3500,costAvax:99999,supply:20},
-  {name:"Ennea Socket CPU Miner",type:"Custom",hashMh:90,powerW:200,costHcash:99999,costAvax:99999,supply:175},
-  {name:"Quad Socket CPU Miner v2.0",type:"Custom",hashMh:120,powerW:200,costHcash:99999,costAvax:99999,supply:175},
-  {name:"Lightning G1 Quad-Rig",type:"Custom",hashMh:80,powerW:200,costHcash:99999,costAvax:99999,supply:20},
-  {name:"Lightning G2 Quad-Rig",type:"Custom",hashMh:140,powerW:400,costHcash:99999,costAvax:99999,supply:20},
-  {name:"Jiga Jlant",type:"Jabba",hashMh:150,powerW:0,costHcash:99999,costAvax:99999,supply:25},
-  {name:"Jiga Jread",type:"Jabba",hashMh:150,powerW:0,costHcash:99999,costAvax:99999,supply:25},
-  {name:"The Grotto Miner",type:"Specialized",hashMh:150,powerW:200,costHcash:99999,costAvax:99999,supply:10},
-  {name:"Bundle of Sticks",type:"Unknown",hashMh:0,powerW:0,costHcash:300,costAvax:99999,supply:120},
-  {name:"Plasma Absolute",type:"Unknown",hashMh:400,powerW:800,costHcash:10000,costAvax:99999,supply:25},
-  {name:"Lightning G3 Tri-Rig",type:"Custom",hashMh:150,powerW:200,costHcash:99999,costAvax:99999,supply:20},
-  {name:"HashTech BeastRack",type:"Custom",hashMh:800,powerW:2000,costHcash:99999,costAvax:99999,supply:10},
-  {name:"RedDragon Octa-TiX",type:"Custom",hashMh:400,powerW:200,costHcash:99999,costAvax:99999,supply:20},
-  {name:"Campfire Miner",type:"Specialized",hashMh:200,powerW:200,costHcash:99999,costAvax:99999,supply:80},
-  {name:"Jvidia JX420",type:"GPU",hashMh:280,powerW:500,costHcash:3500,costAvax:99999,supply:100},
-  {name:"Jvidia JX450",type:"GPU",hashMh:400,powerW:800,costHcash:5000,costAvax:99999,supply:50},
-  {name:"Jvidia JX500",type:"GPU",hashMh:500,powerW:1200,costHcash:7000,costAvax:99999,supply:20},
-  {name:"Mini Torch",type:"Unknown",hashMh:0,powerW:0,costHcash:300,costAvax:99999,supply:40},
-  {name:"Book of Matches",type:"Unknown",hashMh:0,powerW:0,costHcash:300,costAvax:99999,supply:80},
-  {name:"Stormcore Superconductor",type:"Specialized",hashMh:1000,powerW:0,costHcash:25000,costAvax:99999,supply:10},
-  {name:"Burnt Sticks",type:"Unknown",hashMh:0,powerW:0,costHcash:99999,costAvax:99999,supply:80},
+// ─── STATIC MINER DATA ─────────────────────────────────
+const SM = [
+  {name:"Home Brew CPU Miner",type:"CPU",hashMh:10,powerW:100,costH:300,costA:99999,supply:1885},
+  {name:"DragonTech - RedDragon",type:"GPU",hashMh:14,powerW:100,costH:750,costA:999,supply:125},
+  {name:"DragonTech - RedDragon Ti",type:"GPU",hashMh:24,powerW:300,costH:750,costA:99999,supply:100},
+  {name:"RedDragon Quadro",type:"Custom",hashMh:70,powerW:800,costH:2000,costA:50,supply:30},
+  {name:"RedDragon Quadro Ti",type:"Custom",hashMh:110,powerW:1200,costH:2000,costA:99999,supply:15},
+  {name:"Quad Socket CPU Miner",type:"Custom",hashMh:40,powerW:200,costH:99999,costA:99999,supply:325},
+  {name:"RedDragon Tri-Rig",type:"Custom",hashMh:45,powerW:400,costH:2500,costA:3.5,supply:25},
+  {name:"RedDragon Ti Duo-Rig",type:"Custom",hashMh:70,powerW:700,costH:99999,costA:99999,supply:26},
+  {name:"Jlant",type:"Jabba",hashMh:0,powerW:0,costH:99999,costA:99999,supply:111},
+  {name:"Jread",type:"Jabba",hashMh:0,powerW:0,costH:99999,costA:99999,supply:106},
+  {name:"Lightning - G1",type:"GPU",hashMh:20,powerW:100,costH:750,costA:99999,supply:100},
+  {name:"Lightning - G2",type:"GPU",hashMh:35,powerW:200,costH:1000,costA:99999,supply:100},
+  {name:"HashTech ASIC Prototype",type:"ASIC",hashMh:250,powerW:2000,costH:5000,costA:99999,supply:0},
+  {name:"Plasma Base",type:"GPU",hashMh:25,powerW:100,costH:750,costA:99999,supply:35},
+  {name:"Plasma XL",type:"GPU",hashMh:45,powerW:200,costH:1000,costA:99999,supply:30},
+  {name:"USB Miner",type:"USB",hashMh:1,powerW:100,costH:99999,costA:99999,supply:192},
+  {name:"HashTech \"The Beast\" ASIC",type:"ASIC",hashMh:200,powerW:1000,costH:3500,costA:99999,supply:45},
+  {name:"Quad USB Array",type:"USB",hashMh:8,powerW:100,costH:99999,costA:99999,supply:100},
+  {name:"RedDragon Tri-Rig v2.0",type:"Custom",hashMh:45,powerW:300,costH:99999,costA:99999,supply:25},
+  {name:"RedDragon Ti Duo-Rig v2.0",type:"Custom",hashMh:70,powerW:400,costH:99999,costA:99999,supply:25},
+  {name:"RedDragon Quadro v2.0",type:"Custom",hashMh:70,powerW:400,costH:99999,costA:99999,supply:30},
+  {name:"RedDragon Quadro Ti v2.0",type:"Custom",hashMh:110,powerW:800,costH:99999,costA:99999,supply:15},
+  {name:"WindHash Red",type:"Wind",hashMh:125,powerW:600,costH:3500,costA:40,supply:10},
+  {name:"WindHash Blue",type:"Wind",hashMh:250,powerW:1200,costH:6000,costA:60,supply:5},
+  {name:"HashTech \"Mini Beast\" ASIC",type:"ASIC",hashMh:150,powerW:500,costH:5000,costA:99999,supply:25},
+  {name:"Plasma XXL",type:"GPU",hashMh:60,powerW:200,costH:5000,costA:99999,supply:25},
+  {name:"Moats Miner",type:"Specialized",hashMh:100,powerW:100,costH:99999,costA:99999,supply:10},
+  {name:"ne pas ouvrir",type:"Specialized",hashMh:0,powerW:0,costH:5000,costA:99999,supply:50},
+  {name:"CPU Miner v2.0",type:"CPU",hashMh:30,powerW:100,costH:500,costA:99999,supply:1000},
+  {name:"Lightning G3",type:"GPU",hashMh:50,powerW:100,costH:1500,costA:99999,supply:80},
+  {name:"Galactic Hash C",type:"Specialized",hashMh:300,powerW:600,costH:10000,costA:99999,supply:10},
+  {name:"RedDragon TiX",type:"GPU",hashMh:45,powerW:100,costH:1000,costA:99999,supply:250},
+  {name:"HashTech Beast2 ASIC",type:"ASIC",hashMh:350,powerW:1000,costH:3500,costA:99999,supply:20},
+  {name:"Ennea Socket CPU Miner",type:"Custom",hashMh:90,powerW:200,costH:99999,costA:99999,supply:175},
+  {name:"Quad Socket CPU Miner v2.0",type:"Custom",hashMh:120,powerW:200,costH:99999,costA:99999,supply:175},
+  {name:"Lightning G1 Quad-Rig",type:"Custom",hashMh:80,powerW:200,costH:99999,costA:99999,supply:20},
+  {name:"Lightning G2 Quad-Rig",type:"Custom",hashMh:140,powerW:400,costH:99999,costA:99999,supply:20},
+  {name:"Jiga Jlant",type:"Jabba",hashMh:150,powerW:0,costH:99999,costA:99999,supply:25},
+  {name:"Jiga Jread",type:"Jabba",hashMh:150,powerW:0,costH:99999,costA:99999,supply:25},
+  {name:"The Grotto Miner",type:"Specialized",hashMh:150,powerW:200,costH:99999,costA:99999,supply:10},
+  {name:"Bundle of Sticks",type:"Unknown",hashMh:0,powerW:0,costH:300,costA:99999,supply:120},
+  {name:"Plasma Absolute",type:"Unknown",hashMh:400,powerW:800,costH:10000,costA:99999,supply:25},
+  {name:"Lightning G3 Tri-Rig",type:"Custom",hashMh:150,powerW:200,costH:99999,costA:99999,supply:20},
+  {name:"HashTech BeastRack",type:"Custom",hashMh:800,powerW:2000,costH:99999,costA:99999,supply:10},
+  {name:"RedDragon Octa-TiX",type:"Custom",hashMh:400,powerW:200,costH:99999,costA:99999,supply:20},
+  {name:"Campfire Miner",type:"Specialized",hashMh:200,powerW:200,costH:99999,costA:99999,supply:80},
+  {name:"Jvidia JX420",type:"GPU",hashMh:280,powerW:500,costH:3500,costA:99999,supply:100},
+  {name:"Jvidia JX450",type:"GPU",hashMh:400,powerW:800,costH:5000,costA:99999,supply:50},
+  {name:"Jvidia JX500",type:"GPU",hashMh:500,powerW:1200,costH:7000,costA:99999,supply:20},
+  {name:"Mini Torch",type:"Unknown",hashMh:0,powerW:0,costH:300,costA:99999,supply:40},
+  {name:"Book of Matches",type:"Unknown",hashMh:0,powerW:0,costH:300,costA:99999,supply:80},
+  {name:"Stormcore Superconductor",type:"Specialized",hashMh:1000,powerW:0,costH:25000,costA:99999,supply:10},
+  {name:"Burnt Sticks",type:"Unknown",hashMh:0,powerW:0,costH:99999,costA:99999,supply:80},
 ];
 
-// State
-let contracts = [];
-let marketListings = [];
-let facilityMiners = [];
-let networkHashrateMh = 0; // will be estimated
-let currentMarketView = 'cards';
-let currentDealFilter = 'all';
-let currentDealFilterTable = 'all';
-let currentTypeFilter = 'ALL';
-let currentMarketSort = 'deal';
-let currentMinerSort = 'hashrate';
-let currentNetSort = 'roi';
-let marketTableSortCol = 'diff';
-let marketTableSortDir = 1;
+// ─── STATE ─────────────────────────────────────────────
+let allMiners   = SM.map(m=>({...m}));
+let listings    = [];
+let facilityM   = [];
+let netHash     = 0;
+let provider    = null;
+let mktAddr     = null;
+let minerAddrMap= {};   // address.lower -> miner object
+let chainOk     = false;
+let apiOk       = false;
+let cSort       = 'deal';
+let dealFc      = 'all';
+let dealFt      = 'all';
+let typeF       = 'ALL';
+let mSort       = 'hash';
+let nSort       = 'roi';
+let tSortC      = 'diff';
+let tSortD      = -1;
+let cardPage    = 0;
+let viewMode    = 'cards';
 
-// Estimate network hashrate from miner supply * assumed deployment rate
-function estimateNetworkHashrate() {
-  // Rough estimate: assume ~40% of available supply is deployed
-  const totalPossible = MINERS.reduce((s, m) => s + (m.hashMh * Math.min(m.supply, 500) * 0.4), 0);
-  // Use a reasonable estimate: ~50,000 MH/s network
-  return Math.max(totalPossible, 50000);
+// ─── MATH ──────────────────────────────────────────────
+const f    = (n,d=2) => isNaN(n)||n==null?'—':n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fh   = mh => mh>=1000?`${(mh/1000).toFixed(2)} GH/s`:`${mh} MH/s`;
+const eDay = w  => (w*24/1000)*ELEC_R;
+const gDay = (mh,net) => net>0?(mh/net)*DAILY_EM:0;
+const nDay = (mh,w,net) => gDay(mh,net)-eDay(w);
+const sa   = a  => a?`${a.slice(0,6)}…${a.slice(-4)}`:'?';
+
+function badge(t){
+  const k=t.replace(' Powered','').replace(' ','');
+  const d=t==='Custom'?'RIG':t;
+  return `<span class="tb tb-${k}">${d}</span>`;
+}
+function dealTag(pct){
+  if(pct<=-5) return `<span class="dt-hot">🔥 ${Math.abs(pct).toFixed(1)}% OFF</span>`;
+  if(pct<=5)  return `<span class="dt-fair">FAIR</span>`;
+  return `<span class="dt-over">+${pct.toFixed(1)}% OVER</span>`;
+}
+function setS(st,txt){
+  const d=document.getElementById('sdot');
+  d.className='sdot'+(st==='loading'?' loading':st==='error'?' error':'');
+  document.getElementById('stxt').textContent=txt;
+}
+function setBan(st,txt){
+  const d=document.getElementById('banDot');
+  d.className='dot'+(st==='ok'?' ok':st==='err'?' err':'');
+  document.getElementById('banTxt').textContent=txt;
 }
 
-function calcElecCostPerDay(powerW) {
-  // kWh/day = watts * 24 / 1000
-  const kwhPerDay = (powerW * 24) / 1000;
-  return kwhPerDay * ELEC_RATE;
+// ─── API ───────────────────────────────────────────────
+async function fetchContracts(){
+  const r=await fetch(`${BASE}/contracts`,{headers:{'x-api-key':API_KEY}});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  const d=await r.json();
+  return d.contracts||[];
 }
 
-function calcGrossPerDay(hashMh, totalNetworkMh) {
-  if (!totalNetworkMh || totalNetworkMh === 0) return 0;
-  const share = hashMh / totalNetworkMh;
-  return share * DAILY_EMISSION;
-}
+function enrichFromContracts(ctrs){
+  // Find marketplace and token contracts
+  const mkt = ctrs.find(c=>c.category==='marketplace');
+  if(mkt) mktAddr=mkt.address;
 
-function calcNetPerDay(hashMh, powerW, totalNetworkMh) {
-  return calcGrossPerDay(hashMh, totalNetworkMh) - calcElecCostPerDay(powerW);
-}
-
-function fmtNum(n, dec=2) {
-  if (n === undefined || n === null || isNaN(n)) return '—';
-  return n.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec});
-}
-
-function fmtHash(mh) {
-  if (mh >= 1000) return `${(mh/1000).toFixed(2)} GH/s`;
-  return `${mh} MH/s`;
-}
-
-function typeBadge(type) {
-  const t = type.replace(' Powered','').replace(' ','');
-  return `<span class="miner-type-badge badge-${t}">${type}</span>`;
-}
-
-function dealTag(pct) {
-  if (pct <= -5) return `<span class="deal-tag deal-hot">🔥 ${Math.abs(pct).toFixed(1)}% OFF</span>`;
-  if (pct <= 5) return `<span class="deal-tag deal-fair">FAIR</span>`;
-  return `<span class="deal-tag deal-over">+${pct.toFixed(1)}% OVER</span>`;
-}
-
-// ======== API FETCH ========
-async function fetchContracts() {
-  try {
-    const res = await fetch(`${API_BASE}/contracts`, {
-      headers: { 'x-api-key': API_KEY }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    contracts = data.contracts || [];
-    return contracts;
-  } catch(e) {
-    console.warn('Contracts fetch failed:', e);
-    return [];
-  }
-}
-
-async function fetchMarketplaceListings() {
-  // Fetch contracts to find marketplace address + miner_nft contracts
-  const allContracts = contracts.length ? contracts : await fetchContracts();
+  // Process miner_nft entries — these have imageUrl and minerStats
+  const minerCtrs = ctrs.filter(c=>c.category==='miner_nft');
   
-  // Build simulated/derived listings from contracts miner data
-  // The real marketplace listings come from the blockchain - we'll use contract data
-  const minerContracts = allContracts.filter(c => c.category === 'miner_nft');
-  
-  return { minerContracts, allContracts };
-}
+  minerCtrs.forEach(c=>{
+    // Store by address for listing lookups
+    if(c.address) minerAddrMap[c.address.toLowerCase()]=c;
 
-// ======== SIMULATE MARKET LISTINGS (from API + realistic variance) ========
-function generateMarketListings(minerContracts) {
-  // If we have real contract data with minerStats, use it; else use static MINERS data
-  const listings = [];
-  const now = Date.now();
-  
-  // Generate realistic listings for miners that have known hCASH cost
-  const listedMiners = MINERS.filter(m => m.costHcash < 90000 && m.hashMh > 0);
-  
-  listedMiners.forEach((miner, i) => {
-    // Generate 0-4 listings per miner with price variance
-    const count = Math.floor(Math.random() * 4);
-    for (let j = 0; j < count; j++) {
-      const variance = (Math.random() - 0.4) * 0.6; // -40% to +20% range (slight deal bias)
-      const price = Math.max(100, Math.round(miner.costHcash * (1 + variance)));
-      listings.push({
-        id: `${i}-${j}`,
-        miner: miner.name,
-        type: miner.type,
-        hashMh: miner.hashMh,
-        powerW: miner.powerW,
-        baseHcash: miner.costHcash,
-        listedHcash: price,
-        seller: `0x${Math.random().toString(16).slice(2,10)}...`,
-        listedAt: new Date(now - Math.random() * 7 * 86400000).toISOString(),
+    // Match to allMiners by name (fuzzy) or minerIndex
+    const norm = s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    let match = allMiners.find(m=>norm(m.name)===norm(c.name));
+    
+    if(!match && c.minerIndex!==undefined){
+      // Try by minerIndex (offset in allMiners array)
+      match = allMiners[c.minerIndex] || null;
+    }
+
+    if(match){
+      match._addr   = c.address;
+      match._abiId  = c.abiId;
+      match._img    = c.imageUrl||null;
+      match._midx   = c.minerIndex;
+      // Override with live API stats if available
+      if(c.minerStats){
+        if(c.minerStats.hashrateMhps!=null) match.hashMh=c.minerStats.hashrateMhps;
+        if(c.minerStats.powerWatts!=null)   match.powerW=c.minerStats.powerWatts;
+      }
+    } else {
+      // New miner not in static list — add it
+      allMiners.push({
+        name:c.name||`Miner #${c.minerIndex??'?'}`,
+        type: inferType(c.name||''), hashMh:c.minerStats?.hashrateMhps??0,
+        powerW:c.minerStats?.powerWatts??0, costH:99999, costA:99999, supply:0,
+        _addr:c.address, _abiId:c.abiId, _img:c.imageUrl||null, _midx:c.minerIndex
       });
     }
   });
-  
-  return listings;
+
+  // Estimate network hashrate: 35% of supply deployed
+  netHash = allMiners.reduce((s,m)=>s+m.hashMh*Math.min(m.supply||0,999)*0.35,0);
+  netHash = Math.max(netHash, 25000);
+  const hs=fh(netHash);
+  ['t1','t3'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=hs;});
+  const nn=document.getElementById('nn-h'); if(nn)nn.textContent=hs;
 }
 
-// ======== LOAD & RENDER ========
-async function init() {
-  setStatus('loading', 'FETCHING...');
-  
-  // Fetch contracts
-  await fetchContracts();
-  
-  // Estimate network hashrate
-  networkHashrateMh = estimateNetworkHashrate();
-  document.getElementById('t-hash').textContent = fmtHash(networkHashrateMh);
-  document.getElementById('t-hash2').textContent = fmtHash(networkHashrateMh);
-  
-  setStatus('ok', 'LIVE');
-  
-  renderMinerTable();
-  renderNetworkTable();
-  initFacilityBuilder();
-  
-  // Load market
-  await loadMarket();
-  
-  document.getElementById('netLastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
-  document.getElementById('marketApiInfo').textContent = '✓ Data loaded from HashCash API + on-chain estimates';
+function inferType(name){
+  const n=name.toLowerCase();
+  if(n.includes('asic')) return 'ASIC';
+  if(n.includes('gpu')||n.includes('plasma')||n.includes('dragon')||n.includes('lightning')||n.includes('jvidia')) return 'GPU';
+  if(n.includes('cpu')) return 'CPU';
+  if(n.includes('rig')||n.includes('quad')||n.includes('duo')||n.includes('socket')) return 'Custom';
+  if(n.includes('wind')) return 'Wind';
+  return 'Specialized';
 }
 
-async function loadMarket() {
-  const { minerContracts, allContracts } = await fetchMarketplaceListings();
+// ─── ON-CHAIN LISTINGS VIA EVENTS ──────────────────────
+async function fetchChainListings(){
+  if(!provider||!mktAddr) return [];
   
-  // Enrich MINERS with contract data if available
-  if (minerContracts.length > 0) {
-    minerContracts.forEach(c => {
-      const m = MINERS.find(m => m.name.toLowerCase().includes(c.name?.toLowerCase() || ''));
-      if (m && c.minerStats) {
-        if (c.minerStats.hashrateMhps) m.hashMh = c.minerStats.hashrateMhps;
-        if (c.minerStats.powerWatts) m.powerW = c.minerStats.powerWatts;
+  const iface = new ethers.Interface([
+    "event Listed(address indexed nftContract, uint256 indexed tokenId, address indexed seller, uint256 price)",
+    "event Sold(address indexed nftContract, uint256 indexed tokenId, address indexed buyer, uint256 price)",
+    "event Delisted(address indexed nftContract, uint256 indexed tokenId)"
+  ]);
+
+  const latest   = await provider.getBlockNumber();
+  const fromBlk  = Math.max(0, latest - 150000); // ~3 months
+
+  const [listedLogs, soldLogs, delistedLogs] = await Promise.all([
+    provider.getLogs({address:mktAddr,topics:[iface.getEvent('Listed').topicHash],fromBlock:fromBlk,toBlock:'latest'}),
+    provider.getLogs({address:mktAddr,topics:[iface.getEvent('Sold').topicHash],fromBlock:fromBlk,toBlock:'latest'}),
+    provider.getLogs({address:mktAddr,topics:[iface.getEvent('Delisted').topicHash],fromBlock:fromBlk,toBlock:'latest'}),
+  ]);
+
+  const soldSet     = new Set();
+  const delistSet   = new Set();
+  soldLogs.forEach(l=>{const d=iface.parseLog(l);soldSet.add(`${d.args.nftContract.toLowerCase()}-${d.args.tokenId}`);});
+  delistedLogs.forEach(l=>{const d=iface.parseLog(l);delistSet.add(`${d.args.nftContract.toLowerCase()}-${d.args.tokenId}`);});
+
+  const listMap = new Map();
+  listedLogs.forEach(l=>{
+    const d   = iface.parseLog(l);
+    const key = `${d.args.nftContract.toLowerCase()}-${d.args.tokenId}`;
+    if(!soldSet.has(key)&&!delistSet.has(key)){
+      if(!listMap.has(key)||listMap.get(key).blk<l.blockNumber){
+        listMap.set(key,{
+          nftContract: d.args.nftContract.toLowerCase(),
+          tokenId: d.args.tokenId.toString(),
+          seller: d.args.seller,
+          priceWei: d.args.price,
+          blk: l.blockNumber,
+          txHash: l.transactionHash
+        });
       }
-    });
-  }
-  
-  // Generate/load listings
-  marketListings = generateMarketListings(minerContracts);
-  
-  // Update stats
-  const overpriced = marketListings.filter(l => l.listedHcash > l.baseHcash * 1.05).length;
-  const underpriced = marketListings.filter(l => l.listedHcash < l.baseHcash * 0.95).length;
-  
-  let bestDeal = 0;
-  marketListings.forEach(l => {
-    const diff = ((l.listedHcash - l.baseHcash) / l.baseHcash) * 100;
-    if (diff < bestDeal) bestDeal = diff;
+    }
   });
-  
-  document.getElementById('ms-listings').textContent = marketListings.length;
-  document.getElementById('ms-bestdeal').textContent = `${Math.abs(bestDeal).toFixed(1)}%`;
-  document.getElementById('ms-over').textContent = overpriced;
-  document.getElementById('ms-under').textContent = underpriced;
-  
-  renderMarketCards();
-  renderMarketTable();
+
+  return [...listMap.values()].map(l=>{
+    const ctr   = minerAddrMap[l.nftContract];
+    const miner = ctr ? allMiners.find(m=>m._addr?.toLowerCase()===l.nftContract) : null;
+    const priceH= parseFloat(ethers.formatUnits(l.priceWei, HCASH_D));
+    return {
+      id: `${l.nftContract}-${l.tokenId}`,
+      tokenId: l.tokenId,
+      nftContract: l.nftContract,
+      seller: l.seller,
+      priceH,
+      blk: l.blk,
+      txHash: l.txHash,
+      name:   miner?.name||ctr?.name||'Unknown Miner',
+      type:   miner?.type||inferType(ctr?.name||''),
+      hashMh: miner?.hashMh??0,
+      powerW: miner?.powerW??0,
+      baseH:  miner?.costH<90000?miner.costH:null,
+      img:    miner?._img||ctr?.imageUrl||null,
+      _live:  true
+    };
+  }).sort((a,b)=>b.blk-a.blk);
 }
 
-// ======== MARKET CARDS ========
-function getFilteredListings() {
-  let list = [...marketListings];
-  const q = document.getElementById('marketSearch')?.value.toLowerCase() || '';
-  if (q) list = list.filter(l => l.miner.toLowerCase().includes(q));
-  if (currentDealFilter === 'hot') list = list.filter(l => l.listedHcash < l.baseHcash * 0.95);
-  if (currentDealFilter === 'fair') list = list.filter(l => Math.abs(l.listedHcash - l.baseHcash) / l.baseHcash <= 0.05);
-  if (currentDealFilter === 'over') list = list.filter(l => l.listedHcash > l.baseHcash * 1.05);
-  
-  const net = networkHashrateMh;
-  if (currentMarketSort === 'deal') list.sort((a,b) => (a.listedHcash/a.baseHcash) - (b.listedHcash/b.baseHcash));
-  else if (currentMarketSort === 'price-asc') list.sort((a,b) => a.listedHcash - b.listedHcash);
-  else if (currentMarketSort === 'price-desc') list.sort((a,b) => b.listedHcash - a.listedHcash);
-  else if (currentMarketSort === 'hash') list.sort((a,b) => b.hashMh - a.hashMh);
-  else if (currentMarketSort === 'roi') list.sort((a,b) => calcNetPerDay(b.hashMh,b.powerW,net) - calcNetPerDay(a.hashMh,a.powerW,net));
-  
-  return list;
+// ─── DEMO LISTINGS (fallback) ───────────────────────────
+function buildDemo(){
+  const out=[];
+  let id=0;
+  allMiners.filter(m=>m.costH<90000&&m.hashMh>0).forEach(m=>{
+    const n=Math.floor(Math.random()*5)+1;
+    for(let j=0;j<n;j++){
+      const v=(Math.random()-0.45)*0.5;
+      out.push({
+        id:`dm-${id++}`, tokenId:`${2000+id}`,
+        nftContract:m._addr||'0x0',
+        seller:`0x${[...Array(8)].map(()=>Math.floor(Math.random()*16).toString(16)).join('')}...`,
+        priceH:Math.max(50,Math.round(m.costH*(1+v))),
+        blk:0, txHash:null,
+        name:m.name, type:m.type, hashMh:m.hashMh, powerW:m.powerW,
+        baseH:m.costH, img:m._img||null, _demo:true
+      });
+    }
+  });
+  return out.sort((a,b)=>a.priceH/a.baseH-b.priceH/b.baseH);
 }
 
-function renderMarketCards() {
-  const grid = document.getElementById('listingGrid');
-  const list = getFilteredListings();
-  
-  if (!list.length) {
-    grid.innerHTML = '<div class="empty-state">NO LISTINGS MATCH FILTER</div>';
-    return;
+// ─── INIT ──────────────────────────────────────────────
+async function init(){
+  setS('loading','CONNECTING...');
+  setBan('loading','Connecting to HashCash API...');
+
+  // 1. Fetch API contracts
+  try{
+    const ctrs=await fetchContracts();
+    enrichFromContracts(ctrs);
+    apiOk=true;
+    setBan('loading',`✓ API: ${ctrs.length} contracts · ${ctrs.filter(c=>c.category==='miner_nft').length} miners · Connecting to Avalanche...`);
+  }catch(e){
+    setBan('err',`API error: ${e.message}`);
+    setS('error','API ERR');
+    enrichFromContracts([]);
   }
-  
-  const net = networkHashrateMh;
-  grid.innerHTML = list.map(l => {
-    const pct = ((l.listedHcash - l.baseHcash) / l.baseHcash) * 100;
-    const isHot = pct <= -5;
-    const isOver = pct > 5;
-    const netDay = calcNetPerDay(l.hashMh, l.powerW, net);
-    const elecDay = calcElecCostPerDay(l.powerW);
-    const grossDay = calcGrossPerDay(l.hashMh, net);
-    const cardClass = isHot ? 'listing-card deal-hot-card' : isOver ? 'listing-card deal-over-card' : 'listing-card';
-    
-    return `
-    <div class="${cardClass}">
-      <div class="listing-header">
-        <div>
-          <div class="listing-miner-name">${l.miner}</div>
-          <div style="margin-top:4px;">${typeBadge(l.type)}</div>
+
+  // 2. Connect AVAX
+  try{
+    provider=new ethers.JsonRpcProvider(RPC);
+    await provider.getBlockNumber();
+    chainOk=true;
+    setS('loading','SCANNING CHAIN...');
+    setBan('loading','✓ API + AVAX connected — scanning marketplace events...');
+  }catch(e){
+    console.warn('AVAX RPC fail:',e.message);
+  }
+
+  // 3. Render static content
+  renderMinerTbl(); renderNetTbl(); initBuilder();
+
+  // 4. Fetch listings
+  let liveCount=0;
+  if(chainOk&&mktAddr){
+    try{
+      listings=await fetchChainListings();
+      liveCount=listings.length;
+      if(!listings.length){
+        const demo=buildDemo();
+        demo.forEach(l=>l._noActivity=true);
+        listings=demo;
+        setBan('ok',`✓ API loaded · AVAX connected · Marketplace contract found but no recent listings — showing estimated market`);
+      }else{
+        setBan('ok',`✓ LIVE — ${listings.length} active on-chain listings from Avalanche events`);
+      }
+    }catch(e){
+      console.warn('Chain scan error:',e);
+      listings=buildDemo();
+      setBan('ok',`✓ API loaded · Chain scan error (${e.message}) — showing estimated market data`);
+    }
+  }else if(chainOk&&!mktAddr){
+    listings=buildDemo();
+    setBan('ok',`✓ API loaded · No marketplace contract found in registry — showing estimated data`);
+  }else{
+    listings=buildDemo();
+    if(apiOk) setBan('ok',`✓ API loaded · AVAX RPC unavailable — showing estimated market data`);
+  }
+
+  updateStats();
+  renderCards();
+  renderTbl();
+  setS('ok','LIVE');
+
+  const upd=document.getElementById('netUpd');
+  if(upd) upd.textContent='Updated '+new Date().toLocaleTimeString();
+  ['t2','t4'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=listings.length;});
+}
+
+async function reloadMarket(){
+  setS('loading','REFRESHING...');
+  try{
+    if(chainOk&&mktAddr){ listings=await fetchChainListings(); if(!listings.length) listings=buildDemo(); }
+    else listings=buildDemo();
+    updateStats(); renderCards(); renderTbl();
+  }catch(e){console.warn(e);}
+  setS('ok','LIVE');
+}
+
+// ─── STATS ─────────────────────────────────────────────
+function updateStats(){
+  let best=Infinity,bestN='',over=0,und=0;
+  listings.forEach(l=>{
+    if(!l.baseH) return;
+    const p=((l.priceH-l.baseH)/l.baseH)*100;
+    if(p<best){best=p;bestN=l.name;}
+    if(p>5) over++;
+    if(p<-5)und++;
+  });
+  const avg=listings.length?listings.reduce((s,l)=>s+l.priceH,0)/listings.length:0;
+  const isDemo=listings.some(l=>l._demo||l._noActivity);
+
+  document.getElementById('ms-tot').textContent  = listings.length;
+  document.getElementById('ms-src').textContent  = isDemo?'Estimated data':'Live on-chain';
+  if(best<Infinity){
+    document.getElementById('ms-best').textContent = Math.abs(best).toFixed(1)+'%';
+    document.getElementById('ms-bn').textContent   = (bestN.length>22?bestN.slice(0,22)+'…':bestN);
+  }
+  document.getElementById('ms-over').textContent = over;
+  document.getElementById('ms-und').textContent  = und;
+  document.getElementById('ms-avg').textContent  = f(avg,0);
+}
+
+// ─── FILTER ────────────────────────────────────────────
+function filtered(mode){
+  const q=(document.getElementById(mode==='c'?'csrch':'tsrch')?.value||'').toLowerCase();
+  const df=mode==='c'?dealFc:dealFt;
+  let l=[...listings];
+  if(q) l=l.filter(x=>x.name.toLowerCase().includes(q));
+  if(df==='hot') l=l.filter(x=>x.baseH&&x.priceH<x.baseH*.95);
+  if(df==='fair')l=l.filter(x=>!x.baseH||Math.abs(x.priceH-x.baseH)/x.baseH<=.05);
+  if(df==='over') l=l.filter(x=>x.baseH&&x.priceH>x.baseH*1.05);
+  if(mode==='c'){
+    if(cSort==='deal') l.sort((a,b)=>(a.baseH?a.priceH/a.baseH:1)-(b.baseH?b.priceH/b.baseH:1));
+    else if(cSort==='pa')   l.sort((a,b)=>a.priceH-b.priceH);
+    else if(cSort==='pd')   l.sort((a,b)=>b.priceH-a.priceH);
+    else if(cSort==='hash') l.sort((a,b)=>b.hashMh-a.hashMh);
+    else if(cSort==='roi')  l.sort((a,b)=>nDay(b.hashMh,b.powerW,netHash)-nDay(a.hashMh,a.powerW,netHash));
+    else if(cSort==='new')  l.sort((a,b)=>b.blk-a.blk);
+  }else{
+    const dir=tSortD;
+    if(tSortC==='name')  l.sort((a,b)=>dir*a.name.localeCompare(b.name));
+    if(tSortC==='tok')   l.sort((a,b)=>dir*(parseInt(a.tokenId)-parseInt(b.tokenId)));
+    if(tSortC==='price') l.sort((a,b)=>dir*(a.priceH-b.priceH));
+    if(tSortC==='base')  l.sort((a,b)=>dir*((a.baseH||99999)-(b.baseH||99999)));
+    if(tSortC==='diff')  l.sort((a,b)=>dir*((a.baseH?a.priceH/a.baseH:1)-(b.baseH?b.priceH/b.baseH:1)));
+    if(tSortC==='hash')  l.sort((a,b)=>dir*(a.hashMh-b.hashMh));
+    if(tSortC==='nd')    l.sort((a,b)=>dir*(nDay(a.hashMh,a.powerW,netHash)-nDay(b.hashMh,b.powerW,netHash)));
+  }
+  return l;
+}
+
+// ─── RENDER CARDS ──────────────────────────────────────
+function renderCards(){
+  const list=filtered('c');
+  const grid=document.getElementById('mktGrid');
+  const pgr =document.getElementById('mktPager');
+  const s=cardPage*PG_SZ, page=list.slice(s,s+PG_SZ), n=netHash;
+
+  if(!page.length){grid.innerHTML='<div class="emp" style="grid-column:1/-1">NO LISTINGS MATCH FILTER</div>';pgr.innerHTML='';return;}
+
+  grid.innerHTML=page.map(l=>{
+    const hasPct=l.baseH!=null;
+    const pct=hasPct?((l.priceH-l.baseH)/l.baseH)*100:null;
+    const isHot=pct!=null&&pct<=-5, isOver=pct!=null&&pct>5;
+    const nd=nDay(l.hashMh,l.powerW,n);
+    const cls=`mc${isHot?' hot':isOver?' over':''}`;
+    const tokLabel=l.txHash
+      ?`<a class="mc-tok" href="https://snowtrace.io/tx/${l.txHash}" target="_blank">#${l.tokenId}</a>`
+      :`<span class="mc-tok">#${l.tokenId}</span>`;
+    const liveLabel=l._live?'<span class="mc-live">● LIVE</span>':l._noActivity?'<span class="mc-demo">EST.</span>':'<span class="mc-demo">EST.</span>';
+    const imgHtml=l.img
+      ?`<div class="mc-img-wrap"><img src="${l.img}" alt="${l.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=mc-ph>${l.type[0]}</div>'"></div>`
+      :`<div class="mc-ph">${l.type[0]}</div>`;
+    return `<div class="${cls}">
+      ${liveLabel}${tokLabel}
+      ${imgHtml}
+      <div class="mc-body">
+        <div class="mc-name">${l.name}${badge(l.type)}</div>
+        <div class="mc-row">
+          <div><div class="mc-price">${f(l.priceH,0)}</div><div class="mc-psub">hCASH</div></div>
+          ${hasPct?`<div style="text-align:right">
+            <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:${isHot?'var(--green)':isOver?'var(--red)':'var(--warn)'}">${pct>=0?'+':''}${pct.toFixed(1)}%</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim)">vs base</div>
+          </div>`:''}
         </div>
-        <div>
-          <div class="listing-price">${fmtNum(l.listedHcash,0)}</div>
-          <div class="listing-price-sub">hCASH</div>
+        <div class="mc-stats">
+          <div><div class="mcs-l">HASHRATE</div><div class="mcs-v" style="color:var(--accent)">${fh(l.hashMh)}</div></div>
+          <div><div class="mcs-l">POWER</div><div class="mcs-v">${l.powerW}W</div></div>
+          <div><div class="mcs-l">BASE COST</div><div class="mcs-v">${hasPct?f(l.baseH,0)+' hCASH':'N/A'}</div></div>
+          <div><div class="mcs-l">NET/DAY</div><div class="mcs-v" style="color:${nd>=0?'var(--green)':'var(--red)'}">${l.hashMh>0?(nd>=0?'+':'')+f(nd,2)+' hCASH':'—'}</div></div>
+        </div>
+        <div class="mc-foot">
+          <span class="mc-seller">${sa(l.seller)}</span>
+          ${hasPct?dealTag(pct):'<span class="vd" style="font-size:10px">NO BASE</span>'}
         </div>
       </div>
-      <div class="listing-stats">
-        <div class="listing-stat-item">
-          <div class="listing-stat-label">HASHRATE</div>
-          <div class="listing-stat-val" style="color:var(--accent)">${fmtHash(l.hashMh)}</div>
-        </div>
-        <div class="listing-stat-item">
-          <div class="listing-stat-label">POWER</div>
-          <div class="listing-stat-val">${l.powerW}W</div>
-        </div>
-        <div class="listing-stat-item">
-          <div class="listing-stat-label">BASE COST</div>
-          <div class="listing-stat-val">${fmtNum(l.baseHcash,0)}</div>
-        </div>
-        <div class="listing-stat-item">
-          <div class="listing-stat-label">NET/DAY</div>
-          <div class="listing-stat-val" style="color:${netDay>=0?'var(--green)':'var(--red)'}">
-            ${netDay >= 0 ? '+' : ''}${fmtNum(netDay,2)} hCASH
-          </div>
-        </div>
-      </div>
-      <div class="listing-deal">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);">
-          vs base: <span style="color:${isHot?'var(--green)':isOver?'var(--red)':'var(--warn)'}">
-            ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%
-          </span>
-        </div>
-        ${dealTag(pct)}
-      </div>
+    </div>`;
+  }).join('');
+
+  // Pager
+  const pages=Math.ceil(list.length/PG_SZ);
+  pgr.innerHTML=pages>1?Array.from({length:pages},(_,i)=>
+    `<button class="pg-btn${i===cardPage?' active':''}" onclick="cardPage=${i};renderCards()">${i+1}</button>`
+  ).join(''):'';
+}
+
+// ─── RENDER TABLE ───────────────────────────────────────
+function renderTbl(){
+  const list=filtered('t');
+  const body=document.getElementById('tblBody');
+  const n=netHash;
+  if(!list.length){body.innerHTML='<tr><td colspan="9"><div class="emp">NO LISTINGS</div></td></tr>';return;}
+  body.innerHTML=list.slice(0,300).map(l=>{
+    const hasPct=l.baseH!=null;
+    const pct=hasPct?((l.priceH-l.baseH)/l.baseH)*100:null;
+    const nd=nDay(l.hashMh,l.powerW,n);
+    const tokLink=l.txHash?`<a href="https://snowtrace.io/tx/${l.txHash}" target="_blank" style="color:var(--text-dim)">#${l.tokenId}</a>`:`#${l.tokenId}`;
+    return`<tr>
+      <td><span class="mn">${l.name}</span>${badge(l.type)}</td>
+      <td class="vd">${tokLink}</td>
+      <td class="vm">${f(l.priceH,0)}</td>
+      <td class="vd">${hasPct?f(l.baseH,0):'—'}</td>
+      <td class="${pct==null?'vd':pct<=0?'vg':'vr'}">${pct!=null?(pct>=0?'+':'')+pct.toFixed(1)+'%':'—'}</td>
+      <td class="vm" style="color:var(--accent)">${fh(l.hashMh)}</td>
+      <td class="${nd>=0?'vg':'vr'}">${l.hashMh>0?(nd>=0?'+':'')+f(nd,2)+' hCASH':'—'}</td>
+      <td class="vd">${sa(l.seller)}</td>
+      <td>${hasPct?dealTag(pct):'<span class="vd">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+function ts(col){tSortD=tSortC===col?-tSortD:-1;tSortC=col;renderTbl();}
+
+// ─── MINERS TABLE ───────────────────────────────────────
+function renderMinerTbl(){
+  const q=(document.getElementById('mSrch')?.value||'').toLowerCase();
+  const n=netHash;
+  let l=[...allMiners];
+  if(q) l=l.filter(m=>m.name.toLowerCase().includes(q));
+  if(typeF!=='ALL'){
+    if(typeF==='Custom') l=l.filter(m=>m.type==='Custom');
+    else if(typeF==='Specialized') l=l.filter(m=>['Specialized','Jabba','Wind','Unknown'].includes(m.type));
+    else l=l.filter(m=>m.type===typeF);
+  }
+  if(mSort==='hash')  l.sort((a,b)=>b.hashMh-a.hashMh);
+  else if(mSort==='eff')  l.sort((a,b)=>(b.powerW?b.hashMh/b.powerW:999)-(a.powerW?a.hashMh/a.powerW:999));
+  else if(mSort==='roi')  l.sort((a,b)=>nDay(b.hashMh,b.powerW,n)-nDay(a.hashMh,a.powerW,n));
+  else if(mSort==='cost') l.sort((a,b)=>a.costH-b.costH);
+  else l.sort((a,b)=>a.name.localeCompare(b.name));
+
+  document.getElementById('mCnt').textContent=`${l.length} MINERS`;
+  const body=document.getElementById('mTbl');
+  body.innerHTML=l.map(m=>{
+    const ed=eDay(m.powerW), nd=nDay(m.hashMh,m.powerW,n);
+    const eff=m.powerW?(m.hashMh/m.powerW).toFixed(3):'∞';
+    const sc=m.supply===0?'vr':m.supply<20?'vo':'vd';
+    const imgEl=m._img
+      ?`<img src="${m._img}" style="width:28px;height:28px;border-radius:2px;object-fit:cover" loading="lazy" onerror="this.style.opacity='.15'">`
+      :`<div style="width:28px;height:28px;border-radius:2px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-dim)">${m.type[0]}</div>`;
+    return`<tr>
+      <td><span class="mn">${m.name}</span>${badge(m.type)}</td>
+      <td>${imgEl}</td>
+      <td class="vm" style="color:var(--accent)">${fh(m.hashMh)}</td>
+      <td class="vm">${m.powerW}W</td>
+      <td class="vm">${eff}</td>
+      <td class="vm">${m.costH<90000?f(m.costH,0):'<span class="vd">N/A</span>'}</td>
+      <td class="vm">${m.costA<90000?m.costA+' AVAX':'<span class="vd">N/A</span>'}</td>
+      <td class="${nd>=0?'vg':'vr'}">${m.hashMh>0?(nd>=0?'+':'')+f(nd,2)+' hCASH':'<span class="vd">0</span>'}</td>
+      <td class="vo">${m.powerW?f(ed,3)+' hCASH':'<span class="vd">0</span>'}</td>
+      <td class="${sc}">${m.supply===0?'SOLD OUT':m.supply>=99999?'∞':m.supply}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── NETWORK TABLE ──────────────────────────────────────
+function renderNetTbl(){
+  const n=netHash;
+  let l=allMiners.filter(m=>m.hashMh>0);
+  if(nSort==='roi')  l.sort((a,b)=>nDay(b.hashMh,b.powerW,n)-nDay(a.hashMh,a.powerW,n));
+  else if(nSort==='hash') l.sort((a,b)=>b.hashMh-a.hashMh);
+  else if(nSort==='eff')  l.sort((a,b)=>(b.powerW?b.hashMh/b.powerW:999)-(a.powerW?a.hashMh/a.powerW:999));
+  else l.sort((a,b)=>a.name.localeCompare(b.name));
+  const body=document.getElementById('nTbl');
+  body.innerHTML=l.map(m=>{
+    const g=gDay(m.hashMh,n),e=eDay(m.powerW),nd=g-e;
+    const eff=m.powerW?(m.hashMh/m.powerW).toFixed(3):'∞';
+    const pb=m.costH<90000&&nd>0?Math.ceil(m.costH/nd):'—';
+    const imgEl=m._img
+      ?`<img src="${m._img}" style="width:24px;height:24px;border-radius:2px;object-fit:cover" loading="lazy" onerror="this.style.opacity='.15'">`
+      :`<div style="width:24px;height:24px;background:var(--bg3);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text-dim)">${m.type[0]}</div>`;
+    return`<tr>
+      <td><span class="mn">${m.name}</span></td><td>${imgEl}</td><td>${badge(m.type)}</td>
+      <td class="vm" style="color:var(--accent)">${fh(m.hashMh)}</td>
+      <td class="vm">${m.powerW}W</td>
+      <td class="vm">${f(g,3)}</td>
+      <td class="vo">${m.powerW?f(e,3):'0'}</td>
+      <td class="${nd>=0?'vg':'vr'}">${nd>=0?'+':''}${f(nd,3)}</td>
+      <td class="vd">${eff}</td>
+      <td class="${typeof pb==='number'&&pb<365?'vg':'vd'}">${pb}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── FACILITY BUILDER ───────────────────────────────────
+function initBuilder(){
+  const sl=document.getElementById('rigSlots');
+  sl.innerHTML=Array.from({length:MAX_SL},(_,i)=>
+    `<div class="rs" id="sl${i}" onclick="rmSlot(${i})"><span class="rs-rm">✕</span>
+    <svg width="14" height="14" viewBox="0 0 14 14" style="opacity:.2"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.5"/></svg>
+    <span style="font-size:7px;margin-top:3px">EMPTY</span></div>`
+  ).join('');
+  renderBldList(); updateBld();
+}
+
+function renderBldList(){
+  const q=(document.getElementById('bSrch')?.value||'').toLowerCase();
+  let l=allMiners.filter(m=>m.hashMh>0);
+  if(q) l=l.filter(m=>m.name.toLowerCase().includes(q));
+  l.sort((a,b)=>b.hashMh-a.hashMh);
+  const el=document.getElementById('bldList');
+  el.innerHTML=l.map(m=>{
+    const nd=nDay(m.hashMh,m.powerW,netHash);
+    const imgEl=m._img
+      ?`<img class="mpi-img" src="${m._img}" loading="lazy" onerror="this.style.opacity='.15'">`
+      :`<div class="mpi-img">${m.type[0]}</div>`;
+    const esc=m.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return`<div class="mpi" onclick="addMiner('${esc}')">
+      ${imgEl}
+      <span class="mpi-name">${m.name}</span>
+      <span class="mpi-stats">${fh(m.hashMh)}<br><span style="color:${nd>=0?'var(--green)':'var(--red)'}">${nd>=0?'+':''}${f(nd,1)}/d</span></span>
+      <button class="add-b" onclick="event.stopPropagation();addMiner('${esc}')">+</button>
     </div>`;
   }).join('');
 }
 
-function renderMarketTable() {
-  const body = document.getElementById('marketTableBody');
-  let list = [...marketListings];
-  const q = document.getElementById('marketSearchTable')?.value.toLowerCase() || '';
-  if (q) list = list.filter(l => l.miner.toLowerCase().includes(q));
-  if (currentDealFilterTable === 'hot') list = list.filter(l => l.listedHcash < l.baseHcash * 0.95);
-  if (currentDealFilterTable === 'over') list = list.filter(l => l.listedHcash > l.baseHcash * 1.05);
-  
-  const net = networkHashrateMh;
-  const dir = marketTableSortDir;
-  if (marketTableSortCol === 'diff') list.sort((a,b) => dir * ((a.listedHcash/a.baseHcash) - (b.listedHcash/b.baseHcash)));
-  else if (marketTableSortCol === 'listed') list.sort((a,b) => dir * (a.listedHcash - b.listedHcash));
-  else if (marketTableSortCol === 'base') list.sort((a,b) => dir * (a.baseHcash - b.baseHcash));
-  else if (marketTableSortCol === 'hash') list.sort((a,b) => dir * (a.hashMh - b.hashMh));
-  else if (marketTableSortCol === 'roi') list.sort((a,b) => dir * (calcNetPerDay(a.hashMh,a.powerW,net) - calcNetPerDay(b.hashMh,b.powerW,net)));
-  else if (marketTableSortCol === 'name') list.sort((a,b) => dir * a.miner.localeCompare(b.miner));
-  
-  if (!list.length) {
-    body.innerHTML = '<tr><td colspan="7"><div class="empty-state">NO LISTINGS</div></td></tr>';
-    return;
-  }
-  
-  body.innerHTML = list.map(l => {
-    const pct = ((l.listedHcash - l.baseHcash) / l.baseHcash) * 100;
-    const netDay = calcNetPerDay(l.hashMh, l.powerW, net);
-    return `<tr>
-      <td><span class="miner-name">${l.miner}</span> ${typeBadge(l.type)}</td>
-      <td class="val-mono">${fmtNum(l.listedHcash,0)}</td>
-      <td class="val-dim">${fmtNum(l.baseHcash,0)}</td>
-      <td class="${pct<=0?'val-green':'val-red'}">${pct>=0?'+':''}${pct.toFixed(1)}%</td>
-      <td class="val-mono">${fmtHash(l.hashMh)}</td>
-      <td class="${netDay>=0?'val-green':'val-red'}">${netDay>=0?'+':''}${fmtNum(netDay,2)}</td>
-      <td>${dealTag(pct)}</td>
-    </tr>`;
-  }).join('');
+function addMiner(name){
+  if(facilityM.length>=MAX_SL){alert('Facility full!');return;}
+  const m=allMiners.find(x=>x.name===name);
+  if(!m)return;
+  const usedP=facilityM.reduce((s,x)=>s+x.powerW,0);
+  if(usedP+m.powerW>MAX_PW){alert(`Power limit! ${usedP}+${m.powerW}=${usedP+m.powerW}W > 800W`);return;}
+  facilityM.push(m); updateBldDisplay();
 }
+function rmSlot(i){if(facilityM[i]){facilityM.splice(i,1);updateBldDisplay();}}
+function clearF(){facilityM=[];updateBldDisplay();}
 
-function sortMarketTable(col) {
-  if (marketTableSortCol === col) marketTableSortDir *= -1;
-  else { marketTableSortCol = col; marketTableSortDir = 1; }
-  renderMarketTable();
-}
-
-// ======== MINER TABLE ========
-function renderMinerTable() {
-  const body = document.getElementById('minerTableBody');
-  const q = document.getElementById('minerSearch')?.value.toLowerCase() || '';
-  const net = networkHashrateMh;
-  
-  let list = [...MINERS];
-  if (q) list = list.filter(m => m.name.toLowerCase().includes(q));
-  if (currentTypeFilter !== 'ALL') {
-    if (currentTypeFilter === 'Custom') list = list.filter(m => m.type === 'Custom');
-    else if (currentTypeFilter === 'Specialized') list = list.filter(m => ['Specialized','Jabba','Wind','Unknown'].includes(m.type));
-    else list = list.filter(m => m.type === currentTypeFilter);
-  }
-  
-  if (currentMinerSort === 'hashrate') list.sort((a,b) => b.hashMh - a.hashMh);
-  else if (currentMinerSort === 'power') list.sort((a,b) => b.powerW - a.powerW);
-  else if (currentMinerSort === 'efficiency') list.sort((a,b) => (b.powerW?b.hashMh/b.powerW:0) - (a.powerW?a.hashMh/a.powerW:0));
-  else if (currentMinerSort === 'cost') list.sort((a,b) => a.costHcash - b.costHcash);
-  else if (currentMinerSort === 'roi') list.sort((a,b) => calcNetPerDay(b.hashMh,b.powerW,net) - calcNetPerDay(a.hashMh,a.powerW,net));
-  else if (currentMinerSort === 'name') list.sort((a,b) => a.name.localeCompare(b.name));
-  
-  document.getElementById('minerCount').textContent = `${list.length} MINERS`;
-  
-  body.innerHTML = list.map(m => {
-    const elecDay = calcElecCostPerDay(m.powerW);
-    const netDay = calcNetPerDay(m.hashMh, m.powerW, net);
-    const eff = m.powerW ? (m.hashMh / m.powerW).toFixed(3) : '∞';
-    const costAvax = m.costAvax >= 99999 ? '<span class="val-dim">N/A</span>' : `<span class="val-mono">${m.costAvax} AVAX</span>`;
-    const supplyColor = m.supply === 0 ? 'val-red' : m.supply < 20 ? 'val-orange' : 'val-dim';
-    return `<tr>
-      <td><span class="miner-name">${m.name}</span>${typeBadge(m.type)}</td>
-      <td class="val-mono" style="color:var(--accent)">${fmtHash(m.hashMh)}</td>
-      <td class="val-mono">${m.powerW}W</td>
-      <td class="val-mono">${eff}</td>
-      <td class="val-mono">${m.costHcash >= 99999 ? '<span class="val-dim">N/A</span>' : fmtNum(m.costHcash,0)}</td>
-      <td>${costAvax}</td>
-      <td class="${netDay>=0?'val-green':'val-red'}">${m.hashMh>0?(netDay>=0?'+':'')+fmtNum(netDay,2)+' hCASH':'<span class="val-dim">0</span>'}</td>
-      <td class="val-orange">${m.powerW > 0 ? fmtNum(elecDay,2) + ' hCASH' : '<span class="val-dim">0</span>'}</td>
-      <td class="${supplyColor}">${m.supply === 0 ? 'SOLD OUT' : m.supply >= 99999 ? '∞' : m.supply}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ======== NETWORK TABLE ========
-function renderNetworkTable() {
-  const body = document.getElementById('networkTableBody');
-  const net = networkHashrateMh;
-  
-  let list = MINERS.filter(m => m.hashMh > 0);
-  
-  if (currentNetSort === 'roi') list.sort((a,b) => calcNetPerDay(b.hashMh,b.powerW,net) - calcNetPerDay(a.hashMh,a.powerW,net));
-  else if (currentNetSort === 'hash') list.sort((a,b) => b.hashMh - a.hashMh);
-  else if (currentNetSort === 'efficiency') list.sort((a,b) => (b.powerW?b.hashMh/b.powerW:999) - (a.powerW?a.hashMh/a.powerW:999));
-  else if (currentNetSort === 'name') list.sort((a,b) => a.name.localeCompare(b.name));
-  
-  body.innerHTML = list.map(m => {
-    const gross = calcGrossPerDay(m.hashMh, net);
-    const elec = calcElecCostPerDay(m.powerW);
-    const netD = gross - elec;
-    const eff = m.powerW ? (m.hashMh / m.powerW).toFixed(3) : '∞';
-    const payback = m.costHcash < 90000 && netD > 0 ? Math.ceil(m.costHcash / netD) : '—';
-    const share = ((m.hashMh / net) * 100).toFixed(4);
-    return `<tr>
-      <td><span class="miner-name">${m.name}</span></td>
-      <td>${typeBadge(m.type)}</td>
-      <td class="val-mono" style="color:var(--accent)">${fmtHash(m.hashMh)}</td>
-      <td class="val-mono">${m.powerW}W</td>
-      <td class="val-mono">${fmtNum(gross,3)}</td>
-      <td class="val-orange">${m.powerW ? fmtNum(elec,3) : '0'}</td>
-      <td class="${netD>=0?'val-green':'val-red'}">${netD>=0?'+':''}${fmtNum(netD,3)}</td>
-      <td class="val-dim">${eff}</td>
-      <td class="${typeof payback==='number'&&payback<365?'val-green':'val-dim'}">${payback}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ======== FACILITY BUILDER ========
-const SLOT_COUNT = 4;
-const MAX_POWER = 800; // Starter facility
-
-function initFacilityBuilder() {
-  // Render rig slots
-  const slotsEl = document.getElementById('rigSlots');
-  slotsEl.innerHTML = Array.from({length: SLOT_COUNT}, (_,i) => `
-    <div class="rig-slot" id="slot-${i}" onclick="removeFromSlot(${i})">
-      <span class="slot-remove">✕</span>
-      <span style="font-size:18px;color:var(--border)">+</span>
-      <span style="font-size:9px;margin-top:2px;">EMPTY</span>
-    </div>
-  `).join('');
-  
-  renderBuilderMinerList();
-  updateFacilityResults();
-}
-
-function renderBuilderMinerList() {
-  const el = document.getElementById('builderMinerList');
-  const q = document.getElementById('builderSearch')?.value.toLowerCase() || '';
-  const net = networkHashrateMh;
-  
-  let list = MINERS.filter(m => m.hashMh > 0);
-  if (q) list = list.filter(m => m.name.toLowerCase().includes(q));
-  list.sort((a,b) => b.hashMh - a.hashMh);
-  
-  el.innerHTML = list.map((m,i) => {
-    const netDay = calcNetPerDay(m.hashMh, m.powerW, net);
-    return `<div class="miner-pick-item" onclick="addToFacility('${m.name.replace(/'/g,"\\'")}')">
-      <div class="miner-pick-name">${m.name}</div>
-      <div class="miner-pick-stats">
-        ${fmtHash(m.hashMh)}<br>
-        <span style="color:${netDay>=0?'var(--green)':'var(--red)'}">${netDay>=0?'+':''}${fmtNum(netDay,1)}/d</span>
-      </div>
-      <button class="add-btn" onclick="event.stopPropagation();addToFacility('${m.name.replace(/'/g,"\\'")}')">+</button>
-    </div>`;
-  }).join('');
-}
-
-function addToFacility(minerName) {
-  if (facilityMiners.length >= SLOT_COUNT) {
-    alert('Facility is full! Remove a miner first.');
-    return;
-  }
-  const miner = MINERS.find(m => m.name === minerName);
-  if (!miner) return;
-  
-  const totalPower = facilityMiners.reduce((s,m) => s + m.powerW, 0);
-  if (totalPower + miner.powerW > MAX_POWER) {
-    alert(`Power limit exceeded! Current: ${totalPower}W, Adding: ${miner.powerW}W, Max: ${MAX_POWER}W`);
-    return;
-  }
-  
-  facilityMiners.push(miner);
-  updateFacilityDisplay();
-}
-
-function removeFromSlot(i) {
-  if (facilityMiners[i]) {
-    facilityMiners.splice(i, 1);
-    updateFacilityDisplay();
-  }
-}
-
-function clearFacility() {
-  facilityMiners = [];
-  updateFacilityDisplay();
-}
-
-function updateFacilityDisplay() {
-  // Update slots
-  for (let i = 0; i < SLOT_COUNT; i++) {
-    const slot = document.getElementById(`slot-${i}`);
-    const miner = facilityMiners[i];
-    if (miner) {
-      slot.className = 'rig-slot occupied';
-      slot.innerHTML = `
-        <span class="slot-remove">✕</span>
-        <span class="slot-miner-name">${miner.name.split(' ').slice(0,2).join(' ')}</span>
-        <span class="slot-miner-hash" style="color:var(--accent)">${fmtHash(miner.hashMh)}</span>
-        <span style="font-size:8px;color:var(--text-dim)">${miner.powerW}W</span>
-      `;
-    } else {
-      slot.className = 'rig-slot';
-      slot.innerHTML = `<span style="font-size:18px;color:var(--border)">+</span><span style="font-size:9px;margin-top:2px;">EMPTY</span>`;
+function updateBldDisplay(){
+  for(let i=0;i<MAX_SL;i++){
+    const sl=document.getElementById(`sl${i}`), m=facilityM[i];
+    if(m){
+      const imgEl=m._img?`<img class="rs-img" src="${m._img}" loading="lazy" onerror="this.style.opacity='.15'">`:''
+      sl.className='rs occ';
+      sl.innerHTML=`<span class="rs-rm">✕</span>${imgEl}<span class="rs-name">${m.name.split(' ').slice(0,2).join(' ')}</span><span class="rs-hash">${fh(m.hashMh)}</span><span style="font-size:7px;color:var(--text-dim)">${m.powerW}W</span>`;
+    }else{
+      sl.className='rs';
+      sl.innerHTML=`<svg width="14" height="14" viewBox="0 0 14 14" style="opacity:.2"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.5"/></svg><span style="font-size:7px;margin-top:3px">EMPTY</span>`;
     }
   }
-  updateFacilityResults();
+  updateBld();
 }
 
-function updateFacilityResults() {
-  const net = networkHashrateMh;
-  const totalHash = facilityMiners.reduce((s,m) => s + m.hashMh, 0);
-  const totalPower = facilityMiners.reduce((s,m) => s + m.powerW, 0);
-  const gross = calcGrossPerDay(totalHash, net);
-  const elec = calcElecCostPerDay(totalPower);
-  const netDay = gross - elec;
-  const share = net > 0 ? (totalHash / net * 100) : 0;
-  const eff = totalPower > 0 ? (totalHash / totalPower).toFixed(3) : '∞';
-  
-  document.getElementById('r-hash').textContent = fmtHash(totalHash);
-  document.getElementById('r-share').textContent = share.toFixed(4) + '%';
-  document.getElementById('r-share-bar').style.width = Math.min(share * 10, 100) + '%';
-  document.getElementById('r-gross').textContent = fmtNum(gross,3) + ' hCASH';
-  document.getElementById('r-elec').textContent = fmtNum(elec,3) + ' hCASH';
-  document.getElementById('r-net').textContent = (netDay>=0?'+':'') + fmtNum(netDay,3) + ' hCASH';
-  document.getElementById('r-net').className = 'result-val ' + (netDay>=0?'green':'red');
-  document.getElementById('r-month').textContent = (netDay>=0?'+':'') + fmtNum(netDay*30,1) + ' hCASH';
-  document.getElementById('r-month').className = 'result-val ' + (netDay>=0?'green':'red');
-  document.getElementById('r-power').textContent = totalPower + 'W';
-  document.getElementById('r-eff').textContent = eff + ' MH/W';
-  
-  // Slot/power bars
-  const slotPct = (facilityMiners.length / SLOT_COUNT * 100);
-  const powerPct = (totalPower / MAX_POWER * 100);
-  document.getElementById('slotCount').textContent = `${facilityMiners.length} / ${SLOT_COUNT}`;
-  document.getElementById('slotBar').style.width = slotPct + '%';
-  document.getElementById('powerCount').textContent = `${totalPower}W / ${MAX_POWER}W`;
-  const powerBar = document.getElementById('powerBar');
-  powerBar.style.width = Math.min(powerPct, 100) + '%';
-  powerBar.className = 'power-fill ' + (powerPct > 90 ? 'over' : powerPct > 70 ? 'warn' : 'ok');
-  
-  // Warning
-  const warn = document.getElementById('elecWarning');
-  warn.className = 'elec-warning' + (netDay < 0 && facilityMiners.length > 0 ? ' show' : '');
-  
-  document.getElementById('r-context').textContent = 
-    `Est. Network: ${fmtHash(net)} | Your share: ${share.toFixed(4)}% | ${facilityMiners.length === 0 ? 'Add miners to start' : facilityMiners.length + ' miner(s) placed'}`;
+function updateBld(){
+  const n=netHash;
+  const tH=facilityM.reduce((s,m)=>s+m.hashMh,0);
+  const tP=facilityM.reduce((s,m)=>s+m.powerW,0);
+  const g=gDay(tH,n),e=eDay(tP),nd=g-e;
+  const share=n>0?(tH/n)*100:0;
+  const eff=tP>0?(tH/tP).toFixed(3):'—';
+  const slPct=(facilityM.length/MAX_SL)*100;
+  const pwPct=(tP/MAX_PW)*100;
+  document.getElementById('bSlots').textContent=`${facilityM.length}/${MAX_SL}`;
+  document.getElementById('bSBar').style.width=slPct+'%';
+  document.getElementById('bPow').textContent=`${tP}/${MAX_PW}W`;
+  const pb=document.getElementById('bPBar');
+  pb.style.width=Math.min(pwPct,100)+'%';
+  pb.className='pw-fill '+(pwPct>90?'pw-over':pwPct>70?'pw-warn':'pw-ok');
+  document.getElementById('b-h').textContent=fh(tH);
+  document.getElementById('b-sh').textContent=share.toFixed(4)+'%';
+  document.getElementById('b-shb').style.width=Math.min(share*25,100)+'%';
+  document.getElementById('b-gr').textContent=f(g,3)+' hCASH';
+  document.getElementById('b-el').textContent=f(e,3)+' hCASH';
+  const nd_el=document.getElementById('b-nd');
+  nd_el.textContent=(nd>=0?'+':'')+f(nd,3)+' hCASH'; nd_el.className='rv '+(nd>=0?'g':'r');
+  const nm_el=document.getElementById('b-nm');
+  nm_el.textContent=(nd>=0?'+':'')+f(nd*30,1)+' hCASH'; nm_el.className='rv '+(nd>=0?'g':'r');
+  document.getElementById('b-pw').textContent=tP+'W';
+  document.getElementById('b-ef').textContent=eff+' MH/W';
+  document.getElementById('bWarn').className='ew'+(nd<0&&facilityM.length>0?' show':'');
+  document.getElementById('bCtx').textContent=facilityM.length===0
+    ?'Add miners to see projections.'
+    :`Est. network ${fh(n)} · your share ${share.toFixed(4)}% · ${facilityM.length} miner(s)`;
 }
 
-// ======== FILTER/SORT CONTROLS ========
-function setDealFilter(type, btn) {
-  currentDealFilter = type;
-  document.querySelectorAll('#marketCardsView .filter-btn').forEach(b => b.classList.remove('active'));
+// ─── UI CONTROLS ───────────────────────────────────────
+function showPage(p,btn){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
   btn.classList.add('active');
-  renderMarketCards();
 }
-
-function setDealFilterTable(type, btn) {
-  currentDealFilterTable = type;
-  document.querySelectorAll('#marketTableView .filter-btn').forEach(b => b.classList.remove('active'));
+function setView(v){
+  viewMode=v;
+  document.getElementById('cardsView').style.display=v==='cards'?'block':'none';
+  document.getElementById('tableView').style.display=v==='table'?'block':'none';
+  document.getElementById('vCards').classList.toggle('active',v==='cards');
+  document.getElementById('vTable').classList.toggle('active',v==='table');
+}
+function setDealF(f,btn,mode){
+  if(mode==='c')dealFc=f; else dealFt=f;
+  btn.closest('.toolbar').querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderMarketTable();
+  cardPage=0; renderCards(); renderTbl();
+}
+function setTF(t,btn){
+  typeF=t;
+  document.querySelectorAll('#page-miners .fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderMinerTbl();
 }
 
-function filterMarket() { renderMarketCards(); }
-function filterMarketTable() { renderMarketTable(); }
-
-function sortMarket(val) {
-  currentMarketSort = val;
-  renderMarketCards();
-}
-
-function setTypeFilter(type, btn) {
-  currentTypeFilter = type;
-  document.querySelectorAll('#page-miners .filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderMinerTable();
-}
-
-function filterMiners() { renderMinerTable(); }
-function filterBuilderMiners() { renderBuilderMinerList(); }
-
-function sortMiners(val) {
-  currentMinerSort = val;
-  renderMinerTable();
-}
-
-function sortNetwork(val) {
-  currentNetSort = val;
-  renderNetworkTable();
-}
-
-function setMarketView(view) {
-  currentMarketView = view;
-  document.getElementById('marketCardsView').style.display = view === 'cards' ? 'block' : 'none';
-  document.getElementById('marketTableView').style.display = view === 'table' ? 'block' : 'none';
-  document.getElementById('viewCards').classList.toggle('active', view === 'cards');
-  document.getElementById('viewTable').classList.toggle('active', view === 'table');
-}
-
-// ======== NAV ========
-function showPage(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
-  event.target.classList.add('active');
-}
-
-function setStatus(state, text) {
-  const dot = document.getElementById('statusDot');
-  const txt = document.getElementById('statusText');
-  dot.className = 'status-dot ' + (state === 'loading' ? 'loading' : state === 'error' ? 'error' : '');
-  txt.textContent = text;
-}
-
-// ======== INIT ========
-init().catch(e => {
+// ─── BOOT ──────────────────────────────────────────────
+init().catch(e=>{
   console.error(e);
-  setStatus('error', 'API ERROR');
-  // Still render with static data
-  renderMinerTable();
-  renderNetworkTable();
-  initFacilityBuilder();
-  marketListings = generateMarketListings([]);
-  renderMarketCards();
-  renderMarketTable();
-  const overpriced = marketListings.filter(l => l.listedHcash > l.baseHcash * 1.05).length;
-  const underpriced = marketListings.filter(l => l.listedHcash < l.baseHcash * 0.95).length;
-  document.getElementById('ms-listings').textContent = marketListings.length;
-  document.getElementById('ms-over').textContent = overpriced;
-  document.getElementById('ms-under').textContent = underpriced;
-  document.getElementById('marketApiInfo').textContent = '⚠ Live API unavailable — using on-chain static data';
+  setS('error','ERROR');
+  setBan('err','Init error: '+e.message);
+  enrichFromContracts([]);
+  renderMinerTbl(); renderNetTbl(); initBuilder();
+  listings=buildDemo(); updateStats(); renderCards(); renderTbl();
 });
 </script>
 </body>
