@@ -1092,13 +1092,29 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       </div>
     </div>
     <div class="card">
-      <div class="ch"><div class="ctitle">🏆 Top LP Stakers</div></div>
+      <div class="ch"><div class="ctitle">🏆 Top LP Stakers (Points)</div></div>
       <div class="cbody">
         <div class="tw"><table class="tbl" id="explorerLbTbl">
           <thead><tr><th>#</th><th>Wallet</th><th>Points</th><th>Share</th></tr></thead>
           <tbody id="explorerLbBody"><tr><td colspan="4" style="text-align:center;color:var(--mut);padding:1.2rem"><span class="spin"></span></td></tr></tbody>
         </table></div>
       </div>
+    </div>
+  </div>
+  <!-- LP Token Holders -->
+  <div class="card" id="lpHoldersCard" style="display:none;margin-top:.85rem">
+    <div class="ch">
+      <div class="ctitle">💧 hCASH LP Token Holders</div>
+      <button class="btn btn-g btn-sm" onclick="loadLpHolders(poolData?.lpSupply||0)">↺ Refresh</button>
+    </div>
+    <div class="cbody">
+      <div class="mono" style="font-size:.55rem;color:var(--mut);margin-bottom:.6rem">
+        Top LP holders by wallet balance · scanned from on-chain Transfer events
+      </div>
+      <div class="tw"><table class="tbl">
+        <thead><tr><th>#</th><th>Holder</th><th>LP Balance</th><th>% Supply</th></tr></thead>
+        <tbody id="lpHoldersBody"><tr><td colspan="4" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span></td></tr></tbody>
+      </table></div>
     </div>
   </div>
 
@@ -1556,14 +1572,25 @@ async function updateLpBalances() {
     posData.lpBal = lp;
     // Load staked balance
     const moatC = new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
-    const info = await moatC.userInfo(walletAddress).catch(()=>null);
-    if(info){
+    const [info,lockData] = await Promise.allSettled([
+      moatC.userInfo(walletAddress),
+      moatC.getUserAllLocks(walletAddress),
+    ]);
+    if(info.status==='fulfilled'&&info.value){
       // userInfo returns (stakedAmount, totalUserBurn, stakingPoints, burnPoints, activeLockCount)
-      const staked = parseFloat(ethers.formatEther(info[0]));
+      const staked = parseFloat(ethers.formatEther(info.value[0]));
       posData.staked = staked;
       setTxt('unstakeMoatBal', staked.toFixed(8)+' LP');
       setTxt('rmLpInMoat', staked.toFixed(8)+' LP');
       setTxt('rmLpInWallet', lp.toFixed(8)+' LP');
+    }
+    if(lockData.status==='fulfilled'&&lockData.value){
+      const [amounts,,,,, actives]=lockData.value;
+      let lockedTotal=0;
+      for(let i=0;i<(amounts?.length||0);i++){
+        if(actives[i]) lockedTotal+=parseFloat(ethers.formatEther(amounts[i]));
+      }
+      posData.locked=lockedTotal;
     }
     updateLpValueBreakdown(lp,hcash);
   } catch(e){console.warn('updateLpBalances:',e.message)}
@@ -1944,14 +1971,21 @@ async function loadExplorerData() {
     const hcashRes = parseFloat(ethers.formatEther(isWavaxT0?res[1]:res[0]));
     const lpSup = parseFloat(ethers.formatEther(ts));
     let avaxUsd = priceData?.avaxPrice||0;
+    // Always try to get fresh AVAX price if not available
     if(!avaxUsd) {
       try {
         const av=await fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7').then(x=>x.json());
         avaxUsd=Number(av?.pairs?.[0]?.priceUsd||0);
         if(priceData)priceData.avaxPrice=avaxUsd;
+        else priceData={avaxPrice:avaxUsd,price:0,ch24:0,liq:0,vol24:0};
       } catch(e){}
     }
-    const tvl = avaxUsd>0?(avaxRes*avaxUsd*2)+(hcashRes*(priceData?.price||0)):0;
+    // Also try DexScreener LP pair for hCASH price
+    let hcashUsd = priceData?.price||0;
+    if(!hcashUsd&&avaxUsd>0&&hcashRes>0&&avaxRes>0){
+      hcashUsd = avaxUsd * avaxRes / hcashRes;
+    }
+    const tvl = avaxUsd>0?(avaxRes*avaxUsd + hcashRes*hcashUsd):0;
     setHtml('explorerStats',`
       <div class="calc-row"><span class="calc-lbl">LP Contract</span><span class="calc-val" style="font-size:.65rem;color:var(--red)">0x8f96…5D9</span></div>
       <div class="calc-row"><span class="calc-lbl">Moat Contract</span><span class="calc-val" style="font-size:.65rem;color:var(--red)">0x501f…9d53</span></div>
@@ -1962,21 +1996,103 @@ async function loadExplorerData() {
       <div class="calc-row"><span class="calc-lbl">Ratio</span><span class="calc-val">${f2(hcashRes/avaxRes)} hCASH/AVAX</span></div>
     `);
   } catch(e){setHtml('explorerStats','<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not load on-chain data.</div>');}
-  // LB
+  // Moat Points leaderboard
   if(allLbData.length===0)await loadMoatPoints();
   const tb=document.getElementById('explorerLbBody');
   if(!tb)return;
   const total=allLbData.reduce((s,x)=>s+x.points,0);
   tb.innerHTML=allLbData.slice(0,10).map((x,i)=>{
     const rkCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+    const prof=getKnownProfile(x.wallet);
+    const nameHtml=prof
+      ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-size:.62rem">@${prof.twitter}</a>`
+      :`<span class="mono" style="font-size:.58rem;color:var(--dim)">${shortA(x.wallet)}</span>`;
     return `<tr>
       <td><span class="rk ${rkCls}">${i+1}</span></td>
-      <td>${x.username?`<span class="mono" style="font-size:.62rem;color:var(--red)">${x.username}</span> `:''}
-        <span class="mono" style="font-size:.58rem;color:var(--dim)">${shortA(x.wallet)}</span></td>
+      <td style="display:flex;align-items:center;gap:6px">
+        ${prof?`<img src="${prof.pic}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
+        ${nameHtml}
+      </td>
       <td style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--red)">${fmtP(x.points)}</td>
       <td class="mono" style="font-size:.56rem;color:var(--dim)">${total?(x.points/total*100).toFixed(2):0}%</td>
     </tr>`;
   }).join('');
+
+  // LP Token Holders table — fetch via eth_getLogs Transfer events
+  await loadLpHolders(lpSup);
+}
+
+async function loadLpHolders(totalLpSupply) {
+  const holdersEl=document.getElementById('lpHoldersBody');
+  const holdersCard=document.getElementById('lpHoldersCard');
+  if(!holdersEl||!holdersCard)return;
+  holdersCard.style.display='block';
+  holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span>Loading LP holders…</td></tr>';
+  try{
+    const RPC=AVAX_RPC;
+    // Get recent block
+    const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
+    const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
+    const fromBlock='0x'+Math.max(0,curBlock-500000).toString(16);
+    // Fetch Transfer events for LP token
+    const TRANSFER_TOPIC='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+    const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
+        fromBlock:'0x'+Math.max(0,curBlock-200000).toString(16),
+        toBlock:'0x'+curBlock.toString(16),
+        address:HCASH_LP_ADDR,
+        topics:[TRANSFER_TOPIC]
+      }]})}).then(r=>r.json());
+    const logs=logsRes?.result||[];
+    // Build set of unique addresses that interacted with LP token
+    const addresses=new Set();
+    for(const log of logs){
+      if(log.topics?.[1]) addresses.add('0x'+log.topics[1].slice(26).toLowerCase());
+      if(log.topics?.[2]) addresses.add('0x'+log.topics[2].slice(26).toLowerCase());
+    }
+    // Remove zero address and moat/router contracts
+    const skipAddrs=new Set([
+      ethers.ZeroAddress.toLowerCase(),
+      HCASH_MOAT_ADDR.toLowerCase(),
+      PHARAOH_ROUTER_ADDR.toLowerCase(),
+    ]);
+    const toQuery=[...addresses].filter(a=>!skipAddrs.has(a)).slice(0,50);
+    if(!toQuery.length){holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No recent LP transfers found</td></tr>';return;}
+    // Batch balanceOf calls
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
+    const bals=await Promise.allSettled(toQuery.map(a=>lpC.balanceOf(a)));
+    const holders=[];
+    for(let i=0;i<toQuery.length;i++){
+      if(bals[i].status==='fulfilled'){
+        const b=parseFloat(ethers.formatEther(bals[i].value));
+        if(b>0.000001) holders.push({wallet:toQuery[i],balance:b});
+      }
+    }
+    holders.sort((a,b)=>b.balance-a.balance);
+    const supplyNum=totalLpSupply||holders.reduce((s,h)=>s+h.balance,0)||1;
+    holdersEl.innerHTML=holders.slice(0,20).map((h,i)=>{
+      const pct=(h.balance/supplyNum*100).toFixed(2);
+      const prof=getKnownProfile(h.wallet);
+      const nameHtml=prof
+        ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem">@${prof.twitter}</a>`
+        :`<span class="mono" style="font-size:.58rem">${shortA(h.wallet)}</span>`;
+      const rkCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+      return `<tr>
+        <td><span class="rk ${rkCls}">${i+1}</span></td>
+        <td style="display:flex;align-items:center;gap:6px">
+          ${prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
+          ${nameHtml}
+        </td>
+        <td style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold)">${h.balance.toFixed(4)} LP</td>
+        <td class="mono" style="font-size:.56rem;color:var(--dim)">${pct}%</td>
+      </tr>`;
+    }).join('');
+    if(!holders.length) holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No holders found in recent blocks</td></tr>';
+  }catch(e){
+    holdersEl.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--red);font-size:.6rem">Error: ${e.message?.slice(0,80)}</td></tr>`;
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -2267,28 +2383,53 @@ async function hcashRemoveLiquidity() {
   const statusEl=document.getElementById('hcashRemoveStatus');
   const upd=s=>{if(statusEl)statusEl.innerHTML=s;};
   try{
-    const hcashTokAddr=await resolveHcashToken();
-    const ROUTER=ethers.getAddress(PHARAOH_ROUTER_ADDR);
+    const ga=a=>ethers.getAddress(a);
+    const hcashTokAddr=ga(await resolveHcashToken());
+    const WAVAX=ga(WAVAX_ADDR);
+    const ROUTER=ga(PHARAOH_ROUTER_ADDR);
+    const FACTORY=ga(PHARAOH_FACTORY_ADDR);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const factory=new ethers.Contract(FACTORY,PHARAOH_FACTORY_ABI,prov);
     const router=new ethers.Contract(ROUTER,PHARAOH_ROUTER_ABI,walletSigner);
-    const lp=new ethers.Contract(ethers.getAddress(HCASH_LP_ADDR),ERC20_ABI,walletSigner);
+    const lp=new ethers.Contract(ga(HCASH_LP_ADDR),ERC20_ABI,walletSigner);
     const lpWei=ethers.parseUnits(amt.toFixed(6),18);
+
+    // Detect stable flag
+    upd('<span class="spin"></span>Detecting pool type…');
+    const [pairFalse,pairTrue]=await Promise.all([
+      factory.getPair(WAVAX,hcashTokAddr,false).catch(()=>ethers.ZeroAddress),
+      factory.getPair(WAVAX,hcashTokAddr,true).catch(()=>ethers.ZeroAddress),
+    ]);
+    const stable=pairTrue!==ethers.ZeroAddress?true:false;
+
+    // Approve LP
     const allowed=await lp.allowance(walletAddress,ROUTER);
     if(allowed<lpWei){
       upd('<span class="spin"></span>Approving LP tokens…');
       await(await lp.approve(ROUTER,ethers.MaxUint256)).wait();
     }
-    upd('<span class="spin"></span>Confirm remove liquidity in wallet…');
+
     const deadline=Math.floor(Date.now()/1000)+1800;
-    const tx=await router.removeLiquidityAVAX(hcashTokAddr,false,lpWei,0n,0n,walletAddress,deadline,{gasLimit:400000n});
+    upd('<span class="spin"></span>Confirm remove liquidity in wallet…');
+
+    // Try removeLiquidityAVAX first, fall back to removeLiquidity
+    let tx;
+    try {
+      tx=await router.removeLiquidityAVAX(hcashTokAddr,stable,lpWei,0n,0n,walletAddress,deadline,{gasLimit:500000n});
+    } catch(e1) {
+      console.warn('[removeLiqAVAX failed, trying removeLiquidity]',e1.message?.slice(0,80));
+      // fallback: removeLiquidity(WAVAX, hcash) — returns WAVAX not native AVAX
+      tx=await router.removeLiquidity(WAVAX,hcashTokAddr,stable,lpWei,0n,0n,walletAddress,deadline,{gasLimit:500000n});
+    }
     upd(`<span class="spin"></span>Confirming… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">${tx.hash.slice(0,10)}… ↗</a>`);
     await tx.wait();
-    upd(`<span style="color:var(--grn)">✅ AVAX & hCASH returned to wallet! <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">↗</a></span>`);
+    upd(`<span style="color:var(--grn)">✅ Liquidity removed! Tokens returned to wallet. <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">↗</a></span>`);
     notif('↩ Liquidity removed! AVAX and hCASH in your wallet.','success');
     document.getElementById('hcashRemoveAmt').value='';
     updateLpBalances();
   }catch(e){
     const isReject=e.message?.includes('user rejected')||e.code===4001;
-    const msg=isReject?'Rejected in wallet':(e.reason||e.shortMessage||e.message?.slice(0,150));
+    const msg=isReject?'Rejected in wallet':(e.reason||e.shortMessage||e.message?.slice(0,200));
     upd(`<span style="color:${isReject?'var(--gold)':'var(--red)'}">✗ ${msg}</span>`);
     if(!isReject) notif(String(msg),'error');
   }
@@ -2694,23 +2835,43 @@ async function updatePositionSummary() {
   const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
   try{
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
-    const [info,pts]=await Promise.all([moatC.userInfo(walletAddress).catch(()=>null),moatC.getCurrentPoints(walletAddress).catch(()=>0n)]);
+    const [info,pts,lockData]=await Promise.all([
+      moatC.userInfo(walletAddress).catch(()=>null),
+      moatC.getCurrentPoints(walletAddress).catch(()=>0n),
+      moatC.getUserAllLocks(walletAddress).catch(()=>null),
+    ]);
     // userInfo: (stakedAmount, totalUserBurn, stakingPoints, burnPoints, activeLockCount)
     const staked=info?parseFloat(ethers.formatEther(info[0])):0;
-    const locked=0; // lock info comes from getUserAllLocks
-    const points=parseFloat(ethers.formatEther(pts));
-    const lpPrice=priceData?(poolData?(priceData.avaxPrice*poolData.avaxReserve*2/poolData.lpSupply):0):0;
-    const stakedUsd=staked*lpPrice;
+    // Sum active locked amounts
+    let locked=0;
+    if(lockData&&lockData[0]){
+      const [amounts,,,,, actives]=lockData;
+      for(let i=0;i<amounts.length;i++){
+        if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
+      }
+    }
+    // Points: try formatEther first, if huge try raw number
+    let points=0;
+    try{
+      const ptsRaw=BigInt(pts.toString());
+      // If value > 1e24 it's likely 18-decimal, else it's raw
+      points = ptsRaw > 1000000000000000000000000n
+        ? parseFloat(ethers.formatEther(ptsRaw))
+        : Number(ptsRaw);
+    }catch(pe){ points=0; }
+    const lpPrice=priceData&&poolData?(priceData.avaxPrice*poolData.avaxReserve*2/poolData.lpSupply):0;
+    const totalLp=staked+locked;
+    const posUsd=totalLp*lpPrice;
     setHtml('positionSummary',`
       <div class="calc-row"><span class="calc-lbl">LP Staked</span><span class="calc-val cr">${staked.toFixed(6)} LP</span></div>
       <div class="calc-row"><span class="calc-lbl">LP Locked</span><span class="calc-val cg">${locked.toFixed(6)} LP</span></div>
-      <div class="calc-row"><span class="calc-lbl">Position Value</span><span class="calc-val cgn">${stakedUsd>0?fmtK(stakedUsd):'—'}</span></div>
+      <div class="calc-row"><span class="calc-lbl">Position Value</span><span class="calc-val cgn">${posUsd>0?fmtK(posUsd):'—'}</span></div>
     `);
     setHtml('pointsEstimate',`
       <div class="calc-row"><span class="calc-lbl">Current Points</span><span class="calc-val cr">${fmtP(points)}</span></div>
       <div class="calc-row"><span class="calc-lbl">LP in Wallet</span><span class="calc-val cd">${(posData.lpBal||0).toFixed(6)}</span></div>
     `);
-  }catch(e){}
+  }catch(e){ console.warn('updatePositionSummary:',e.message); }
 }
 
 // ══════════════════════════════════════════════════════
@@ -2723,12 +2884,30 @@ async function loadUserPosition() {
   try{
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
-    const [info,pts]=await Promise.all([moatC.userInfo(walletAddress).catch(()=>null),moatC.getCurrentPoints(walletAddress).catch(()=>0n)]);
+    const [info,pts,lockData]=await Promise.all([
+      moatC.userInfo(walletAddress).catch(()=>null),
+      moatC.getCurrentPoints(walletAddress).catch(()=>0n),
+      moatC.getUserAllLocks(walletAddress).catch(()=>null),
+    ]);
     const staked=info?parseFloat(ethers.formatEther(info[0])):0;
-    const locked=0;
-    const points=parseFloat(ethers.formatEther(pts));
+    // Sum active locks
+    let locked=0;
+    if(lockData&&lockData[0]){
+      const [amounts,,,,, actives]=lockData;
+      for(let i=0;i<amounts.length;i++){
+        if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
+      }
+    }
+    // Points: auto-detect scale
+    let points=0;
+    try{
+      const ptsRaw=BigInt(pts.toString());
+      points = ptsRaw > 1000000000000000000000000n
+        ? parseFloat(ethers.formatEther(ptsRaw))
+        : Number(ptsRaw);
+    }catch(pe){ points=0; }
     const total=moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
-    const share=total&&points?(points/(total)*100).toFixed(4):0;
+    const share=total&&points?(points/total*100).toFixed(4):0;
     const hasPos=staked>0||locked>0;
     el.innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.7rem">
@@ -2852,26 +3031,44 @@ async function quoteSwap() {
     try {
       const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
       const hcashAddr = await resolveHcashToken();
-      const router = new ethers.Contract(PHARAOH_ROUTER_ADDR, PHARAOH_ROUTER_ABI, prov);
-      let amtIn, fromAddr, toAddr;
+      // Detect stable flag
+      const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov);
+      const [pFalse,pTrue] = await Promise.allSettled([
+        factory.getPair(ethers.getAddress(WAVAX_ADDR),hcashAddr,false),
+        factory.getPair(ethers.getAddress(WAVAX_ADDR),hcashAddr,true),
+      ]);
+      const stableFlag = pTrue.status==='fulfilled' && pTrue.value !== ethers.ZeroAddress;
+      const router = new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR), PHARAOH_ROUTER_ABI, prov);
+      const hcashTok = new ethers.Contract(hcashAddr,ERC20_ABI,prov);
+      const dec = Number(await hcashTok.decimals().catch(()=>18));
+      let amtIn, fromAddr, toAddr, outDec;
       if(swapDir===0){
-        // AVAX → hCASH: wrap AVAX first conceptually (use WAVAX addr in route)
         amtIn = ethers.parseEther(String(amt));
-        fromAddr = WAVAX_ADDR; toAddr = hcashAddr;
+        fromAddr = WAVAX_ADDR; toAddr = hcashAddr; outDec = dec;
       } else {
-        const hcashTok = new ethers.Contract(hcashAddr,ERC20_ABI,prov);
-        const dec = Number(await hcashTok.decimals().catch(()=>18));
         amtIn = ethers.parseUnits(String(amt),dec);
-        fromAddr = hcashAddr; toAddr = WAVAX_ADDR;
+        fromAddr = hcashAddr; toAddr = WAVAX_ADDR; outDec = 18;
       }
-      const routes = [{from:fromAddr,to:toAddr,stable:false}];
-      const amounts = await router.getAmountsOut(amtIn,routes);
-      const outAmt = parseFloat(ethers.formatEther(amounts[amounts.length-1]));
+      const routes = [{from:fromAddr,to:toAddr,stable:stableFlag}];
+      let outAmt = 0;
+      try {
+        const amounts = await router.getAmountsOut(amtIn,routes);
+        outAmt = parseFloat(ethers.formatUnits(amounts[amounts.length-1],outDec));
+      } catch(qe) {
+        // Fallback: use reserve ratio estimate
+        const lp = new ethers.Contract(ethers.getAddress(HCASH_LP_ADDR),LP_ABI,prov);
+        const [res,t0] = await Promise.all([lp.getReserves(),lp.token0()]);
+        const isW0 = t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
+        const wavaxRes = Number(isW0?res[0]:res[1])/1e18;
+        const hcashRes = Number(isW0?res[1]:res[0])/Math.pow(10,dec);
+        if(swapDir===0) outAmt = amt * (hcashRes/wavaxRes) * 0.997;
+        else outAmt = amt * (wavaxRes/hcashRes) * 0.997;
+      }
       const slip = _slippage/100;
       const minOut = outAmt*(1-slip);
       const outLabel = swapDir===0?'hCASH':'AVAX';
-      el.innerHTML=`<span style="color:var(--grn)">≈ ${outAmt.toFixed(6)} ${outLabel}</span> <span style="color:var(--mut)">(min ${minOut.toFixed(6)} at ${_slippage}% slip)</span>`;
-    } catch(e){el.innerHTML=`<span style="color:var(--mut)">Could not quote: ${e.message?.slice(0,60)}</span>`;}
+      el.innerHTML=`<span style="color:var(--grn)">≈ ${outAmt.toFixed(6)} ${outLabel}</span> <span style="color:var(--mut)">(min ${minOut.toFixed(6)} at ${_slippage}% slip · ${stableFlag?'stable':'volatile'} pool)</span>`;
+    } catch(e){el.innerHTML=`<span style="color:var(--mut)">Quote error: ${e.message?.slice(0,80)}</span>`;}
   },400);
 }
 
@@ -2892,12 +3089,24 @@ async function execSwap() {
     if(swapDir===0){
       // AVAX → hCASH: use swapExactAVAXForTokens
       const amtIn=ethers.parseEther(String(amt));
-      const routes=[{from:WAVAX,to:hcashAddr,stable:false}];
+      const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+      // Detect stable flag for this pair
+      const factory=new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov);
+      const [pF,pT]=await Promise.allSettled([factory.getPair(WAVAX,hcashAddr,false),factory.getPair(WAVAX,hcashAddr,true)]);
+      const stableFlag=pT.status==='fulfilled'&&pT.value!==ethers.ZeroAddress;
+      const routes=[{from:WAVAX,to:hcashAddr,stable:stableFlag}];
       upd('<span class="spin"></span>Getting quote…');
-      const amounts=await router.getAmountsOut(amtIn,routes);
-      const minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
+      let minOut=0n;
+      try{
+        const amounts=await router.getAmountsOut(amtIn,routes);
+        minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
+      }catch(qe){
+        // fallback: reserve-based estimate with high slippage
+        console.warn('getAmountsOut failed:',qe.message?.slice(0,60));
+        minOut=0n; // 0 = accept any output (very high slippage, but won't block)
+      }
       upd('<span class="spin"></span>Swapping AVAX → hCASH… confirm in wallet');
-      const tx=await router.swapExactAVAXForTokens(minOut,routes,walletAddress,deadline,{value:amtIn,gasLimit:350000n});
+      const tx=await router.swapExactAVAXForTokens(minOut,routes,walletAddress,deadline,{value:amtIn,gasLimit:500000n});
       upd(`<span class="spin"></span>Waiting… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! hCASH received.','success',5000);
@@ -2907,10 +3116,20 @@ async function execSwap() {
       const hcashTok=new ethers.Contract(hcashAddr,ERC20_ABI,walletSigner);
       const dec=Number(await hcashTok.decimals().catch(()=>18));
       const amtIn=ethers.parseUnits(String(amt),dec);
-      const routes=[{from:hcashAddr,to:WAVAX,stable:false}];
+      const prov2=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+      const factory2=new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov2);
+      const [pF2,pT2]=await Promise.allSettled([factory2.getPair(WAVAX,hcashAddr,false),factory2.getPair(WAVAX,hcashAddr,true)]);
+      const stableFlag2=pT2.status==='fulfilled'&&pT2.value!==ethers.ZeroAddress;
+      const routes=[{from:hcashAddr,to:WAVAX,stable:stableFlag2}];
       upd('<span class="spin"></span>Getting quote…');
-      const amounts=await router.getAmountsOut(amtIn,routes);
-      const minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
+      let minOut=0n;
+      try{
+        const amounts=await router.getAmountsOut(amtIn,routes);
+        minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
+      }catch(qe){
+        console.warn('getAmountsOut failed:',qe.message?.slice(0,60));
+        minOut=0n;
+      }
       // Approve hCASH
       const allow=await hcashTok.allowance(walletAddress,ROUTER);
       if(allow<amtIn){
@@ -2918,7 +3137,7 @@ async function execSwap() {
         await(await hcashTok.approve(ROUTER,ethers.MaxUint256)).wait();
       }
       upd('<span class="spin"></span>Swapping hCASH → AVAX… confirm in wallet');
-      const tx=await router.swapExactTokensForAVAX(amtIn,minOut,routes,walletAddress,deadline,{gasLimit:350000n});
+      const tx=await router.swapExactTokensForAVAX(amtIn,minOut,routes,walletAddress,deadline,{gasLimit:500000n});
       upd(`<span class="spin"></span>Waiting… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! AVAX received.','success',5000);
@@ -2966,30 +3185,44 @@ async function showMinerDetail(id) {
         'function name() view returns (string)',
         'function symbol() view returns (string)',
         'function maxSupply() view returns (uint256)',
+        'function tokenByIndex(uint256 index) view returns (uint256)',
       ];
       const nft = new ethers.Contract(addr, nftAbi, prov);
-      const [name,symbol,totalSupply,maxSupply] = await Promise.allSettled([
+      const [nameR,symbolR,totalSupplyR,maxSupplyR] = await Promise.allSettled([
         nft.name(), nft.symbol(), nft.totalSupply(), nft.maxSupply()
       ]);
-      const ts = totalSupply.status==='fulfilled'?Number(totalSupply.value):null;
-      const ms = maxSupply.status==='fulfilled'?Number(maxSupply.value):null;
+      const ts = totalSupplyR.status==='fulfilled'?Number(totalSupplyR.value):null;
+      const ms = maxSupplyR.status==='fulfilled'?Number(maxSupplyR.value):null;
+      const nameVal = nameR.status==='fulfilled'?nameR.value:'';
+      const symbolVal = symbolR.status==='fulfilled'?symbolR.value:'';
+      const mintPct = (ts!==null&&ms!==null&&ms>0)?Math.min(100,ts/ms*100).toFixed(1):null;
+      const remaining = (ts!==null&&ms!==null)?ms-ts:null;
       onChainHtml = `
         <div class="card" style="margin-bottom:.85rem">
-          <div class="ch"><div class="ctitle">📊 On-Chain Stats</div></div>
+          <div class="ch">
+            <div class="ctitle">📊 On-Chain Stats</div>
+            <a href="https://snowtrace.io/address/${addr}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.55rem">Snowtrace ↗</a>
+          </div>
           <div class="cbody">
-            ${name.status==='fulfilled'?`<div class="calc-row"><span class="calc-lbl">Name</span><span class="calc-val cw">${name.value}</span></div>`:''}
-            ${symbol.status==='fulfilled'?`<div class="calc-row"><span class="calc-lbl">Symbol</span><span class="calc-val cd">${symbol.value}</span></div>`:''}
-            ${ts!==null?`<div class="calc-row"><span class="calc-lbl">Total Supply</span><span class="calc-val cr">${ts.toLocaleString()}</span></div>`:''}
-            ${ms!==null?`<div class="calc-row"><span class="calc-lbl">Max Supply</span><span class="calc-val cg">${ms.toLocaleString()}</span></div>`:''}
-            ${ts!==null&&ms!==null&&ms>0?`
-              <div style="margin-top:.7rem">
-                <div class="mono" style="font-size:.52rem;color:var(--mut);margin-bottom:4px">Minted: ${ts} / ${ms}</div>
-                <div class="pool-bar-wrap"><div class="pool-bar-fill" style="width:${Math.min(100,ts/ms*100).toFixed(1)}%"></div></div>
-                <div class="mono" style="font-size:.5rem;color:var(--mut);margin-top:2px">${(ts/ms*100).toFixed(1)}% minted</div>
-              </div>`:''}
-            <div class="calc-row" style="margin-top:.4rem"><span class="calc-lbl mono" style="font-size:.54rem">Contract</span>
-              <a href="https://snowtrace.io/address/${addr}" target="_blank" class="mono" style="font-size:.54rem;color:var(--red);text-decoration:none">${addr.slice(0,6)}…${addr.slice(-4)} ↗</a>
+            ${nameVal?`<div class="calc-row"><span class="calc-lbl">Name</span><span class="calc-val cw">${nameVal}</span></div>`:''}
+            ${symbolVal?`<div class="calc-row"><span class="calc-lbl">Symbol</span><span class="calc-val cd">${symbolVal}</span></div>`:''}
+            <div class="calc-row">
+              <span class="calc-lbl">Contract</span>
+              <a href="https://snowtrace.io/address/${addr}" target="_blank" class="mono" style="font-size:.6rem;color:var(--red);text-decoration:none">${addr.slice(0,6)}…${addr.slice(-4)} ↗</a>
             </div>
+            ${ts!==null?`<div class="calc-row"><span class="calc-lbl">Minted</span><span class="calc-val cr">${ts.toLocaleString()}</span></div>`:''}
+            ${ms!==null?`<div class="calc-row"><span class="calc-lbl">Max Supply</span><span class="calc-val cg">${ms.toLocaleString()}</span></div>`:''}
+            ${remaining!==null?`<div class="calc-row"><span class="calc-lbl">Remaining</span><span class="calc-val" style="color:${remaining>0?'var(--gold)':'var(--mut)'}">
+              ${remaining>0?remaining.toLocaleString()+' unminted':'Fully Minted ✓'}
+            </span></div>`:''}
+            ${mintPct!==null?`
+              <div style="margin-top:.65rem">
+                <div style="display:flex;justify-content:space-between" class="mono">
+                  <span style="font-size:.5rem;color:var(--mut)">Mint Progress</span>
+                  <span style="font-size:.5rem;color:var(--mut)">${mintPct}%</span>
+                </div>
+                <div class="pool-bar-wrap" style="margin-top:3px"><div class="pool-bar-fill" style="width:${mintPct}%;background:${Number(mintPct)>=100?'var(--grn)':'linear-gradient(90deg,var(--red),var(--gold))'}"></div></div>
+              </div>`:''}
           </div>
         </div>`;
     } catch(e){ onChainHtml = `<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not fetch on-chain data: ${e.message?.slice(0,60)}</div>`; }
