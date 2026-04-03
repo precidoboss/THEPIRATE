@@ -629,9 +629,9 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
 
   <!-- Hero banner -->
   <div class="banner" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-    <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/hashcashclub.png"
-      style="width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid rgba(229,62,62,.3)"
-      onerror="this.style.display='none'">
+    <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg"
+      style="width:52px;height:52px;border-radius:10px;object-fit:cover;border:1px solid rgba(229,62,62,.3)"
+      onerror="this.src='https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/hashcashclub.png';this.onerror=null">
     <div style="flex:1;min-width:200px">
       <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.1rem">💧 hCASH / WAVAX LP Moat</div>
       <div class="mono" style="font-size:.58rem;color:var(--dim);margin-top:2px">Add AVAX + hCASH liquidity on Pharaoh → stake LP tokens here → earn Moat Points → grow Fort Score</div>
@@ -708,7 +708,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="mono" style="font-size:.54rem;color:var(--dim)">Pharaoh Volatile Pool · Avalanche C-Chain</div>
     </div>
     <div style="display:flex;gap:5px;flex-wrap:wrap">
-      <a href="https://phar.gg" target="_blank" class="btn btn-gold btn-sm" style="text-decoration:none;font-size:.58rem">Pharaoh ↗</a>
+      <a href="https://phar.gg" target="_blank" class="btn btn-gold btn-sm" style="text-decoration:none;font-size:.58rem;display:inline-flex;align-items:center;gap:5px"><img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:14px;height:14px;border-radius:3px;object-fit:cover" onerror="this.style.display='none'">Pharaoh ↗</a>
       <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.58rem">hashcash.club ↗</a>
     </div>
   </div>
@@ -971,8 +971,58 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div id="lp_pane_rewards" class="liq-pane">
       <div class="liq-pane-inner">
         <div class="liq-step-label">Pending rewards from hCASH Moat</div>
+
+        <!-- Pharaoh Exchange promo -->
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(212,168,67,.05);border:1px solid rgba(212,168,67,.15);border-radius:10px;padding:.75rem;margin-bottom:.85rem">
+          <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg"
+            style="width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid rgba(212,168,67,.3);flex-shrink:0"
+            onerror="this.style.display='none'">
+          <div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem;color:var(--gold)">Pharaoh Exchange</div>
+            <div class="mono" style="font-size:.52rem;color:var(--mut)">Earn swap fees + Moat Points from your LP position</div>
+          </div>
+          <a href="https://phar.gg" target="_blank" class="btn btn-gold btn-sm" style="text-decoration:none;margin-left:auto">phar.gg ↗</a>
+        </div>
+
+        <!-- Pending rewards -->
         <div id="rewardsContent" style="margin-top:.7rem">
           <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading rewards…</div>
+        </div>
+
+        <!-- Miner NFTs section -->
+        <div style="margin-top:1.2rem">
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem;color:var(--red);margin-bottom:.6rem;display:flex;align-items:center;gap:6px">⛏ Special Miner NFT Rewards</div>
+          <!-- Miner #27 -->
+          <div class="card" style="margin-bottom:.5rem">
+            <div class="ch">
+              <div class="ctitle" style="font-size:.7rem">⛏ miner_nft:27 — <span style="color:var(--gold)">Top 10 Leaderboard Reward</span></div>
+              <button class="btn btn-g btn-sm" onclick="showMinerDetail('miner_nft:27')">View ↗</button>
+            </div>
+            <div class="cbody" style="padding:.75rem">
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Hashrate</span><span style="color:var(--red);font-family:'Rajdhani',sans-serif;font-weight:700">100 MH/s</span></div>
+                <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Power</span><span style="color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700">100W</span></div>
+                <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Total Supply</span><span style="font-family:'Rajdhani',sans-serif;font-weight:700">10</span></div>
+              </div>
+              <div class="mono" style="font-size:.54rem;color:var(--dim);margin-top:.5rem;padding:.4rem;background:rgba(212,168,67,.05);border-radius:6px;border:1px solid rgba(212,168,67,.12)">🏆 Distributed to the <b style="color:var(--gold)">top 10 wallets</b> on the Moats Leaderboard</div>
+            </div>
+          </div>
+          <!-- Miner #40 -->
+          <div class="card" id="miner40RewardCard">
+            <div class="ch">
+              <div class="ctitle" style="font-size:.7rem">⛏ miner_nft:40 — The Grotto</div>
+              <button class="btn btn-g btn-sm" onclick="showMinerDetail('miner_nft:40')">View ↗</button>
+            </div>
+            <div class="cbody" style="padding:.75rem">
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Hashrate</span><span style="color:var(--red);font-family:'Rajdhani',sans-serif;font-weight:700">150 MH/s</span></div>
+                <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Power</span><span style="color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700">200W</span></div>
+                <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Total Supply</span><span style="font-family:'Rajdhani',sans-serif;font-weight:700">10</span></div>
+              </div>
+              <div class="calc-row" style="margin-top:.5rem"><span class="calc-lbl">Contract</span><a href="https://snowtrace.io/address/0xACB7A697" target="_blank" class="mono" style="font-size:.58rem;color:var(--red);text-decoration:none">0xACB7…A697 ↗</a></div>
+              <div class="calc-row"><span class="calc-lbl">First Holder</span><span class="calc-val mono" id="miner40FirstHolder" style="font-size:.58rem;color:var(--dim)"><span class="spin"></span></span></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1007,7 +1057,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="ch"><div class="ctitle">🛒 Get hCASH</div></div>
       <div class="cbody" style="display:flex;flex-wrap:wrap;gap:.4rem">
         <a href="https://phar.gg" target="_blank" class="liq-dex-link" style="text-decoration:none">
-          <span style="font-size:1rem">🦅</span>
+          <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:28px;height:28px;border-radius:6px;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none';this.nextSibling.style.display='inline'"><span style="display:none;font-size:1rem">🦅</span>
           <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.8rem">Pharaoh</div><div class="mono" style="font-size:.5rem;color:var(--mut)">Primary venue</div></div>
         </a>
         <a href="https://lfj.gg/avalanche/trade" target="_blank" class="liq-dex-link" style="text-decoration:none">
@@ -1060,9 +1110,9 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
   <div class="sh"><div class="sh-t">⬡ hCASH LP Moat Explorer</div></div>
 
   <div class="explorer-hero">
-    <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/hashcashclub.png"
+    <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg"
       style="width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid rgba(229,62,62,.35)"
-      onerror="this.style.display='none';document.getElementById('expFbIcon').style.display='flex'">
+      onerror="this.src='https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/hashcashclub.png';this.onerror=null;document.getElementById('expFbIcon').style.display='none'">
     <div id="expFbIcon" style="display:none;width:56px;height:56px;border-radius:12px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.25);align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">💧</div>
     <div style="flex:1;min-width:180px">
       <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.15rem">hCASH LP Moat</div>
@@ -1102,7 +1152,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     </div>
   </div>
   <!-- LP Token Holders -->
-  <div class="card" id="lpHoldersCard" style="display:none;margin-top:.85rem">
+  <div class="card" id="lpHoldersCard" style="margin-top:.85rem">
     <div class="ch">
       <div class="ctitle">💧 hCASH LP Token Holders</div>
       <button class="btn btn-g btn-sm" onclick="loadLpHolders(poolData?.lpSupply||0)">↺ Refresh</button>
@@ -1786,6 +1836,22 @@ async function loadEvents() {
     const logs=logsRes?.result||[];
     const events=[];
 
+    // Batch fetch unique block timestamps for accurate dates
+    const uniqueBlocks=new Set(logs.map(l=>l.blockNumber).filter(Boolean));
+    const blockTimestamps={};
+    // Fetch timestamps in batches of 20
+    const blockArr=[...uniqueBlocks];
+    const batchSize=20;
+    for(let i=0;i<blockArr.length;i+=batchSize){
+      const batch=blockArr.slice(i,i+batchSize);
+      const reqs=batch.map((bn,idx)=>({jsonrpc:'2.0',id:idx,method:'eth_getBlockByNumber',params:[bn,false]}));
+      try{
+        const bRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(reqs)}).then(r=>r.json());
+        const arr=Array.isArray(bRes)?bRes:[bRes];
+        arr.forEach(r=>{if(r?.result?.timestamp)blockTimestamps[r.result.number]=parseInt(r.result.timestamp,16);});
+      }catch(e){/* fallback to estimation */}
+    }
+
     for(const log of logs){
       const topic0=(log.topics||[])[0]||'';
       const wallet=log.topics?.[1]?'0x'+log.topics[1].slice(26).toLowerCase():'';
@@ -1796,9 +1862,10 @@ async function loadEvents() {
         const hex=(log.data||'0x').replace('0x','').padStart(64,'0').slice(0,64);
         amt=Number(BigInt('0x'+hex))/1e18;
       }catch(e){}
-      // Estimate timestamp from block (approx 2s/block on Avax)
+      // Use real block timestamp or estimate
       const blkNum=parseInt(log.blockNumber||'0',16);
-      const approxTs=Math.floor(Date.now()/1000)-(curBlock-blkNum)*2;
+      const realTs=blockTimestamps[log.blockNumber];
+      const approxTs=realTs||Math.floor(Date.now()/1000)-(curBlock-blkNum)*2;
       let type='activity';
       if(topic0===EV_STAKED)type='staked';
       else if(topic0===EV_LOCKED)type='locked';
@@ -1870,21 +1937,30 @@ function renderEvFeed() {
     const col=TYPE_COLOR[t]||'var(--mut)';
     const ico=TYPE_ICON[t]||'·';
     const w=(e.user||e.from||e.wallet||e.address||'').toLowerCase();
-    const ts=e.timestamp?new Date(Number(e.timestamp>1e12?e.timestamp:e.timestamp*1000)).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
-    const amt=Number(e.amount||e.tokenAmount||0)>0?fmtP(Number(e.amount||e.tokenAmount||0))+' LP':'';
+    const rawTs=e.timestamp;
+    let ts='—';
+    if(rawTs){
+      const ms=Number(rawTs)>1e12?Number(rawTs):Number(rawTs)*1000;
+      const d=new Date(ms);
+      if(!isNaN(d)){
+        ts=d.toLocaleDateString([],{month:'short',day:'numeric',year:'2-digit'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      }
+    }
+    const amt=Number(e.amount||e.tokenAmount||0);
+    const amtStr=amt>0?amt.toFixed(6)+' LP':'';
     const txhash=e.transactionHash||e.txHash||e.hash||'';
     return `<div class="ei">
       <span style="font-size:1rem;flex-shrink:0">${ico}</span>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="mono" style="font-size:.62rem;color:${col}">${t}</span>
-          ${amt?`<span class="mono" style="font-size:.6rem;color:var(--txt)">${amt}</span>`:''}
+          <span class="mono" style="font-size:.64rem;color:${col};font-weight:700">${t}</span>
+          ${amtStr?`<span class="mono" style="font-size:.64rem;color:var(--txt);background:rgba(255,255,255,.04);padding:1px 5px;border-radius:3px">${amtStr}</span>`:''}
           ${e.lockDays?`<span class="mono" style="font-size:.56rem;color:var(--gold)">🔒 ${e.lockDays}d</span>`:''}
         </div>
-        <div style="display:flex;gap:6px;align-items:center;margin-top:2px;flex-wrap:wrap">
-          ${w?`<span class="mono" style="font-size:.54rem;color:var(--mut)">${shortA(w)}</span>`:''}
-          <span class="mono" style="font-size:.52rem;color:var(--mut)">${ts}</span>
-          ${txhash?`<a href="https://snowtrace.io/tx/${txhash}" target="_blank" class="mono" style="font-size:.52rem;color:var(--red);text-decoration:none">${txhash.slice(0,8)}…↗</a>`:''}
+        <div style="display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap">
+          ${w?`<a href="https://snowtrace.io/address/${w}" target="_blank" class="mono" style="font-size:.56rem;color:var(--pur);text-decoration:none">${shortA(w)}</a>`:''}
+          <span class="mono" style="font-size:.54rem;color:var(--dim)">${ts}</span>
+          ${txhash?`<a href="https://snowtrace.io/tx/${txhash}" target="_blank" class="mono" style="font-size:.52rem;color:var(--red);text-decoration:none">${txhash.slice(0,10)}…↗</a>`:''}
         </div>
       </div>
     </div>`;
@@ -2412,14 +2488,19 @@ async function hcashRemoveLiquidity() {
     const deadline=Math.floor(Date.now()/1000)+1800;
     upd('<span class="spin"></span>Confirm remove liquidity in wallet…');
 
-    // Try removeLiquidityAVAX first, fall back to removeLiquidity
+    // Use removeLiquidityAVAX with stable:false (volatile pool) — fallback to removeLiquidity
     let tx;
     try {
-      tx=await router.removeLiquidityAVAX(hcashTokAddr,stable,lpWei,0n,0n,walletAddress,deadline,{gasLimit:500000n});
+      tx=await router.removeLiquidityAVAX(hcashTokAddr,false,lpWei,0n,0n,walletAddress,deadline,{gasLimit:600000n});
     } catch(e1) {
-      console.warn('[removeLiqAVAX failed, trying removeLiquidity]',e1.message?.slice(0,80));
-      // fallback: removeLiquidity(WAVAX, hcash) — returns WAVAX not native AVAX
-      tx=await router.removeLiquidity(WAVAX,hcashTokAddr,stable,lpWei,0n,0n,walletAddress,deadline,{gasLimit:500000n});
+      console.warn('[removeLiqAVAX stable:false failed, trying stable:true]',e1.message?.slice(0,80));
+      try{
+        tx=await router.removeLiquidityAVAX(hcashTokAddr,true,lpWei,0n,0n,walletAddress,deadline,{gasLimit:600000n});
+      }catch(e2){
+        console.warn('[removeLiqAVAX stable:true failed, trying removeLiquidity]',e2.message?.slice(0,80));
+        const WAVAX=ethers.getAddress(WAVAX_ADDR);
+        tx=await router.removeLiquidity(WAVAX,hcashTokAddr,false,lpWei,0n,0n,walletAddress,deadline,{gasLimit:600000n});
+      }
     }
     upd(`<span class="spin"></span>Confirming… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">${tx.hash.slice(0,10)}… ↗</a>`);
     await tx.wait();
@@ -2552,7 +2633,51 @@ async function hcashDoUnstake() {
 async function hcashUnstake(){await hcashDoUnstake();}
 
 // ── Rewards ──
+async function fetchMiner40FirstHolder() {
+  const el=document.getElementById('miner40FirstHolder');
+  if(!el)return;
+  try{
+    const RPC=AVAX_RPC;
+    const MINER40_ADDR='0xACB7A697'; // contract address
+    // Use eth_getLogs to find first Transfer from zero address (mint) for this NFT
+    // Scan from a wide range
+    const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
+    const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
+    const TRANSFER_TOPIC='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+    const FROM_ZERO='0x0000000000000000000000000000000000000000000000000000000000000000';
+    // Search last 5M blocks for mint events
+    const fromBlock='0x'+Math.max(0,curBlock-5000000).toString(16);
+    const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
+        fromBlock,toBlock:'0x'+curBlock.toString(16),
+        address:ethers.getAddress('0xACB74BE83e4B51D2E1EAbA1D1FA9d98Be44fA697'),
+        topics:[TRANSFER_TOPIC,FROM_ZERO]
+      }]})}).then(r=>r.json()).catch(()=>({result:[]}));
+    const logs=logsRes?.result||[];
+    if(logs.length>0){
+      // Sort by blockNumber ascending to find the first mint
+      logs.sort((a,b)=>parseInt(a.blockNumber,16)-parseInt(b.blockNumber,16));
+      const firstLog=logs[0];
+      const toAddr=firstLog.topics?.[2]?'0x'+firstLog.topics[2].slice(26).toLowerCase():'';
+      if(toAddr&&toAddr!=='0x0000000000000000000000000000000000000000'){
+        const prof=getKnownProfile(toAddr);
+        el.innerHTML=prof
+          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none">@${prof.twitter}</a>`
+          :`<a href="https://snowtrace.io/address/${toAddr}" target="_blank" style="color:var(--dim);text-decoration:none;font-size:.55rem">${shortA(toAddr)} ↗</a>`;
+        return;
+      }
+    }
+    el.textContent='Not found';
+  }catch(e){
+    const el2=document.getElementById('miner40FirstHolder');
+    if(el2)el2.textContent='—';
+  }
+}
+
 async function loadRewards() {
+  // Fetch miner #40 first holder in background
+  fetchMiner40FirstHolder();
   const el=document.getElementById('rewardsContent');
   if(!walletAddress){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut)">Connect wallet to see rewards.</div>');return;}
   if(el)el.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading rewards…</div>';
@@ -2850,22 +2975,25 @@ async function updatePositionSummary() {
         if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
       }
     }
-    // Points: try formatEther first, if huge try raw number
+    // Points: getCurrentPoints returns uint256 in 1e18 scale — always divide by 1e18
     let points=0;
     try{
       const ptsRaw=BigInt(pts.toString());
-      // If value > 1e24 it's likely 18-decimal, else it's raw
-      points = ptsRaw > 1000000000000000000000000n
-        ? parseFloat(ethers.formatEther(ptsRaw))
-        : Number(ptsRaw);
+      points = Number(ptsRaw) / 1e18;
     }catch(pe){ points=0; }
-    const lpPrice=priceData&&poolData?(priceData.avaxPrice*poolData.avaxReserve*2/poolData.lpSupply):0;
+    // Calculate position USD value from pool data
+    let lpPrice=0;
+    if(priceData&&poolData&&poolData.lpSupply>0){
+      const avaxPriceUsd=priceData.avaxPrice||0;
+      // TVL = 2 * avax side value (50/50 pool)
+      lpPrice=avaxPriceUsd>0?(avaxPriceUsd*poolData.avaxReserve*2/poolData.lpSupply):0;
+    }
     const totalLp=staked+locked;
     const posUsd=totalLp*lpPrice;
     setHtml('positionSummary',`
       <div class="calc-row"><span class="calc-lbl">LP Staked</span><span class="calc-val cr">${staked.toFixed(6)} LP</span></div>
       <div class="calc-row"><span class="calc-lbl">LP Locked</span><span class="calc-val cg">${locked.toFixed(6)} LP</span></div>
-      <div class="calc-row"><span class="calc-lbl">Position Value</span><span class="calc-val cgn">${posUsd>0?fmtK(posUsd):'—'}</span></div>
+      <div class="calc-row"><span class="calc-lbl">Position Value</span><span class="calc-val cgn">${posUsd>0?fmtK(posUsd):'Fetching…'}</span></div>
     `);
     setHtml('pointsEstimate',`
       <div class="calc-row"><span class="calc-lbl">Current Points</span><span class="calc-val cr">${fmtP(points)}</span></div>
@@ -2898,17 +3026,23 @@ async function loadUserPosition() {
         if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
       }
     }
-    // Points: auto-detect scale
+    // Points: getCurrentPoints returns uint256 in 1e18 scale — always divide by 1e18
     let points=0;
     try{
       const ptsRaw=BigInt(pts.toString());
-      points = ptsRaw > 1000000000000000000000000n
-        ? parseFloat(ethers.formatEther(ptsRaw))
-        : Number(ptsRaw);
+      points = Number(ptsRaw) / 1e18;
     }catch(pe){ points=0; }
+    // Recalculate LP price fresh
+    let lpPrice=0;
+    if(priceData&&poolData&&poolData.lpSupply>0){
+      const avaxPriceUsd=priceData.avaxPrice||0;
+      lpPrice=avaxPriceUsd>0?(avaxPriceUsd*poolData.avaxReserve*2/poolData.lpSupply):0;
+    }
     const total=moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
     const share=total&&points?(points/total*100).toFixed(4):0;
     const hasPos=staked>0||locked>0;
+    const totalLpPos=staked+locked;
+    const posUsd=totalLpPos*lpPrice;
     el.innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.7rem">
         <div class="sc" style="text-align:center"><div class="sl">Staked LP</div><div class="sv cr">${staked.toFixed(6)}</div></div>
@@ -2916,6 +3050,7 @@ async function loadUserPosition() {
         <div class="sc" style="text-align:center"><div class="sl">Moat Points</div><div class="sv cr">${fmtP(points)}</div></div>
         <div class="sc" style="text-align:center"><div class="sl">Pool Share</div><div class="sv cd">${share}%</div></div>
       </div>
+      ${posUsd>0?`<div class="calc-row" style="margin-bottom:.6rem"><span class="calc-lbl">Position Value</span><span class="calc-val cgn">${fmtK(posUsd)}</span></div>`:''}
       ${!hasPos?`<div class="banner" style="text-align:center;margin-bottom:.5rem">
         <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:.3rem">No LP staked yet</div>
         <div class="mono" style="font-size:.58rem;color:var(--mut);margin-bottom:.6rem">Add AVAX + hCASH liquidity on Pharaoh → stake LP to start earning points</div>
@@ -2984,6 +3119,25 @@ function buildStakeLockRefs() {
 // ══════════════════════════════════════════════════════
 //  SWAP hCASH ↔ AVAX
 // ══════════════════════════════════════════════════════
+// ── Pharaoh multi-route quote (tries both stable & volatile paths) ──
+async function pharaohMultiQuote(prov, tIn, tOut, amtIn) {
+  const router=new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR),PHARAOH_ROUTER_ABI,prov);
+  const routeSets=[
+    [{from:tIn,to:tOut,stable:false}],
+    [{from:tIn,to:tOut,stable:true}],
+    [{from:tIn,to:WAVAX_ADDR,stable:false},{from:WAVAX_ADDR,to:tOut,stable:false}],
+  ].filter(r=>!(r.length===1&&r[0].from.toLowerCase()===r[0].to.toLowerCase()));
+  let best=null;
+  await Promise.allSettled(routeSets.map(async routes=>{
+    try{
+      const amts=await router.getAmountsOut(amtIn,routes);
+      const out=amts[amts.length-1];
+      if(out>0n&&(!best||out>best.out))best={out,routes};
+    }catch(e){}
+  }));
+  return best;
+}
+
 let swapDir = 0; // 0 = AVAX→hCASH, 1 = hCASH→AVAX
 
 function setSwapDir(dir) {
@@ -3031,43 +3185,24 @@ async function quoteSwap() {
     try {
       const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
       const hcashAddr = await resolveHcashToken();
-      // Detect stable flag
-      const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov);
-      const [pFalse,pTrue] = await Promise.allSettled([
-        factory.getPair(ethers.getAddress(WAVAX_ADDR),hcashAddr,false),
-        factory.getPair(ethers.getAddress(WAVAX_ADDR),hcashAddr,true),
-      ]);
-      const stableFlag = pTrue.status==='fulfilled' && pTrue.value !== ethers.ZeroAddress;
-      const router = new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR), PHARAOH_ROUTER_ABI, prov);
-      const hcashTok = new ethers.Contract(hcashAddr,ERC20_ABI,prov);
-      const dec = Number(await hcashTok.decimals().catch(()=>18));
-      let amtIn, fromAddr, toAddr, outDec;
+      let amtIn, tIn, tOut;
       if(swapDir===0){
+        // AVAX → hCASH
         amtIn = ethers.parseEther(String(amt));
-        fromAddr = WAVAX_ADDR; toAddr = hcashAddr; outDec = dec;
+        tIn = WAVAX_ADDR; tOut = hcashAddr;
       } else {
+        // hCASH → AVAX
+        const dec=Number(await new ethers.Contract(hcashAddr,ERC20_ABI,prov).decimals().catch(()=>18));
         amtIn = ethers.parseUnits(String(amt),dec);
-        fromAddr = hcashAddr; toAddr = WAVAX_ADDR; outDec = 18;
+        tIn = hcashAddr; tOut = WAVAX_ADDR;
       }
-      const routes = [{from:fromAddr,to:toAddr,stable:stableFlag}];
-      let outAmt = 0;
-      try {
-        const amounts = await router.getAmountsOut(amtIn,routes);
-        outAmt = parseFloat(ethers.formatUnits(amounts[amounts.length-1],outDec));
-      } catch(qe) {
-        // Fallback: use reserve ratio estimate
-        const lp = new ethers.Contract(ethers.getAddress(HCASH_LP_ADDR),LP_ABI,prov);
-        const [res,t0] = await Promise.all([lp.getReserves(),lp.token0()]);
-        const isW0 = t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
-        const wavaxRes = Number(isW0?res[0]:res[1])/1e18;
-        const hcashRes = Number(isW0?res[1]:res[0])/Math.pow(10,dec);
-        if(swapDir===0) outAmt = amt * (hcashRes/wavaxRes) * 0.997;
-        else outAmt = amt * (wavaxRes/hcashRes) * 0.997;
-      }
-      const slip = _slippage/100;
-      const minOut = outAmt*(1-slip);
-      const outLabel = swapDir===0?'hCASH':'AVAX';
-      el.innerHTML=`<span style="color:var(--grn)">≈ ${outAmt.toFixed(6)} ${outLabel}</span> <span style="color:var(--mut)">(min ${minOut.toFixed(6)} at ${_slippage}% slip · ${stableFlag?'stable':'volatile'} pool)</span>`;
+      const best = await pharaohMultiQuote(prov,tIn,tOut,amtIn);
+      if(!best){el.innerHTML=`<span style="color:var(--mut)">No liquidity found for this route</span>`;return;}
+      const slip=_slippage/100;
+      const outAmt=parseFloat(ethers.formatEther(best.out));
+      const minOut=outAmt*(1-slip);
+      const outLabel=swapDir===0?'hCASH':'AVAX';
+      el.innerHTML=`<span style="color:var(--grn)">≈ ${outAmt.toFixed(6)} ${outLabel}</span> <span style="color:var(--mut)">(min ${minOut.toFixed(6)} at ${_slippage}% slip)</span>`;
     } catch(e){el.innerHTML=`<span style="color:var(--mut)">Quote error: ${e.message?.slice(0,80)}</span>`;}
   },400);
 }
@@ -3079,6 +3214,7 @@ async function execSwap() {
   const statusEl=document.getElementById('swapStatus');
   const upd=s=>{if(statusEl)statusEl.innerHTML=s;};
   try{
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const hcashAddr=ethers.getAddress(await resolveHcashToken());
     const WAVAX=ethers.getAddress(WAVAX_ADDR);
     const ROUTER=ethers.getAddress(PHARAOH_ROUTER_ADDR);
@@ -3086,50 +3222,28 @@ async function execSwap() {
     const deadline=BigInt(Math.floor(Date.now()/1000)+1200);
     const slip=_slippage/100;
 
+    upd('<span class="spin"></span>Finding best route…');
+
     if(swapDir===0){
-      // AVAX → hCASH: use swapExactAVAXForTokens
+      // AVAX → hCASH
       const amtIn=ethers.parseEther(String(amt));
-      const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
-      // Detect stable flag for this pair
-      const factory=new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov);
-      const [pF,pT]=await Promise.allSettled([factory.getPair(WAVAX,hcashAddr,false),factory.getPair(WAVAX,hcashAddr,true)]);
-      const stableFlag=pT.status==='fulfilled'&&pT.value!==ethers.ZeroAddress;
-      const routes=[{from:WAVAX,to:hcashAddr,stable:stableFlag}];
-      upd('<span class="spin"></span>Getting quote…');
-      let minOut=0n;
-      try{
-        const amounts=await router.getAmountsOut(amtIn,routes);
-        minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
-      }catch(qe){
-        // fallback: reserve-based estimate with high slippage
-        console.warn('getAmountsOut failed:',qe.message?.slice(0,60));
-        minOut=0n; // 0 = accept any output (very high slippage, but won't block)
-      }
+      const best=await pharaohMultiQuote(prov,WAVAX,hcashAddr,amtIn);
+      if(!best)throw new Error('No swap route found. Try a smaller amount or check pool liquidity.');
+      const minOut=best.out*(BigInt(Math.floor((1-slip)*10000)))/10000n;
       upd('<span class="spin"></span>Swapping AVAX → hCASH… confirm in wallet');
-      const tx=await router.swapExactAVAXForTokens(minOut,routes,walletAddress,deadline,{value:amtIn,gasLimit:500000n});
+      const tx=await router.swapExactAVAXForTokens(minOut,best.routes,walletAddress,deadline,{value:amtIn,gasLimit:600000n});
       upd(`<span class="spin"></span>Waiting… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! hCASH received.','success',5000);
       upd(`<span style="color:var(--grn)">✓ Swap done! <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">↗</a></span>`);
     }else{
-      // hCASH → AVAX: use swapExactTokensForAVAX
+      // hCASH → AVAX
       const hcashTok=new ethers.Contract(hcashAddr,ERC20_ABI,walletSigner);
       const dec=Number(await hcashTok.decimals().catch(()=>18));
       const amtIn=ethers.parseUnits(String(amt),dec);
-      const prov2=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
-      const factory2=new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov2);
-      const [pF2,pT2]=await Promise.allSettled([factory2.getPair(WAVAX,hcashAddr,false),factory2.getPair(WAVAX,hcashAddr,true)]);
-      const stableFlag2=pT2.status==='fulfilled'&&pT2.value!==ethers.ZeroAddress;
-      const routes=[{from:hcashAddr,to:WAVAX,stable:stableFlag2}];
-      upd('<span class="spin"></span>Getting quote…');
-      let minOut=0n;
-      try{
-        const amounts=await router.getAmountsOut(amtIn,routes);
-        minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
-      }catch(qe){
-        console.warn('getAmountsOut failed:',qe.message?.slice(0,60));
-        minOut=0n;
-      }
+      const best=await pharaohMultiQuote(prov,hcashAddr,WAVAX,amtIn);
+      if(!best)throw new Error('No swap route found. Try a smaller amount or check pool liquidity.');
+      const minOut=best.out*(BigInt(Math.floor((1-slip)*10000)))/10000n;
       // Approve hCASH
       const allow=await hcashTok.allowance(walletAddress,ROUTER);
       if(allow<amtIn){
@@ -3137,7 +3251,7 @@ async function execSwap() {
         await(await hcashTok.approve(ROUTER,ethers.MaxUint256)).wait();
       }
       upd('<span class="spin"></span>Swapping hCASH → AVAX… confirm in wallet');
-      const tx=await router.swapExactTokensForAVAX(amtIn,minOut,routes,walletAddress,deadline,{gasLimit:500000n});
+      const tx=await router.swapExactTokensForAVAX(amtIn,minOut,best.routes,walletAddress,deadline,{gasLimit:600000n});
       upd(`<span class="spin"></span>Waiting… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! AVAX received.','success',5000);
