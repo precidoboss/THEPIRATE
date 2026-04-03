@@ -1019,7 +1019,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
                 <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Power</span><span style="color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700">200W</span></div>
                 <div class="pen-row" style="flex:1;min-width:80px"><span class="mono" style="font-size:.5rem;color:var(--mut)">Total Supply</span><span style="font-family:'Rajdhani',sans-serif;font-weight:700">10</span></div>
               </div>
-              <div class="calc-row" style="margin-top:.5rem"><span class="calc-lbl">Contract</span><a href="https://snowtrace.io/address/0xACB7A697" target="_blank" class="mono" style="font-size:.58rem;color:var(--red);text-decoration:none">0xACB7…A697 ↗</a></div>
+              <div class="calc-row" style="margin-top:.5rem"><span class="calc-lbl">Contract</span><a href="https://snowtrace.io/address/0xACB74BE83e4B51D2E1EAbA1D1FA9d98Be44fA697" target="_blank" class="mono" style="font-size:.58rem;color:var(--red);text-decoration:none">0xACB7…A697 ↗</a></div>
               <div class="calc-row"><span class="calc-lbl">First Holder</span><span class="calc-val mono" id="miner40FirstHolder" style="font-size:.58rem;color:var(--dim)"><span class="spin"></span></span></div>
             </div>
           </div>
@@ -2038,6 +2038,7 @@ function renderLb() {
 // ══════════════════════════════════════════════════════
 async function loadExplorerData() {
   setHtml('explorerStats','<div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading on-chain data…</div>');
+  let lpSup = poolData?.lpSupply || 0; // hoist so it's accessible outside the try block
   try {
     const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const lp = new ethers.Contract(HCASH_LP_ADDR,LP_ABI,prov);
@@ -2045,7 +2046,7 @@ async function loadExplorerData() {
     const isWavaxT0 = t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
     const avaxRes = parseFloat(ethers.formatEther(isWavaxT0?res[0]:res[1]));
     const hcashRes = parseFloat(ethers.formatEther(isWavaxT0?res[1]:res[0]));
-    const lpSup = parseFloat(ethers.formatEther(ts));
+    lpSup = parseFloat(ethers.formatEther(ts));
     let avaxUsd = priceData?.avaxPrice||0;
     // Always try to get fresh AVAX price if not available
     if(!avaxUsd) {
@@ -2100,9 +2101,7 @@ async function loadExplorerData() {
 
 async function loadLpHolders(totalLpSupply) {
   const holdersEl=document.getElementById('lpHoldersBody');
-  const holdersCard=document.getElementById('lpHoldersCard');
-  if(!holdersEl||!holdersCard)return;
-  holdersCard.style.display='block';
+  if(!holdersEl)return;
   holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span>Loading LP holders…</td></tr>';
   try{
     const RPC=AVAX_RPC;
@@ -2636,42 +2635,65 @@ async function hcashUnstake(){await hcashDoUnstake();}
 async function fetchMiner40FirstHolder() {
   const el=document.getElementById('miner40FirstHolder');
   if(!el)return;
+  el.innerHTML='<span class="spin"></span>';
   try{
     const RPC=AVAX_RPC;
-    const MINER40_ADDR='0xACB7A697'; // contract address
-    // Use eth_getLogs to find first Transfer from zero address (mint) for this NFT
-    // Scan from a wide range
+    // First try to get the address from the HashCash API
+    let miner40Addr='';
+    try{
+      const d=await fetch(`${HCASH_API}/contracts`,{headers:{'x-api-key':HCASH_API_KEY}}).then(x=>x.json());
+      const contracts=d?.contracts||d||[];
+      const m40=contracts.find(c=>c.id==='miner_nft:40'||c.name?.toLowerCase().includes('grotto')||c.symbol?.includes('40'));
+      if(m40?.address) miner40Addr=ethers.getAddress(m40.address);
+    }catch(e){}
+
+    // Fallback: use known address from user description
+    if(!miner40Addr) miner40Addr=ethers.getAddress('0xACB74BE83e4B51D2E1EAbA1D1FA9d98Be44fA697');
+
+    // Get earliest block for this contract by scanning Transfer from zero (mint events)
     const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
-    const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
+    const curBlock=parseInt(blkRes?.result||'0',16);
+
     const TRANSFER_TOPIC='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
     const FROM_ZERO='0x0000000000000000000000000000000000000000000000000000000000000000';
-    // Search last 5M blocks for mint events
-    const fromBlock='0x'+Math.max(0,curBlock-5000000).toString(16);
+
+    // Scan in chunks from start to find earliest mint
+    let firstHolder='';
+    let firstBlock=Infinity;
+    // Try last 10M blocks (covers ~6+ months on Avax)
+    const scanFrom='0x'+Math.max(0,curBlock-10000000).toString(16);
+
     const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
-        fromBlock,toBlock:'0x'+curBlock.toString(16),
-        address:ethers.getAddress('0xACB74BE83e4B51D2E1EAbA1D1FA9d98Be44fA697'),
+        fromBlock:scanFrom,
+        toBlock:'0x'+curBlock.toString(16),
+        address:miner40Addr,
         topics:[TRANSFER_TOPIC,FROM_ZERO]
       }]})}).then(r=>r.json()).catch(()=>({result:[]}));
-    const logs=logsRes?.result||[];
+
+    const logs=(logsRes?.result||[]);
     if(logs.length>0){
-      // Sort by blockNumber ascending to find the first mint
-      logs.sort((a,b)=>parseInt(a.blockNumber,16)-parseInt(b.blockNumber,16));
+      // Sort ascending by block to find the very first mint
+      logs.sort((a,b)=>parseInt(a.blockNumber||'0',16)-parseInt(b.blockNumber||'0',16));
       const firstLog=logs[0];
+      // The 'to' address is in topics[2]
       const toAddr=firstLog.topics?.[2]?'0x'+firstLog.topics[2].slice(26).toLowerCase():'';
       if(toAddr&&toAddr!=='0x0000000000000000000000000000000000000000'){
         const prof=getKnownProfile(toAddr);
+        const txHash=firstLog.transactionHash||'';
         el.innerHTML=prof
-          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none">@${prof.twitter}</a>`
-          :`<a href="https://snowtrace.io/address/${toAddr}" target="_blank" style="color:var(--dim);text-decoration:none;font-size:.55rem">${shortA(toAddr)} ↗</a>`;
+          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:14px;height:14px;border-radius:50%;object-fit:cover">@${prof.twitter}</a>`
+          :`<a href="https://snowtrace.io/address/${toAddr}" target="_blank" class="mono" style="font-size:.56rem;color:var(--pur);text-decoration:none">${shortA(toAddr)}</a>${txHash?` <a href="https://snowtrace.io/tx/${txHash}" target="_blank" class="mono" style="font-size:.5rem;color:var(--mut);text-decoration:none">↗</a>`:''}`;
         return;
       }
     }
-    el.textContent='Not found';
+    // No mint found — show contract link
+    el.innerHTML=`<a href="https://snowtrace.io/address/${miner40Addr}" target="_blank" class="mono" style="font-size:.56rem;color:var(--red);text-decoration:none">View on Snowtrace ↗</a>`;
   }catch(e){
     const el2=document.getElementById('miner40FirstHolder');
-    if(el2)el2.textContent='—';
+    if(el2) el2.innerHTML=`<span style="color:var(--mut);font-size:.56rem">Could not fetch</span>`;
+    console.warn('fetchMiner40FirstHolder:',e.message);
   }
 }
 
@@ -2981,19 +3003,39 @@ async function updatePositionSummary() {
       const ptsRaw=BigInt(pts.toString());
       points = Number(ptsRaw) / 1e18;
     }catch(pe){ points=0; }
-    // Calculate position USD value from pool data
+    // Calculate position USD value — fetch AVAX price if not cached
     let lpPrice=0;
-    if(priceData&&poolData&&poolData.lpSupply>0){
-      const avaxPriceUsd=priceData.avaxPrice||0;
-      // TVL = 2 * avax side value (50/50 pool)
-      lpPrice=avaxPriceUsd>0?(avaxPriceUsd*poolData.avaxReserve*2/poolData.lpSupply):0;
-    }
+    try{
+      let avaxPriceUsd=priceData?.avaxPrice||0;
+      let lpSupply=poolData?.lpSupply||0;
+      let avaxReserve=poolData?.avaxReserve||0;
+      // If prices not loaded yet, fetch them now
+      if(!avaxPriceUsd||!lpSupply){
+        const prov2=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+        const [avRes,lpRes]=await Promise.allSettled([
+          fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7').then(x=>x.json()),
+          new ethers.Contract(HCASH_LP_ADDR,LP_ABI,prov2).getReserves().then(async r=>{
+            const lp2=new ethers.Contract(HCASH_LP_ADDR,['function totalSupply() view returns (uint256)','function token0() view returns (address)'],prov2);
+            const [ts,t0]=await Promise.all([lp2.totalSupply(),lp2.token0()]);
+            const isW=t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
+            return {avaxR:parseFloat(ethers.formatEther(isW?r[0]:r[1])),supply:parseFloat(ethers.formatEther(ts))};
+          })
+        ]);
+        if(avRes.status==='fulfilled') avaxPriceUsd=Number(avRes.value?.pairs?.[0]?.priceUsd||0);
+        if(lpRes.status==='fulfilled'){ lpSupply=lpRes.value.supply; avaxReserve=lpRes.value.avaxR; }
+        if(priceData) priceData.avaxPrice=avaxPriceUsd;
+        if(poolData){ poolData.lpSupply=lpSupply; poolData.avaxReserve=avaxReserve; }
+      }
+      if(avaxPriceUsd>0&&lpSupply>0&&avaxReserve>0){
+        lpPrice=avaxPriceUsd*avaxReserve*2/lpSupply;
+      }
+    }catch(pe){ console.warn('lpPrice fetch:',pe.message); }
     const totalLp=staked+locked;
     const posUsd=totalLp*lpPrice;
     setHtml('positionSummary',`
       <div class="calc-row"><span class="calc-lbl">LP Staked</span><span class="calc-val cr">${staked.toFixed(6)} LP</span></div>
       <div class="calc-row"><span class="calc-lbl">LP Locked</span><span class="calc-val cg">${locked.toFixed(6)} LP</span></div>
-      <div class="calc-row"><span class="calc-lbl">Position Value</span><span class="calc-val cgn">${posUsd>0?fmtK(posUsd):'Fetching…'}</span></div>
+      <div class="calc-row"><span class="calc-lbl">Position Value</span><span class="calc-val cgn">${posUsd>0?fmtK(posUsd):'—'}</span></div>
     `);
     setHtml('pointsEstimate',`
       <div class="calc-row"><span class="calc-lbl">Current Points</span><span class="calc-val cr">${fmtP(points)}</span></div>
@@ -3032,12 +3074,30 @@ async function loadUserPosition() {
       const ptsRaw=BigInt(pts.toString());
       points = Number(ptsRaw) / 1e18;
     }catch(pe){ points=0; }
-    // Recalculate LP price fresh
+    // Recalculate LP price fresh — fetch AVAX price if not cached
     let lpPrice=0;
-    if(priceData&&poolData&&poolData.lpSupply>0){
-      const avaxPriceUsd=priceData.avaxPrice||0;
-      lpPrice=avaxPriceUsd>0?(avaxPriceUsd*poolData.avaxReserve*2/poolData.lpSupply):0;
-    }
+    try{
+      let avaxPriceUsd=priceData?.avaxPrice||0;
+      let lpSupply=poolData?.lpSupply||0;
+      let avaxReserve=poolData?.avaxReserve||0;
+      if(!avaxPriceUsd||!lpSupply){
+        const prov2=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+        const [avRes,lpRes]=await Promise.allSettled([
+          fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7').then(x=>x.json()),
+          new ethers.Contract(HCASH_LP_ADDR,LP_ABI,prov2).getReserves().then(async r=>{
+            const lp2=new ethers.Contract(HCASH_LP_ADDR,['function totalSupply() view returns (uint256)','function token0() view returns (address)'],prov2);
+            const [ts,t0]=await Promise.all([lp2.totalSupply(),lp2.token0()]);
+            const isW=t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
+            return {avaxR:parseFloat(ethers.formatEther(isW?r[0]:r[1])),supply:parseFloat(ethers.formatEther(ts))};
+          })
+        ]);
+        if(avRes.status==='fulfilled') avaxPriceUsd=Number(avRes.value?.pairs?.[0]?.priceUsd||0);
+        if(lpRes.status==='fulfilled'){ lpSupply=lpRes.value.supply; avaxReserve=lpRes.value.avaxR; }
+        if(priceData) priceData.avaxPrice=avaxPriceUsd;
+        if(poolData){ poolData.lpSupply=lpSupply; poolData.avaxReserve=avaxReserve; }
+      }
+      if(avaxPriceUsd>0&&lpSupply>0&&avaxReserve>0) lpPrice=avaxPriceUsd*avaxReserve*2/lpSupply;
+    }catch(pe){}
     const total=moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
     const share=total&&points?(points/total*100).toFixed(4):0;
     const hasPos=staked>0||locked>0;
@@ -3287,6 +3347,15 @@ async function showMinerDetail(id) {
   if(!el) return;
   el.innerHTML = '<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:2rem"><span class="spin"></span>Loading on-chain data…</div>';
 
+  // Auto-fetch miner data if not yet cached
+  if(!_minerData[id]) {
+    try {
+      const d = await fetch(`${HCASH_API}/contracts`,{headers:{'x-api-key':HCASH_API_KEY}}).then(x=>x.json());
+      const contracts = d?.contracts||d||[];
+      contracts.forEach(m=>{ _minerData[m.id||m.name||''] = m; });
+    } catch(e) { console.warn('showMinerDetail auto-fetch:',e.message); }
+  }
+
   const miner = _minerData[id];
   const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
 
@@ -3343,7 +3412,19 @@ async function showMinerDetail(id) {
   }
 
   if(!miner) {
-    el.innerHTML = `<div class="card"><div class="cbody"><div class="mono" style="color:var(--mut)">Miner data not loaded. Go back and reload miners.</div></div></div>`;
+    // For known miners, show what we know even without API data
+    const KNOWN_MINERS = {
+      'miner_nft:27': { id:'miner_nft:27', name:'Miner #27', category:'miner_nft', minerStats:{hashrateFormatted:'100 MH/s', powerFormatted:'100W'} },
+      'miner_nft:40': { id:'miner_nft:40', name:'The Grotto', category:'miner_nft', address:'0xACB74BE83e4B51D2E1EAbA1D1FA9d98Be44fA697', minerStats:{hashrateFormatted:'150 MH/s', powerFormatted:'200W'} },
+    };
+    const fallback = KNOWN_MINERS[id];
+    if(!fallback) {
+      el.innerHTML = `<div class="card"><div class="cbody"><div class="mono" style="color:var(--mut)">Miner data not found. <button class="btn btn-g btn-sm" onclick="loadMiners().then(()=>showMinerDetail('${id}'))">↺ Load Miners</button></div></div></div>`;
+      return;
+    }
+    _minerData[id] = fallback;
+    // Re-run with the fallback data
+    showMinerDetail(id);
     return;
   }
 
