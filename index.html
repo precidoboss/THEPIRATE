@@ -19,8 +19,8 @@
   --red2: #fc4f4f;
   --red-glow: rgba(229,62,62,0.15);
   --white: #f0f0f5;
-  --dim: #7a7b96;
-  --mut: #4a4b65;
+  --dim: #9a9bb6;
+  --mut: #5a5b75;
   --gold: #d4a843;
   --grn: #4ade80;
   --acc: #e53e3e;
@@ -28,6 +28,15 @@
   --pur: #818cf8;
   --cyn: #22d3ee;
   --txt: #e8e9f5;
+  /* Typography scale — all sizes bumped up 30-40% */
+  --fs-xs:  0.72rem;   /* was .48-.52rem */
+  --fs-sm:  0.82rem;   /* was .55-.6rem  */
+  --fs-base:0.95rem;   /* was .65-.75rem */
+  --fs-md:  1.05rem;   /* was .78-.85rem */
+  --fs-lg:  1.2rem;    /* was .9-1rem    */
+  --fs-xl:  1.5rem;    /* was 1.1-1.3rem */
+  --fs-2xl: 1.9rem;    /* was 1.3-1.6rem */
+  --fs-3xl: 2.6rem;    /* was 2rem       */
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-tap-highlight-color:transparent;scroll-behavior:smooth}
@@ -35,10 +44,12 @@ body{
   background:var(--bg);
   color:var(--txt);
   font-family:'Barlow Condensed',sans-serif;
+  font-size:16px;
+  line-height:1.5;
   overflow-x:hidden;
   min-height:100dvh;
 }
-/* Noise texture overlay */
+/* Noise texture */
 body::after{
   content:'';position:fixed;inset:0;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
@@ -50,33 +61,33 @@ body::before{
   background-image:
     linear-gradient(rgba(229,62,62,0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(229,62,62,0.03) 1px, transparent 1px);
-  background-size:40px 40px;
+  background-size:44px 44px;
   pointer-events:none;z-index:0;
 }
 
 /* ── SCROLLBAR ── */
-::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--sur)}
 ::-webkit-scrollbar-thumb{background:var(--red);border-radius:99px}
 
-/* ── MONO FONT ── */
+/* ── FONT HELPERS ── */
 .mono{font-family:'Share Tech Mono',monospace}
 .raj{font-family:'Rajdhani',sans-serif}
 
 /* ── LIVE DOT ── */
-.live{display:inline-flex;align-items:center;gap:5px;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grn)}
-.ld{width:6px;height:6px;border-radius:50%;background:var(--grn);box-shadow:0 0 8px var(--grn);animation:pulse 1.8s ease-in-out infinite}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--grn)}
+.ld{width:7px;height:7px;border-radius:50%;background:var(--grn);box-shadow:0 0 8px var(--grn);animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
 
 /* ── TICKER BAR ── */
 .tkbar{
   background:rgba(229,62,62,0.06);
   border-bottom:1px solid rgba(229,62,62,0.15);
-  height:28px;overflow:hidden;display:flex;align-items:center;position:relative;z-index:20;
+  height:32px;overflow:hidden;display:flex;align-items:center;position:relative;z-index:20;
 }
 .tkin{
   display:inline-flex;gap:60px;white-space:nowrap;
-  font-family:'Share Tech Mono',monospace;font-size:.58rem;
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);
   color:var(--dim);animation:tka 60s linear infinite;
 }
 @keyframes tka{to{transform:translateX(-50%)}}
@@ -88,35 +99,35 @@ header{
   border-bottom:1px solid var(--bor);
   background:rgba(6,6,8,.97);
   backdrop-filter:blur(24px);
-  padding:0 1rem;
+  padding:0 1.2rem;
   display:flex;align-items:center;justify-content:space-between;
-  height:58px;gap:8px;
+  height:68px;gap:10px;
 }
 .logo{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:12px;
   font-family:'Rajdhani',sans-serif;font-weight:700;
-  font-size:1.2rem;letter-spacing:.04em;
+  font-size:var(--fs-lg);letter-spacing:.04em;
   color:var(--txt);text-decoration:none;flex-shrink:0;
 }
 .logo-img{
-  width:38px;height:38px;border-radius:8px;
+  width:42px;height:42px;border-radius:9px;
   object-fit:cover;border:1px solid rgba(229,62,62,0.4);
-  box-shadow:0 0 12px rgba(229,62,62,0.2);
+  box-shadow:0 0 14px rgba(229,62,62,0.2);
 }
 .logo em{color:var(--red);font-style:normal}
 .logo-sub{
   font-family:'Share Tech Mono',monospace;
-  font-size:.5rem;letter-spacing:.15em;
+  font-size:var(--fs-xs);letter-spacing:.15em;
   color:var(--mut);text-transform:uppercase;
-  display:block;margin-top:-2px;
+  display:block;margin-top:-1px;
 }
-.navtabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.navtabs{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none}
 .navtabs::-webkit-scrollbar{display:none}
 .tab{
-  padding:5px 11px;border-radius:5px;cursor:pointer;
+  padding:7px 14px;border-radius:6px;cursor:pointer;
   color:var(--mut);transition:all .15s;
   border:1px solid transparent;
-  font-family:'Share Tech Mono',monospace;font-size:.6rem;
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);
   white-space:nowrap;user-select:none;flex-shrink:0;
   letter-spacing:.04em;text-transform:uppercase;
 }
@@ -125,90 +136,95 @@ header{
 .hdr-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
 /* ── MAIN ── */
-main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
-@media(min-width:768px){main{padding:1.2rem}}
+main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
+@media(min-width:768px){main{padding:1.4rem}}
 .view{display:none}.view.on{display:block}
 
 /* ── SECTION HEAD ── */
-.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;gap:8px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;gap:8px}
 .sh-t{
   font-family:'Rajdhani',sans-serif;font-weight:700;
-  font-size:.9rem;text-transform:uppercase;letter-spacing:.12em;
-  color:var(--dim);display:flex;align-items:center;gap:10px;
+  font-size:var(--fs-md);text-transform:uppercase;letter-spacing:.1em;
+  color:var(--dim);display:flex;align-items:center;gap:12px;
 }
-.sh-t::before{content:'';width:16px;height:1px;background:var(--red)}
+.sh-t::before{content:'';width:18px;height:2px;background:var(--red)}
 
 /* ── CARDS ── */
 .card{
   background:var(--card);border:1px solid var(--bor);
-  border-radius:10px;overflow:hidden;margin-bottom:.85rem;
+  border-radius:12px;overflow:hidden;margin-bottom:1rem;
   position:relative;
 }
 .card:hover{border-color:var(--bor2)}
-.ch{padding:.7rem 1rem;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.ctitle{
-  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.8rem;
-  text-transform:uppercase;letter-spacing:.08em;
-  display:flex;align-items:center;gap:7px;
+.ch{
+  padding:.85rem 1.2rem;
+  border-bottom:1px solid var(--bor);
+  display:flex;align-items:center;justify-content:space-between;gap:8px
 }
-.cbody{padding:1rem}
+.ctitle{
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:var(--fs-base);
+  text-transform:uppercase;letter-spacing:.07em;
+  display:flex;align-items:center;gap:8px;
+}
+.cbody{padding:1.1rem}
 
 /* ── STAT GRID ── */
-.sg{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-bottom:.85rem}
+.sg{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-bottom:1rem}
 @media(min-width:460px){.sg{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:900px){.sg{grid-template-columns:repeat(5,1fr)}}
 .sc{
   background:var(--card);border:1px solid var(--bor);
-  border-radius:8px;padding:.8rem;
+  border-radius:10px;padding:1rem;
   position:relative;overflow:hidden;
   transition:border-color .2s;
 }
 .sc::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--red),transparent);
   opacity:0;transition:.2s;
 }
 .sc:hover::before{opacity:.6}
 .sc:hover{border-color:rgba(229,62,62,0.22)}
-.sl{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem}
-.sv{font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;line-height:1}
-.ss{font-size:.6rem;color:var(--mut);margin-top:2px;font-family:'Share Tech Mono',monospace}
+.sl{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem}
+.sv{font-family:'Rajdhani',sans-serif;font-size:var(--fs-xl);font-weight:700;line-height:1}
+.ss{font-size:var(--fs-xs);color:var(--mut);margin-top:3px;font-family:'Share Tech Mono',monospace}
 .cr{color:var(--red)}.cg{color:var(--gold)}.cgn{color:var(--grn)}.cd{color:var(--dim)}.cw{color:var(--white)}
 
 /* ── GRID ── */
-.g2{display:grid;grid-template-columns:1fr;gap:.85rem}
+.g2{display:grid;grid-template-columns:1fr;gap:1rem}
 @media(min-width:720px){.g2{grid-template-columns:1fr 1fr}}
-.gsb{display:grid;grid-template-columns:1fr;gap:.85rem}
+.gsb{display:grid;grid-template-columns:1fr;gap:1rem}
 @media(min-width:1024px){.gsb{grid-template-columns:1fr 360px}}
 
 /* ── BUTTONS ── */
 .btn{
-  padding:.5rem 1rem;background:var(--red);
-  border:none;border-radius:6px;
+  padding:.6rem 1.15rem;background:var(--red);
+  border:none;border-radius:7px;
   color:#fff;font-family:'Rajdhani',sans-serif;
-  font-weight:700;font-size:.8rem;letter-spacing:.06em;
+  font-weight:700;font-size:var(--fs-base);letter-spacing:.06em;
   cursor:pointer;transition:all .15s;text-transform:uppercase;
   display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
 }
-.btn:hover{background:var(--red2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(229,62,62,0.3)}
+.btn:hover{background:var(--red2);transform:translateY(-1px);box-shadow:0 4px 18px rgba(229,62,62,0.3)}
 .btn:active{transform:translateY(0)}
 .btn-g{
   background:transparent;border:1px solid var(--bor);
   color:var(--dim);
 }
 .btn-g:hover{border-color:var(--red);color:var(--txt);background:transparent;box-shadow:none;transform:none}
-.btn-sm{padding:3px 8px;font-size:.65rem}
+.btn-sm{padding:4px 11px;font-size:var(--fs-xs)}
 .btn-gold{background:var(--gold);color:#0a0a0f}
-.btn-gold:hover{filter:brightness(1.1);box-shadow:0 4px 16px rgba(212,168,67,0.3)}
+.btn-gold:hover{filter:brightness(1.1);box-shadow:0 4px 18px rgba(212,168,67,0.3)}
 .btn-green{background:var(--grn);color:#0a0a0f}
-.btn-green:hover{filter:brightness(1.1);box-shadow:0 4px 16px rgba(74,222,128,0.3)}
+.btn-green:hover{filter:brightness(1.1);box-shadow:0 4px 18px rgba(74,222,128,0.3)}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 
 /* ── INPUTS ── */
 .inp{
-  background:var(--sur);border:1px solid var(--bor);border-radius:6px;
-  padding:.5rem .75rem;color:var(--txt);
-  font-family:'Share Tech Mono',monospace;font-size:.8rem;
+  background:var(--sur);border:1px solid var(--bor);border-radius:7px;
+  padding:.6rem .9rem;color:var(--txt);
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);
   outline:none;width:100%;transition:border-color .15s;
 }
 .inp:focus{border-color:rgba(229,62,62,0.45)}
@@ -216,331 +232,242 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
 
 /* ── TABLE ── */
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{font-family:'Share Tech Mono',monospace;font-size:.48rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);padding:.45rem .7rem;text-align:left;border-bottom:1px solid var(--bor)}
-.tbl td{padding:.5rem .7rem;font-size:.75rem;border-bottom:1px solid rgba(31,32,48,.5);vertical-align:middle}
+.tbl th{
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);
+  text-transform:uppercase;letter-spacing:.1em;color:var(--mut);
+  padding:.6rem .85rem;text-align:left;border-bottom:1px solid var(--bor)
+}
+.tbl td{padding:.65rem .85rem;font-size:var(--fs-sm);border-bottom:1px solid rgba(31,32,48,.5);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:rgba(229,62,62,0.025)}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tw::-webkit-scrollbar{height:2px}
+.tw::-webkit-scrollbar{height:3px}
 
 /* ── SPINNER ── */
 .spin{
-  display:inline-block;width:12px;height:12px;
+  display:inline-block;width:14px;height:14px;
   border:2px solid rgba(229,62,62,0.2);
   border-top-color:var(--red);border-radius:50%;
-  animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px;
+  animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── BAR ── */
-.bw{display:flex;align-items:center;gap:6px}
-.bt{flex:1;height:3px;background:var(--bor);border-radius:99px;overflow:hidden;min-width:28px}
+.bw{display:flex;align-items:center;gap:8px}
+.bt{flex:1;height:4px;background:var(--bor);border-radius:99px;overflow:hidden;min-width:32px}
 .bf{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),var(--red2));transition:width .8s}
-.bv{font-family:'Share Tech Mono',monospace;font-size:.64rem;min-width:42px;text-align:right}
+.bv{font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);min-width:50px;text-align:right}
 
 /* ── WALLET CONNECT ── */
 .wc-btn{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:12px;
   background:linear-gradient(135deg,rgba(229,62,62,0.08),rgba(229,62,62,0.03));
-  border:2px solid rgba(229,62,62,0.25);border-radius:10px;
-  padding:1rem 1.2rem;cursor:pointer;transition:all .2s;width:100%;
+  border:2px solid rgba(229,62,62,0.25);border-radius:11px;
+  padding:1.1rem 1.3rem;cursor:pointer;transition:all .2s;width:100%;
 }
-.wc-btn:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 6px 20px rgba(229,62,62,0.15)}
+.wc-btn:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 6px 22px rgba(229,62,62,0.15)}
 .wc-btn.connected{border-color:var(--grn);background:linear-gradient(135deg,rgba(74,222,128,0.06),transparent)}
 
 /* ── LP CARD SPECIAL ── */
 .lp-hero{
   background:linear-gradient(135deg,rgba(229,62,62,0.1),rgba(212,168,67,0.05),rgba(6,6,8,0) 70%);
-  border:1px solid rgba(229,62,62,0.2);border-radius:12px;
-  padding:1.2rem;margin-bottom:.85rem;
+  border:1px solid rgba(229,62,62,0.2);border-radius:13px;
+  padding:1.3rem;margin-bottom:1rem;
   position:relative;overflow:hidden;
 }
 .lp-hero::before{
-  content:'💧';position:absolute;right:1rem;top:.8rem;
-  font-size:4rem;opacity:.08;
+  content:'💧';position:absolute;right:1.2rem;top:.9rem;
+  font-size:4.5rem;opacity:.08;
 }
 .lp-amt-row{
-  display:flex;gap:5px;align-items:center;
+  display:flex;gap:6px;align-items:center;
 }
 
 /* ── LOCK DURATION GRID ── */
-.dur-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:.7rem}
+.dur-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:.85rem}
 .dur-btn{
-  background:var(--sur);border:1.5px solid var(--bor);border-radius:7px;
-  padding:.4rem .2rem;text-align:center;cursor:pointer;transition:all .15s;
+  background:var(--sur);border:1.5px solid var(--bor);border-radius:8px;
+  padding:.55rem .3rem;text-align:center;cursor:pointer;transition:all .15s;
 }
 .dur-btn.active{
   background:rgba(212,168,67,.1);border-color:var(--gold);
 }
 .dur-btn:hover:not(.active){border-color:var(--bor2)}
-.dur-days{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.75rem}
-.dur-mult{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--mut)}
+.dur-days{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm)}
+.dur-mult{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)}
 .dur-btn.active .dur-days{color:var(--gold)}
 .dur-btn.active .dur-mult{color:var(--gold)}
 
 /* ── LOCK ROW ── */
 .lock-row{
   background:var(--sur);border:1.5px solid rgba(212,168,67,.15);
-  border-radius:9px;padding:.7rem;margin-bottom:.5rem;
+  border-radius:10px;padding:.85rem;margin-bottom:.6rem;
 }
-.lock-prog{height:3px;background:var(--bor);border-radius:99px;overflow:hidden;margin:.4rem 0}
+.lock-prog{height:4px;background:var(--bor);border-radius:99px;overflow:hidden;margin:.5rem 0}
 .lock-prog-fill{height:100%;border-radius:99px;transition:width .5s}
 
-
 /* ── PEN GRID ── */
-.pen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem;margin-bottom:.85rem}
+.pen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem;margin-bottom:1rem}
 @media(min-width:600px){.pen-grid{grid-template-columns:repeat(5,1fr)}}
-.pen-row{background:var(--card);border:1px solid var(--bor);border-radius:7px;padding:.45rem .6rem;display:flex;flex-direction:column;gap:2px}
+.pen-row{background:var(--card);border:1px solid var(--bor);border-radius:8px;padding:.6rem .75rem;display:flex;flex-direction:column;gap:3px}
+
 /* ── SWAP ── */
-.slip-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:.5rem}
-.slip-btn{background:var(--sur);border:1px solid var(--bor);border-radius:5px;padding:2px 8px;color:var(--mut);font-family:'Share Tech Mono',monospace;font-size:.55rem;cursor:pointer;transition:all .12s}
+.slip-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.6rem}
+.slip-btn{background:var(--sur);border:1px solid var(--bor);border-radius:6px;padding:3px 10px;color:var(--mut);font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);cursor:pointer;transition:all .12s}
 .slip-btn.active{border-color:var(--red);color:var(--red2)}
+
 /* ── CALC ROW ── */
-.calc-row{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid rgba(31,32,48,.4)}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid rgba(31,32,48,.4)}
 .calc-row:last-child{border-bottom:none}
-.calc-lbl{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--mut)}
-.calc-val{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem}
+.calc-lbl{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)}
+.calc-val{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-md)}
+
 /* ── BANNER ── */
-.banner{background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.12);border-radius:10px;padding:.85rem;margin-bottom:.85rem}
+.banner{background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.12);border-radius:12px;padding:1rem;margin-bottom:1rem}
+
 /* ── EXPLORER HERO ── */
-.explorer-hero{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(229,62,62,.07),rgba(212,168,67,.04),transparent 80%);border:1px solid rgba(229,62,62,.18);border-radius:12px;padding:1.1rem;margin-bottom:.85rem}
+.explorer-hero{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(229,62,62,.07),rgba(212,168,67,.04),transparent 80%);border:1px solid rgba(229,62,62,.18);border-radius:14px;padding:1.3rem;margin-bottom:1rem}
+
 /* ── EV FEED ── */
-.evf{max-height:500px;overflow-y:auto;padding:.5rem}
-.ei{display:flex;gap:8px;padding:.55rem .3rem;border-bottom:1px solid rgba(31,32,48,.4)}
+.evf{max-height:520px;overflow-y:auto;padding:.55rem}
+.ei{display:flex;gap:10px;padding:.65rem .4rem;border-bottom:1px solid rgba(31,32,48,.4)}
 .ei:last-child{border-bottom:none}
+
 /* ── RANK ── */
-.rk{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem;background:var(--sur)}
+.rk{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:5px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm);background:var(--sur)}
 .r1{background:rgba(212,168,67,.15);color:var(--gold)}.r2{background:rgba(192,192,192,.1);color:#aaa}.r3{background:rgba(180,100,50,.1);color:#cd7f32}.rn{color:var(--mut)}
+
 /* ── SIG ── */
-.sig{display:flex;gap:10px;background:var(--card);border:1px solid var(--bor);border-radius:9px;padding:.75rem;margin-bottom:.55rem}
+.sig{display:flex;gap:12px;background:var(--card);border:1px solid var(--bor);border-radius:10px;padding:.9rem;margin-bottom:.65rem}
+.sig-icon{font-size:1.55rem;flex-shrink:0;margin-top:2px}
+.sig-body{flex:1;min-width:0}
+.sig-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-md);margin-bottom:4px}
+.sig-desc{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);line-height:1.65}
+
+/* ── MINING POOL DISPLAY ── */
+.pool-bar-wrap{background:var(--sur);border-radius:99px;height:10px;overflow:hidden;margin:.6rem 0}
+.pool-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),var(--red2));transition:width .8s}
 
 /* ── MINER CARDS ── */
-.miner-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:.85rem}
-@media(min-width:460px){.miner-grid{grid-template-columns:repeat(3,1fr)}}
+.miner-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1rem}
+@media(min-width:600px){.miner-grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:900px){.miner-grid{grid-template-columns:repeat(4,1fr)}}
 .miner-card{
-  background:var(--card);border:1px solid var(--bor);
-  border-radius:10px;overflow:hidden;cursor:pointer;
-  transition:all .2s;
+  background:var(--card);border:1px solid var(--bor);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:all .2s;
 }
-.miner-card:hover{border-color:rgba(229,62,62,0.3);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.5)}
-.miner-img{width:100%;aspect-ratio:1;object-fit:cover}
-.miner-img-fb{
-  width:100%;aspect-ratio:1;display:flex;align-items:center;
-  justify-content:center;background:var(--sur);font-size:2.5rem;
-}
-.miner-info{padding:.6rem}
-.miner-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:.3rem}
-.miner-stat{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:.52rem;margin-top:.2rem}
-.miner-stat-k{color:var(--mut)}
-.miner-stat-v{color:var(--txt)}
+.miner-card:hover{border-color:rgba(229,62,62,.35);transform:translateY(-2px);box-shadow:0 6px 20px rgba(229,62,62,.1)}
+.miner-img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.miner-img-fb{width:100%;aspect-ratio:1;background:rgba(229,62,62,.08);display:flex;align-items:center;justify-content:center;font-size:3rem}
+.miner-info{padding:.7rem}
+.miner-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-base);margin-bottom:.4rem}
+.miner-stat{display:flex;justify-content:space-between;align-items:center;padding:.2rem 0}
+.miner-stat-k{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)}
+.miner-stat-v{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm)}
 
 /* ── NOTIF ── */
 #notif{
-  position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;
-  display:flex;flex-direction:column;gap:.4rem;pointer-events:none;
+  position:fixed;top:80px;right:18px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;
 }
 .ntf{
-  background:var(--card);border:1px solid var(--bor);border-radius:8px;
-  padding:.6rem 1rem;font-family:'Share Tech Mono',monospace;font-size:.65rem;
-  max-width:280px;animation:nfade 4s ease forwards;
-  pointer-events:auto;
+  background:var(--card);border:1px solid var(--bor);
+  border-radius:9px;padding:.75rem 1rem;
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);
+  color:var(--txt);pointer-events:auto;
+  animation:ntfIn .2s ease;max-width:320px;line-height:1.45;
 }
-.ntf.success{border-color:rgba(74,222,128,.4);color:var(--grn)}
-.ntf.error{border-color:rgba(229,62,62,.4);color:var(--red2)}
-.ntf.warn{border-color:rgba(212,168,67,.4);color:var(--gold)}
-@keyframes nfade{0%{opacity:0;transform:translateY(8px)}10%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@keyframes ntfIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.ntf.success{border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.07)}
+.ntf.error{border-color:rgba(229,62,62,.35);background:rgba(229,62,62,.07)}
+.ntf.warn{border-color:rgba(212,168,67,.35);background:rgba(212,168,67,.07)}
 
-/* ── TABS (inner) ── */
-.ptabs{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;margin-bottom:.85rem}
-.ptab{
-  padding:4px 12px;border-radius:6px;cursor:pointer;
-  font-family:'Share Tech Mono',monospace;font-size:.58rem;
-  border:1px solid var(--bor);background:transparent;
-  color:var(--mut);white-space:nowrap;transition:all .15s;
-  text-transform:uppercase;letter-spacing:.04em;
-}
-.ptab:hover{border-color:var(--bor2);color:var(--txt)}
-.ptab.on{border-color:rgba(229,62,62,.35);background:rgba(229,62,62,.08);color:var(--red2)}
-.ptab-gold.on{border-color:rgba(212,168,67,.35);background:rgba(212,168,67,.08);color:var(--gold)}
-
-/* ── PANE ── */
+/* ── INNER TABS ── */
+.ptabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:4px;margin-bottom:.85rem}
+.ptabs::-webkit-scrollbar{display:none}
+.ptab{flex:1;min-width:fit-content;padding:7px 12px;border-radius:7px;background:transparent;border:none;color:var(--mut);font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;justify-content:center;user-select:none}
+.ptab:hover{color:var(--txt)}
+.ptab.on{background:var(--card);color:var(--red2);box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .pane{display:none}.pane.on{display:block}
-
-/* ── SLIPPAGE ROW ── */
-.slip-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:.7rem}
-.slip-btn{padding:2px 8px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:.55rem;border:1px solid var(--bor);background:transparent;color:var(--mut);cursor:pointer;transition:all .1s}
-.slip-btn.active{border-color:rgba(229,62,62,.4);background:rgba(229,62,62,.1);color:var(--red2)}
-
-/* ── TOKEN BADGE ── */
-.tok-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:4px 10px;border-radius:6px;
-  font-family:'Share Tech Mono',monospace;font-size:.65rem;
-  cursor:pointer;transition:all .1s;border:1.5px solid transparent;
-}
-.tok-badge.active{border-color:rgba(229,62,62,.4);background:rgba(229,62,62,.1);color:var(--red2)}
-.tok-badge.inactive{border-color:var(--bor);background:var(--card);color:var(--mut)}
-.tok-badge:hover{border-color:var(--bor2);color:var(--txt)}
-
-/* ── SWAP BOX ── */
-.swap-box{
-  background:var(--sur);border:1px solid var(--bor);border-radius:10px;
-  padding:.85rem;margin-bottom:.35rem;transition:border-color .15s;
-}
-.swap-box:focus-within{border-color:rgba(229,62,62,.3)}
-.swap-big{
-  background:transparent;border:none;outline:none;
-  font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;
-  color:var(--txt);width:100%;min-width:0;
-}
-
-/* ── RANK ── */
-.rk{font-family:'Share Tech Mono',monospace;font-size:.6rem;font-weight:700;width:22px;height:22px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-.r1{background:rgba(212,168,67,.12);color:var(--gold);border:1px solid rgba(212,168,67,.25)}
-.r2{background:rgba(200,200,210,.06);color:#9aa0a8;border:1px solid rgba(200,200,210,.15)}
-.r3{background:rgba(140,90,60,.08);color:#a07050;border:1px solid rgba(140,90,60,.2)}
-.rn{background:rgba(74,75,101,.06);color:var(--mut);border:1px solid var(--bor)}
-
-/* ── PENALTY TABLE ── */
-.pen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem;margin-bottom:.85rem}
-.pen-row{
-  background:var(--sur);border:1px solid var(--bor);border-radius:6px;
-  padding:.45rem .6rem;display:flex;justify-content:space-between;align-items:center;
-}
-
-/* ── BANNER ── */
-.banner{
-  background:linear-gradient(135deg,rgba(229,62,62,.12),rgba(212,168,67,.04));
-  border:1px solid rgba(229,62,62,.2);border-radius:12px;
-  padding:1.1rem;margin-bottom:1rem;
-}
-
-/* ── EVENT STREAM ── */
-.evf{max-height:380px;overflow-y:auto;padding:.55rem .9rem}
-.ei{display:flex;gap:8px;align-items:flex-start;padding:.44rem 0;border-bottom:1px solid rgba(31,32,48,.4)}
-.ei:last-child{border-bottom:none}
-.ei.new-ev{animation:nev .7s ease}
-@keyframes nev{0%{background:rgba(229,62,62,.08);border-radius:5px}100%{background:transparent}}
-
-/* ── DELTA FLASH ── */
-.sv.flash{color:var(--red)!important}
-.delta{
-  display:inline-block;font-family:'Share Tech Mono',monospace;
-  font-size:.52rem;padding:1px 4px;border-radius:3px;margin-left:4px;
-  animation:dfade 4s ease forwards;
-}
-@keyframes dfade{0%,70%{opacity:1}100%{opacity:0}}
-.d-up{background:rgba(74,222,128,.12);color:var(--grn)}
-.d-dn{background:rgba(229,62,62,.12);color:var(--red)}
-
-/* ── MOAT EXPLORER ── */
-.explorer-hero{
-  background:linear-gradient(135deg,rgba(229,62,62,.08),rgba(212,168,67,.04));
-  border:2px solid rgba(229,62,62,.2);border-radius:14px;
-  padding:1.4rem;margin-bottom:1rem;
-  display:flex;align-items:center;gap:14px;
-}
-.explorer-icon{
-  width:56px;height:56px;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);
-  font-size:2rem;flex-shrink:0;
-}
-
-/* ── CALC ── */
-.calc-row{display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;border-bottom:1px solid rgba(31,32,48,.5)}
-.calc-row:last-child{border-bottom:none;padding-top:.55rem;margin-top:.1rem}
-.calc-lbl{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--mut)}
-.calc-val{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.88rem}
-
-/* ── SIGNAL BADGES ── */
-.sig{
-  display:flex;gap:8px;align-items:flex-start;
-  padding:.65rem .8rem;background:var(--sur);
-  border:1px solid var(--bor);border-radius:8px;margin-bottom:.4rem;
-}
-.sig-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
-.sig-body{flex:1;min-width:0}
-.sig-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.78rem;margin-bottom:2px}
-.sig-desc{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:var(--mut);line-height:1.55}
-
-/* ── MINING POOL DISPLAY ── */
-.pool-bar-wrap{background:var(--sur);border-radius:99px;height:8px;overflow:hidden;margin:.5rem 0}
-.pool-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),var(--red2));transition:width .8s}
 
 /* ── RESPONSIVE ── */
 @media(max-width:480px){
-  header{padding:0 .6rem;height:52px}
-  main{padding:.6rem}
+  header{padding:0 .75rem;height:58px}
+  main{padding:.75rem}
   .sg{grid-template-columns:repeat(2,1fr)}
 }
 
-/* ── MOBILE IMPROVEMENTS ── */
+/* ── MOBILE ── */
 @media(max-width:640px){
-  .navtabs{gap:1px}
-  .tab{padding:4px 8px;font-size:.52rem}
+  :root{
+    --fs-xs:0.68rem;
+    --fs-sm:0.78rem;
+    --fs-base:0.9rem;
+    --fs-md:1rem;
+    --fs-lg:1.1rem;
+    --fs-xl:1.35rem;
+    --fs-2xl:1.6rem;
+    --fs-3xl:2.1rem;
+  }
+  .navtabs{gap:2px}
+  .tab{padding:5px 10px}
   .sg{grid-template-columns:repeat(2,1fr)}
   .gsb{grid-template-columns:1fr}
   .g2{grid-template-columns:1fr}
   .dur-grid{grid-template-columns:repeat(4,1fr)}
   .miner-grid{grid-template-columns:repeat(2,1fr)}
   .ptabs{gap:2px}
-  .ptab{padding:3px 8px;font-size:.52rem}
-  .sv{font-size:1.1rem}
-  main{padding:.5rem}
-  .tbl th,.tbl td{padding:.4rem .5rem}
-  .btn{font-size:.72rem;padding:.42rem .8rem}
-  header{height:auto;min-height:52px;flex-wrap:wrap;padding:.4rem .6rem;gap:4px}
-  .logo{font-size:1rem}
+  .ptab{padding:4px 9px}
+  main{padding:.65rem}
+  .tbl th,.tbl td{padding:.5rem .6rem}
+  header{height:auto;min-height:58px;flex-wrap:wrap;padding:.5rem .75rem;gap:5px}
+  .logo{font-size:1.25rem}
   .hdr-r{flex-shrink:0}
-  .navtabs{order:3;width:100%;padding-bottom:3px}
-  .lp-amt-row{flex-wrap:nowrap}
-  .inp{font-size:.8rem}
+  .navtabs{order:3;width:100%;padding-bottom:4px}
 }
 @media(max-width:380px){
-  .tab{padding:3px 6px;font-size:.48rem}
+  .tab{padding:4px 7px}
   .sg{grid-template-columns:repeat(2,1fr)}
 }
 
-/* ── LIQUIDITY PAGE REDESIGN ── */
-.liq-tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:3px;margin-bottom:.75rem;-webkit-overflow-scrolling:touch}
+/* ── LIQUIDITY REDESIGN ── */
+.liq-tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;background:var(--sur);border:1px solid var(--bor);border-radius:11px;padding:4px;margin-bottom:.9rem;-webkit-overflow-scrolling:touch}
 .liq-tabs::-webkit-scrollbar{display:none}
-.liq-tab{flex:1;min-width:fit-content;padding:6px 10px;border-radius:7px;background:transparent;border:none;color:var(--mut);font-family:'Share Tech Mono',monospace;font-size:.54rem;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:4px;justify-content:center;user-select:none}
+.liq-tab{flex:1;min-width:fit-content;padding:8px 12px;border-radius:8px;background:transparent;border:none;color:var(--mut);font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;justify-content:center;user-select:none}
 .liq-tab:hover{color:var(--txt)}
 .liq-tab.active{background:var(--card);color:var(--red2);box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .liq-tab-gold.active{color:var(--gold)}
 .liq-tab-green.active{color:var(--grn)}
-@media(max-width:480px){.liq-tab{padding:5px 8px;font-size:.5rem}}
+@media(max-width:480px){.liq-tab{padding:6px 9px}}
 
 .liq-pane{display:none}
 .liq-pane.active{display:block}
-.liq-pane-inner{background:var(--card);border:1px solid var(--bor);border-radius:12px;padding:1rem;margin-bottom:0}
-.liq-step-label{font-size:.7rem;color:var(--dim);line-height:1.6;margin-bottom:.75rem;padding-bottom:.6rem;border-bottom:1px solid var(--bor)}
-.liq-token-row{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:.7rem .85rem;margin-bottom:.5rem;transition:border-color .15s}
+.liq-pane-inner{background:var(--card);border:1px solid var(--bor);border-radius:13px;padding:1.2rem;margin-bottom:0}
+.liq-step-label{font-size:var(--fs-base);color:var(--dim);line-height:1.6;margin-bottom:.85rem;padding-bottom:.7rem;border-bottom:1px solid var(--bor)}
+.liq-token-row{display:flex;align-items:center;gap:12px;background:var(--sur);border:1px solid var(--bor);border-radius:11px;padding:.85rem 1rem;margin-bottom:.6rem;transition:border-color .15s}
 .liq-token-row:focus-within{border-color:rgba(229,62,62,.4)}
-.liq-token-icon{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem;background:var(--card);border:1px solid var(--bor);overflow:hidden}
+.liq-token-icon{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.55rem;background:var(--card);border:1px solid var(--bor);overflow:hidden}
 .liq-token-info{flex:1;min-width:0}
-.liq-token-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--txt)}
-.liq-token-bal{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut);margin-top:1px}
-.liq-token-input-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0}
-.liq-input{background:transparent;border:none;outline:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.15rem;color:var(--txt);text-align:right;width:110px;padding:0}
-@media(max-width:380px){.liq-input{width:80px;font-size:.95rem}}
-.liq-max-btn{padding:2px 7px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.25);border-radius:4px;color:var(--red);font-family:'Share Tech Mono',monospace;font-size:.5rem;cursor:pointer;transition:all .12s;white-space:nowrap}
+.liq-token-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-md);color:var(--txt)}
+.liq-token-bal{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:2px}
+.liq-token-input-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.liq-input{background:transparent;border:none;outline:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-xl);color:var(--txt);text-align:right;width:120px;padding:0}
+@media(max-width:380px){.liq-input{width:85px;font-size:var(--fs-lg)}}
+.liq-max-btn{padding:3px 9px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.25);border-radius:5px;color:var(--red);font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);cursor:pointer;transition:all .12s;white-space:nowrap}
 .liq-max-btn:hover{background:rgba(229,62,62,.2)}
-.liq-plus-divider{text-align:center;color:var(--mut);font-size:.9rem;margin:.1rem 0;line-height:1}
-.liq-preview{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--gold);min-height:1.2em;padding:.3rem 0;margin:.2rem 0}
-.liq-slip-row{display:flex;align-items:center;gap:5px;margin:.5rem 0;flex-wrap:wrap}
-.liq-action-btn{width:100%;padding:.65rem;margin-top:.5rem;font-size:.8rem}
-.liq-status{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--mut);text-align:center;margin-top:.45rem;min-height:1.1em;line-height:1.5}
-.liq-note{font-size:.62rem;color:var(--mut);line-height:1.55;margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--bor)}
-.liq-info-strip{display:flex;gap:1rem;flex-wrap:wrap;background:var(--sur);border:1px solid var(--bor);border-radius:7px;padding:.5rem .75rem}
-.liq-swap-dir-row{display:flex;gap:6px;margin-bottom:.5rem}
-.liq-dir-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:.5rem;background:var(--sur);border:1.5px solid var(--bor);border-radius:9px;cursor:pointer;transition:all .15s;font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--mut)}
+.liq-plus-divider{text-align:center;color:var(--mut);font-size:1.55rem;margin:.15rem 0;line-height:1}
+.liq-preview{font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);color:var(--gold);min-height:1.3em;padding:.35rem 0;margin:.25rem 0}
+.liq-slip-row{display:flex;align-items:center;gap:6px;margin:.6rem 0;flex-wrap:wrap}
+.liq-action-btn{width:100%;padding:.75rem;margin-top:.6rem;font-size:var(--fs-base)}
+.liq-status{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);text-align:center;margin-top:.5rem;min-height:1.2em;line-height:1.5}
+.liq-note{font-size:var(--fs-xs);color:var(--mut);line-height:1.6;margin-top:.7rem;padding-top:.6rem;border-top:1px solid var(--bor)}
+.liq-info-strip{display:flex;gap:1.1rem;flex-wrap:wrap;background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.6rem .9rem}
+.liq-swap-dir-row{display:flex;gap:7px;margin-bottom:.6rem}
+.liq-dir-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:.65rem;background:var(--sur);border:1.5px solid var(--bor);border-radius:10px;cursor:pointer;transition:all .15s;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)}
 .liq-dir-btn.active{background:rgba(229,62,62,.08);border-color:var(--red);color:var(--red2)}
 .liq-dir-btn:hover:not(.active){border-color:var(--bor2);color:var(--txt)}
-.liq-dir-arrow{color:var(--mut);font-size:.75rem}
-.liq-dex-link{display:flex;align-items:center;gap:8px;flex:1;min-width:120px;background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.55rem .7rem;transition:border-color .15s;color:var(--txt)}
+.liq-dir-arrow{color:var(--mut);font-size:1.35rem}
+.liq-dex-link{display:flex;align-items:center;gap:10px;flex:1;min-width:130px;background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:.65rem .85rem;transition:border-color .15s;color:var(--txt)}
 .liq-dex-link:hover{border-color:rgba(229,62,62,.25)}
 </style>
 </head>
@@ -586,7 +513,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/hashcashclub.png"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
       alt="hCASH">
-    <span style="width:38px;height:38px;border-radius:8px;background:var(--red);display:none;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">💧</span>
+    <span style="width:38px;height:38px;border-radius:8px;background:var(--red);display:none;align-items:center;justify-content:center;font-size:1.55rem;flex-shrink:0">💧</span>
     <span>
       h<em>CASH</em> MOAT
       <span class="logo-sub">LP Intelligence · Avalanche</span>
@@ -607,8 +534,8 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <button id="connectBtn" class="btn btn-sm" onclick="walletConnect()">Connect Wallet</button>
     <div id="connectedBadge" style="display:none;align-items:center;gap:6px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:6px;padding:4px 10px">
       <span class="ld" style="background:var(--grn);box-shadow:0 0 6px var(--grn)"></span>
-      <span class="mono" style="font-size:.58rem;color:var(--grn)" id="connAddr">—</span>
-      <button onclick="walletDisconnect()" style="background:none;border:none;color:var(--mut);font-size:.7rem;cursor:pointer;padding:0 0 0 4px">✕</button>
+      <span class="mono" style="font-size:.85rem;color:var(--grn)" id="connAddr">—</span>
+      <button onclick="walletDisconnect()" style="background:none;border:none;color:var(--mut);font-size:1rem;cursor:pointer;padding:0 0 0 4px">✕</button>
     </div>
   </div>
 </header>
@@ -633,8 +560,8 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       style="width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid rgba(229,62,62,.3)"
       onerror="this.style.display='none'">
     <div style="flex:1;min-width:200px">
-      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.1rem">💧 hCASH / WAVAX LP Moat</div>
-      <div class="mono" style="font-size:.58rem;color:var(--dim);margin-top:2px">Add AVAX + hCASH liquidity on Pharaoh → stake LP tokens here → earn Moat Points → grow Fort Score</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem">💧 hCASH / WAVAX LP Moat</div>
+      <div class="mono" style="font-size:.9rem;color:var(--dim);margin-top:2px">Add AVAX + hCASH liquidity on Pharaoh → stake LP tokens here → earn Moat Points → grow Fort Score</div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <a href="https://phar.gg" target="_blank" class="btn btn-gold btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px"><img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:16px;height:16px;border-radius:3px;object-fit:cover" onerror="this.style.display='none'">Pharaoh ↗</a>
@@ -663,7 +590,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="cbody" id="myPositionCard">
         <div style="text-align:center;padding:1.5rem;color:var(--mut)">
           <div style="font-size:1.8rem;margin-bottom:.5rem">🔌</div>
-          <div class="mono" style="font-size:.65rem">Connect wallet to view your position</div>
+          <div class="mono" style="font-size:.92rem">Connect wallet to view your position</div>
           <button class="btn btn-sm" style="margin-top:.8rem" onclick="walletConnect()">Connect Wallet</button>
         </div>
       </div>
@@ -676,7 +603,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
         <span class="live"><span class="ld"></span>Live</span>
       </div>
       <div class="cbody" id="poolCompositionCard">
-        <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading pool data…</div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading pool data…</div>
       </div>
     </div>
   </div>
@@ -684,7 +611,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
   <!-- Signal row -->
   <div class="sh" style="margin-top:.5rem"><div class="sh-t">LP Signals</div></div>
   <div id="signalsDiv">
-    <div class="mono" style="font-size:.6rem;color:var(--mut);padding:.5rem"><span class="spin"></span>Analysing…</div>
+    <div class="mono" style="font-size:1.35rem;color:var(--mut);padding:.5rem"><span class="spin"></span>Analysing…</div>
   </div>
 </div>
 
@@ -704,12 +631,12 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/hashcashclub.png" style="width:42px;height:42px;border-radius:50%;border:2px solid var(--bor);object-fit:cover;margin-left:-12px" onerror="this.src='data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\'><rect width=\'42\' height=\'42\' fill=\'%23d4a843\' rx=\'21\'/><text x=\'21\' y=\'27\' text-anchor=\'middle\' fill=\'white\' font-size=\'12\'>hC</text></svg>'">
     </div>
     <div style="flex:1;min-width:140px">
-      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05rem">AVAX / hCASH</div>
-      <div class="mono" style="font-size:.54rem;color:var(--dim);display:flex;align-items:center;gap:4px;margin-top:2px"><img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:12px;height:12px;border-radius:2px;object-fit:cover" onerror="this.style.display='none'"> Pharaoh Volatile Pool · Avalanche C-Chain</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem">AVAX / hCASH</div>
+      <div class="mono" style="font-size:1.25rem;color:var(--dim);display:flex;align-items:center;gap:4px;margin-top:2px"><img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:12px;height:12px;border-radius:2px;object-fit:cover" onerror="this.style.display='none'"> Pharaoh Volatile Pool · Avalanche C-Chain</div>
     </div>
     <div style="display:flex;gap:5px;flex-wrap:wrap">
-      <a href="https://phar.gg" target="_blank" class="btn btn-gold btn-sm" style="text-decoration:none;font-size:.58rem;display:inline-flex;align-items:center;gap:4px"><img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:14px;height:14px;border-radius:3px;object-fit:cover" onerror="this.style.display='none'">Pharaoh ↗</a>
-      <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.58rem">hashcash.club ↗</a>
+      <a href="https://phar.gg" target="_blank" class="btn btn-gold btn-sm" style="text-decoration:none;font-size:.82rem;display:inline-flex;align-items:center;gap:4px"><img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:14px;height:14px;border-radius:3px;object-fit:cover" onerror="this.style.display='none'">Pharaoh ↗</a>
+      <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.82rem">hashcash.club ↗</a>
     </div>
   </div>
 
@@ -732,7 +659,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       </div>
       <div class="sc" style="text-align:center;padding:.6rem">
         <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:3px">
-          <span style="font-size:.65rem">💧</span>
+          <span style="font-size:.92rem">💧</span>
           <span class="sl" style="margin:0">LP</span>
         </div>
         <div class="sv cw" id="lpLpBal" style="font-size:1rem">—</div>
@@ -745,8 +672,8 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div class="wc-btn" onclick="walletConnect()">
       <span style="font-size:1.5rem">🔌</span>
       <div>
-        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem">Connect Wallet</div>
-        <div class="mono" style="font-size:.55rem;color:var(--mut)">MetaMask or Core · Avalanche C-Chain</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.4rem">Connect Wallet</div>
+        <div class="mono" style="font-size:.80rem;color:var(--mut)">MetaMask or Core · Avalanche C-Chain</div>
       </div>
     </div>
   </div>
@@ -813,7 +740,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
         </div>
         <div id="hcashLpPreview" class="liq-preview"></div>
         <div class="liq-slip-row">
-          <span class="mono" style="font-size:.52rem;color:var(--mut)">Slip:</span>
+          <span class="mono" style="font-size:.76rem;color:var(--mut)">Slip:</span>
           <button class="slip-btn" onclick="setSlip(0.5,this)">0.5%</button>
           <button class="slip-btn active" onclick="setSlip(1.0,this)">1%</button>
           <button class="slip-btn" onclick="setSlip(2.0,this)">2%</button>
@@ -829,8 +756,8 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="liq-pane-inner">
         <div class="liq-step-label">Remove LP tokens from Pharaoh to get back AVAX + hCASH</div>
         <div class="liq-info-strip">
-          <span class="mono" style="font-size:.58rem">In moat: <b style="color:var(--red)" id="rmLpInMoat">—</b></span>
-          <span class="mono" style="font-size:.58rem">In wallet: <b id="rmLpInWallet">—</b></span>
+          <span class="mono" style="font-size:.85rem">In moat: <b style="color:var(--red)" id="rmLpInMoat">—</b></span>
+          <span class="mono" style="font-size:.85rem">In wallet: <b id="rmLpInWallet">—</b></span>
         </div>
         <div class="liq-token-row" style="margin-top:.6rem">
           <div class="liq-token-icon" style="background:rgba(229,62,62,.08)">💧</div>
@@ -889,7 +816,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
         </div>
         <div id="swapQuoteRow" class="liq-preview"></div>
         <div class="liq-slip-row">
-          <span class="mono" style="font-size:.52rem;color:var(--mut)">Slip:</span>
+          <span class="mono" style="font-size:.76rem;color:var(--mut)">Slip:</span>
           <button class="slip-btn active" onclick="setSlip(0.5,this)">0.5%</button>
           <button class="slip-btn" onclick="setSlip(1.0,this)">1%</button>
           <button class="slip-btn" onclick="setSlip(2.0,this)">2%</button>
@@ -949,7 +876,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="liq-pane-inner">
         <div class="liq-step-label">Unstake LP from Moat (0.5% fee) · then remove from Pharaoh if desired</div>
         <div class="liq-info-strip" style="margin-top:.5rem">
-          <span class="mono" style="font-size:.58rem">Currently staked: <b style="color:var(--red)" id="unstakeMoatBal">—</b></span>
+          <span class="mono" style="font-size:.85rem">Currently staked: <b style="color:var(--red)" id="unstakeMoatBal">—</b></span>
         </div>
         <div class="liq-token-row" style="margin-top:.6rem">
           <div class="liq-token-icon" style="background:rgba(229,62,62,.08)">↩</div>
@@ -972,19 +899,19 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="liq-pane-inner">
         <div class="liq-step-label">Pending rewards from hCASH Moat</div>
         <div id="rewardsContent" style="margin-top:.7rem">
-          <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading rewards…</div>
+          <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading rewards…</div>
         </div>
         <!-- Miner NFT rewards info -->
         <div style="margin-top:1rem">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem;color:var(--gold);margin-bottom:.6rem;display:flex;align-items:center;gap:6px">⛏ Top 10 Moat Leaderboard Miner Rewards</div>
-          <div style="font-size:.68rem;color:var(--dim);line-height:1.6;margin-bottom:.75rem;background:rgba(212,168,67,.04);border:1px solid rgba(212,168,67,.12);border-radius:8px;padding:.7rem">
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--gold);margin-bottom:.6rem;display:flex;align-items:center;gap:6px">⛏ Top 10 Moat Leaderboard Miner Rewards</div>
+          <div style="font-size:.94rem;color:var(--dim);line-height:1.6;margin-bottom:.75rem;background:rgba(212,168,67,.04);border:1px solid rgba(212,168,67,.12);border-radius:8px;padding:.7rem">
             Special Miner NFTs were airdropped to the top 10 wallets on the Moats leaderboard. These miners generate hCASH when placed in facilities on hashcash.club.
           </div>
           <div class="g2" id="minerRewardCards">
             <div class="card">
               <div class="ch">
                 <div class="ctitle">⛏ Miner #27</div>
-                <span class="mono" style="font-size:.5rem;color:var(--mut)">miner_nft</span>
+                <span class="mono" style="font-size:1.25rem;color:var(--mut)">miner_nft</span>
               </div>
               <div class="cbody">
                 <div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr">100 MH/s</span></div>
@@ -992,15 +919,15 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
                 <div class="calc-row"><span class="calc-lbl">Name</span><span class="calc-val cw">Miner #27</span></div>
                 <div class="calc-row"><span class="calc-lbl">Symbol</span><span class="calc-val cd">MINER27</span></div>
                 <div class="calc-row"><span class="calc-lbl">Total Supply</span><span class="calc-val">10</span></div>
-                <a id="miner27Link" href="https://snowtrace.io/token/0x0000000000000000000000000000000000000000" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-bottom:.6rem;font-size:.54rem;display:inline-flex">Snowtrace ↗</a>
-                <div style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut);margin-bottom:.4rem">Current Holders</div>
-                <div id="miner27Holders"><div class="mono" style="font-size:.55rem;color:var(--mut)"><span class="spin"></span></div></div>
+                <a id="miner27Link" href="https://snowtrace.io/token/0x0000000000000000000000000000000000000000" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-bottom:.6rem;font-size:1.25rem;display:inline-flex">Snowtrace ↗</a>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:.76rem;color:var(--mut);margin-bottom:.4rem">Current Holders</div>
+                <div id="miner27Holders"><div class="mono" style="font-size:.80rem;color:var(--mut)"><span class="spin"></span></div></div>
               </div>
             </div>
             <div class="card">
               <div class="ch">
                 <div class="ctitle">⛏ Miner #40</div>
-                <span class="mono" style="font-size:.5rem;color:var(--mut)">miner_nft</span>
+                <span class="mono" style="font-size:1.25rem;color:var(--mut)">miner_nft</span>
               </div>
               <div class="cbody">
                 <div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr">150 MH/s</span></div>
@@ -1008,9 +935,9 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
                 <div class="calc-row"><span class="calc-lbl">Name</span><span class="calc-val cw">The Grotto Miner</span></div>
                 <div class="calc-row"><span class="calc-lbl">Symbol</span><span class="calc-val cd">MINER40</span></div>
                 <div class="calc-row"><span class="calc-lbl">Total Supply</span><span class="calc-val">10</span></div>
-                <a id="miner40Link" href="https://snowtrace.io/token/0x0000000000000000000000000000000000000000" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-bottom:.6rem;font-size:.54rem;display:inline-flex">Snowtrace ↗</a>
-                <div style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut);margin-bottom:.4rem">Current Holders</div>
-                <div id="miner40Holders"><div class="mono" style="font-size:.55rem;color:var(--mut)"><span class="spin"></span></div></div>
+                <a id="miner40Link" href="https://snowtrace.io/token/0x0000000000000000000000000000000000000000" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-bottom:.6rem;font-size:1.25rem;display:inline-flex">Snowtrace ↗</a>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:.76rem;color:var(--mut);margin-bottom:.4rem">Current Holders</div>
+                <div id="miner40Holders"><div class="mono" style="font-size:.80rem;color:var(--mut)"><span class="spin"></span></div></div>
               </div>
             </div>
           </div>
@@ -1024,22 +951,22 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div class="card">
       <div class="ch"><div class="ctitle">📊 Pool Data</div><span class="live"><span class="ld"></span>Live</span></div>
       <div class="cbody" id="poolDataSidebar">
-        <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center"><span class="spin"></span>Fetching…</div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center"><span class="spin"></span>Fetching…</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
       <div class="card">
         <div class="ch"><div class="ctitle">💱 Ratio</div></div>
         <div class="cbody" style="text-align:center">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.6rem;color:var(--red)" id="ratioDisplay">—</div>
-          <div class="mono" style="font-size:.52rem;color:var(--mut)">hCASH / AVAX</div>
-          <div class="mono" style="font-size:.5rem;color:var(--dim);margin-top:3px" id="ratioInv">—</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.85rem;color:var(--red)" id="ratioDisplay">—</div>
+          <div class="mono" style="font-size:.76rem;color:var(--mut)">hCASH / AVAX</div>
+          <div class="mono" style="font-size:1.25rem;color:var(--dim);margin-top:3px" id="ratioInv">—</div>
         </div>
       </div>
       <div class="card">
         <div class="ch"><div class="ctitle">💼 My LP</div></div>
         <div class="cbody">
-          <div class="mono" style="font-size:.6rem;color:var(--txt)" id="lpValueBreakdown">Connect wallet</div>
+          <div class="mono" style="font-size:1.35rem;color:var(--txt)" id="lpValueBreakdown">Connect wallet</div>
         </div>
       </div>
     </div>
@@ -1049,15 +976,15 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="cbody" style="display:flex;flex-wrap:wrap;gap:.4rem">
         <a href="https://phar.gg" target="_blank" class="liq-dex-link" style="text-decoration:none">
           <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:28px;height:28px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">
-          <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.8rem">Pharaoh</div><div class="mono" style="font-size:.5rem;color:var(--mut)">Primary venue</div></div>
+          <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem">Pharaoh</div><div class="mono" style="font-size:1.25rem;color:var(--mut)">Primary venue</div></div>
         </a>
         <a href="https://lfj.gg/avalanche/trade" target="_blank" class="liq-dex-link" style="text-decoration:none">
           <span style="font-size:1rem">🏔️</span>
-          <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.8rem">LFJ</div><div class="mono" style="font-size:.5rem;color:var(--mut)">Trader Joe</div></div>
+          <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem">LFJ</div><div class="mono" style="font-size:1.25rem;color:var(--mut)">Trader Joe</div></div>
         </a>
         <a href="https://hashcash.club" target="_blank" class="liq-dex-link" style="text-decoration:none">
           <span style="font-size:1rem">⛏</span>
-          <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.8rem">hashcash.club</div><div class="mono" style="font-size:.5rem;color:var(--mut)">Official</div></div>
+          <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem">hashcash.club</div><div class="mono" style="font-size:1.25rem;color:var(--mut)">Official</div></div>
         </a>
       </div>
     </div>
@@ -1074,13 +1001,13 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div class="card">
       <div class="ch"><div class="ctitle">Your Position Summary</div></div>
       <div class="cbody" id="positionSummary">
-        <div class="mono" style="font-size:.6rem;color:var(--mut)">Connect wallet to see your position.</div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut)">Connect wallet to see your position.</div>
       </div>
     </div>
     <div class="card">
       <div class="ch"><div class="ctitle">Points Estimate</div></div>
       <div class="cbody" id="pointsEstimate">
-        <div class="mono" style="font-size:.6rem;color:var(--mut)">Enter stake/lock amount to estimate points.</div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut)">Enter stake/lock amount to estimate points.</div>
       </div>
     </div>
   </div>
@@ -1093,7 +1020,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <button class="btn btn-g btn-sm" onclick="loadFortScoreOptimizer()">↺ Analyze</button>
     </div>
     <div class="cbody" id="fortScorePanel">
-      <div class="mono" style="font-size:.65rem;color:var(--mut);text-align:center;padding:1rem">Connect wallet and click Analyze to see your Fort Score breakdown and optimization tips.</div>
+      <div class="mono" style="font-size:.92rem;color:var(--mut);text-align:center;padding:1rem">Connect wallet and click Analyze to see your Fort Score breakdown and optimization tips.</div>
     </div>
   </div>
 
@@ -1116,11 +1043,11 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/hashcashclub.png"
       style="width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid rgba(229,62,62,.35)"
       onerror="this.style.display='none';document.getElementById('expFbIcon').style.display='flex'">
-    <div id="expFbIcon" style="display:none;width:56px;height:56px;border-radius:12px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.25);align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">💧</div>
+    <div id="expFbIcon" style="display:none;width:56px;height:56px;border-radius:12px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.25);align-items:center;justify-content:center;font-size:2.4rem;flex-shrink:0">💧</div>
     <div style="flex:1;min-width:180px">
-      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.15rem">hCASH LP Moat</div>
-      <div class="mono" style="font-size:.56rem;color:var(--dim);margin-top:3px">0x501f6e7bec3db63d8dacbc9fa0ce42d5d2329d53 · Avalanche C-Chain</div>
-      <div class="mono" style="font-size:.54rem;color:var(--mut);margin-top:2px">LP Token Moat · Pharaoh Exchange · Burn Disabled · Stake + Lock Only</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem">hCASH LP Moat</div>
+      <div class="mono" style="font-size:.80rem;color:var(--dim);margin-top:3px">0x501f6e7bec3db63d8dacbc9fa0ce42d5d2329d53 · Avalanche C-Chain</div>
+      <div class="mono" style="font-size:1.25rem;color:var(--mut);margin-top:2px">LP Token Moat · Pharaoh Exchange · Burn Disabled · Stake + Lock Only</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
       <a href="https://snowtrace.io/address/0x501f6e7bec3db63d8dacbc9fa0ce42d5d2329d53" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none">Snowtrace ↗</a>
@@ -1129,8 +1056,8 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
   </div>
 
   <div class="sg">
-    <div class="sc"><div class="sl">Moat Contract</div><div class="sv" style="font-size:.72rem;word-break:break-all;color:var(--red)">0x501f…9d53</div></div>
-    <div class="sc"><div class="sl">LP Token</div><div class="sv" style="font-size:.72rem;word-break:break-all">0x8f96…5D9</div><div class="ss">WAVAX/hCASH Pharaoh LP</div></div>
+    <div class="sc"><div class="sl">Moat Contract</div><div class="sv" style="font-size:1rem;word-break:break-all;color:var(--red)">0x501f…9d53</div></div>
+    <div class="sc"><div class="sl">LP Token</div><div class="sv" style="font-size:1rem;word-break:break-all">0x8f96…5D9</div><div class="ss">WAVAX/hCASH Pharaoh LP</div></div>
     <div class="sc"><div class="sl">Chain</div><div class="sv cw">Avalanche</div><div class="ss">Chain ID: 43114</div></div>
     <div class="sc"><div class="sl">DEX</div><div style="display:flex;align-items:center;gap:5px;margin:.2rem 0"><img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:20px;height:20px;border-radius:4px;object-fit:cover" onerror="this.style.display='none'"><span class="sv cg" style="font-size:1rem">Pharaoh</span></div><div class="ss">phar.gg</div></div>
     <div class="sc"><div class="sl">Burn</div><div class="sv cr">Disabled</div><div class="ss">Stake + Lock only</div></div>
@@ -1141,7 +1068,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div class="card">
       <div class="ch"><div class="ctitle">📊 On-Chain Stats</div><button class="btn btn-g btn-sm" onclick="loadExplorerData()">↺ Refresh</button></div>
       <div class="cbody" id="explorerStats">
-        <div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading…</div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading…</div>
       </div>
     </div>
     <div class="card">
@@ -1161,7 +1088,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <button class="btn btn-g btn-sm" onclick="loadLpHolders(poolData?.lpSupply||0)">↺ Refresh</button>
     </div>
     <div class="cbody">
-      <div class="mono" style="font-size:.55rem;color:var(--mut);margin-bottom:.6rem">
+      <div class="mono" style="font-size:.80rem;color:var(--mut);margin-bottom:.6rem">
         Top LP holders by wallet balance · scanned from on-chain Transfer events
       </div>
       <div class="tw"><table class="tbl">
@@ -1182,16 +1109,16 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div class="card">
       <div class="cbody">
         <div style="background:rgba(229,62,62,.05);border:1px solid rgba(229,62,62,.15);border-radius:8px;padding:.85rem;margin-bottom:.7rem">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--red);margin-bottom:.35rem">⚠ EEL Penalty</div>
-          <div style="font-size:.73rem;color:var(--dim);line-height:1.65">If you exit a lock early, the EEL (Early Exit Liquidity) penalty applies: from 95% penalty at start to 0% when fully matured. Penalty tokens go to the protocol + other stakers.</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:var(--red);margin-bottom:.35rem">⚠ EEL Penalty</div>
+          <div style="font-size:1rem;color:var(--dim);line-height:1.65">If you exit a lock early, the EEL (Early Exit Liquidity) penalty applies: from 95% penalty at start to 0% when fully matured. Penalty tokens go to the protocol + other stakers.</div>
         </div>
         <div style="background:rgba(212,168,67,.05);border:1px solid rgba(212,168,67,.15);border-radius:8px;padding:.85rem;margin-bottom:.7rem">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--gold);margin-bottom:.35rem">🏰 Fort Score</div>
-          <div style="font-size:.73rem;color:var(--dim);line-height:1.65">Your Fort Score = all your Moat Points summed across all moats. Fort Score % of total ecosystem = your share of the Early User Airdrop.</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:var(--gold);margin-bottom:.35rem">🏰 Fort Score</div>
+          <div style="font-size:1rem;color:var(--dim);line-height:1.65">Your Fort Score = all your Moat Points summed across all moats. Fort Score % of total ecosystem = your share of the Early User Airdrop.</div>
         </div>
         <div style="background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.15);border-radius:8px;padding:.85rem">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--grn);margin-bottom:.35rem">💧 LP vs Token Moat</div>
-          <div style="font-size:.73rem;color:var(--dim);line-height:1.65">Unlike regular token moats, hCASH Moat accepts LP tokens (not raw hCASH). This means you provide liquidity AND earn points — a dual reward for supporting the hCASH/AVAX trading pair.</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:var(--grn);margin-bottom:.35rem">💧 LP vs Token Moat</div>
+          <div style="font-size:1rem;color:var(--dim);line-height:1.65">Unlike regular token moats, hCASH Moat accepts LP tokens (not raw hCASH). This means you provide liquidity AND earn points — a dual reward for supporting the hCASH/AVAX trading pair.</div>
         </div>
       </div>
     </div>
@@ -1207,13 +1134,13 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div class="card">
       <div class="ch"><div class="ctitle">Investment Calculator</div></div>
       <div class="cbody">
-        <div style="font-size:.73rem;color:var(--dim);margin-bottom:.85rem;line-height:1.6">Enter your USDC budget. We'll calculate how to split it 50/50 into hCASH + WAVAX, what LP tokens you'll receive, and your estimated Moat Points.</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:.54rem;color:var(--mut);margin-bottom:4px">Budget in USDC</div>
+        <div style="font-size:1rem;color:var(--dim);margin-bottom:.85rem;line-height:1.6">Enter your USDC budget. We'll calculate how to split it 50/50 into hCASH + WAVAX, what LP tokens you'll receive, and your estimated Moat Points.</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--mut);margin-bottom:4px">Budget in USDC</div>
         <div class="lp-amt-row" style="margin-bottom:.85rem">
           <input id="calcUsdc" type="number" class="inp" placeholder="e.g. 500" oninput="runCalc()">
-          <span class="mono" style="font-size:.7rem;color:var(--dim);padding:0 6px;flex-shrink:0">USDC</span>
+          <span class="mono" style="font-size:1rem;color:var(--dim);padding:0 6px;flex-shrink:0">USDC</span>
         </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:.54rem;color:var(--mut);margin-bottom:6px">Lock strategy</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--mut);margin-bottom:6px">Lock strategy</div>
         <div class="dur-grid" id="calcDurGrid"></div>
         <div id="calcResults" style="margin-top:.5rem"></div>
       </div>
@@ -1222,11 +1149,11 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="card">
         <div class="ch"><div class="ctitle">EEL Penalty Calculator</div></div>
         <div class="cbody">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.54rem;color:var(--mut);margin-bottom:4px">Lock duration (days)</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--mut);margin-bottom:4px">Lock duration (days)</div>
           <input id="eelDuration" type="number" class="inp" placeholder="e.g. 180" oninput="runEel()" style="margin-bottom:.6rem">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.54rem;color:var(--mut);margin-bottom:4px">LP amount locked</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--mut);margin-bottom:4px">LP amount locked</div>
           <input id="eelAmount" type="number" class="inp" placeholder="e.g. 1000" oninput="runEel()" style="margin-bottom:.6rem">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.54rem;color:var(--mut);margin-bottom:4px">Days already served</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--mut);margin-bottom:4px">Days already served</div>
           <input id="eelServed" type="number" class="inp" placeholder="e.g. 45" oninput="runEel()" style="margin-bottom:.75rem">
           <div id="eelResult" style="display:none">
             <div style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.75rem">
@@ -1241,7 +1168,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="card">
         <div class="ch"><div class="ctitle">Council Score Calculator</div></div>
         <div class="cbody">
-          <div style="font-size:.73rem;color:var(--dim);margin-bottom:.7rem;line-height:1.5">Enter your points in hCASH moat + other moats to see your Council Score with diversity bonus.</div>
+          <div style="font-size:1rem;color:var(--dim);margin-bottom:.7rem;line-height:1.5">Enter your points in hCASH moat + other moats to see your Council Score with diversity bonus.</div>
           <div id="councilInputs">
             <div style="display:flex;gap:5px;margin-bottom:.4rem">
               <input type="number" class="inp council-pts" placeholder="hCASH moat pts" oninput="runCouncil()" style="flex:1">
@@ -1266,36 +1193,36 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <a href="https://hashcash.club" target="_blank" class="btn btn-sm" style="text-decoration:none">hashcash.club ↗</a>
     </div>
   </div>
-  <div style="font-size:.75rem;color:var(--dim);margin-bottom:1rem;line-height:1.65;background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.1);border-radius:8px;padding:.75rem">
+  <div style="font-size:1.25rem;color:var(--dim);margin-bottom:1rem;line-height:1.65;background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.1);border-radius:8px;padding:.75rem">
     HashCash miners are NFTs you place in facilities to generate hCASH. Miners with higher hashrate earn more hCASH per block. Providing hCASH/WAVAX LP and participating in the Moat strengthens the entire HashCash ecosystem.
   </div>
   <div class="miner-grid" id="minerGrid">
     <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)">
       <span class="spin"></span>
-      <span class="mono" style="font-size:.65rem;margin-left:5px">Loading miner data from HashCash API…</span>
+      <span class="mono" style="font-size:.92rem;margin-left:5px">Loading miner data from HashCash API…</span>
     </div>
   </div>
 
   <!-- Rigs section -->
   <div class="sh" style="margin-top:.5rem"><div class="sh-t">🔧 Rig Assemblers</div></div>
   <div id="rigGrid" class="g2">
-    <div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading rig data…</div>
+    <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading rig data…</div>
   </div>
 
   <!-- Marketplace listings -->
   <div class="sh" style="margin-top:.5rem">
     <div class="sh-t">🛒 Marketplace Listings</div>
-    <span class="mono" style="font-size:.52rem;color:var(--mut)" id="marketplaceHeader"></span>
+    <span class="mono" style="font-size:.76rem;color:var(--mut)" id="marketplaceHeader"></span>
   </div>
   <div id="marketplaceListings">
-    <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span></div>
+    <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span></div>
   </div>
 
   <!-- Other contracts -->
   <div class="sh" style="margin-top:.5rem"><div class="sh-t">📄 Other HashCash Contracts</div></div>
   <div class="card">
     <div class="cbody" id="otherContractsDiv">
-      <div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading…</div>
+      <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading…</div>
     </div>
   </div>
 </div>
@@ -1309,7 +1236,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <button class="btn btn-g btn-sm" onclick="nav(document.querySelector('[data-v=miners]'))">← Back to Miners</button>
   </div>
   <div id="minerDetailContent">
-    <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:2rem"><span class="spin"></span>Loading…</div>
+    <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:2rem"><span class="spin"></span>Loading…</div>
   </div>
 </div>
 
@@ -1324,7 +1251,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     <div class="cbody">
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:.85rem;flex-wrap:wrap">
         <input id="lbSearch" type="text" class="inp" placeholder="Search wallet…" style="max-width:220px" oninput="filterLb()">
-        <span class="mono" style="font-size:.56rem;color:var(--mut)" id="lbCount"></span>
+        <span class="mono" style="font-size:.80rem;color:var(--mut)" id="lbCount"></span>
       </div>
       <div class="tw">
         <table class="tbl">
@@ -1349,24 +1276,24 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
       <div class="ch">
         <div class="ctitle">Event Stream</div>
         <div style="display:flex;gap:5px">
-          <select id="evTypeFilter" class="inp" style="width:auto;padding:2px 6px;font-size:.6rem" onchange="filterEvs()">
+          <select id="evTypeFilter" class="inp" style="width:auto;padding:2px 6px;font-size:1.35rem" onchange="filterEvs()">
             <option value="">All Types</option>
             <option value="staked">🔒 Staked</option>
             <option value="locked">⏳ Locked</option>
             <option value="reward">💰 Rewards</option>
             <option value="unstake">↩ Unstake</option>
           </select>
-          <span class="mono" style="font-size:.55rem;color:var(--mut);align-self:center" id="evCount"></span>
+          <span class="mono" style="font-size:.80rem;color:var(--mut);align-self:center" id="evCount"></span>
         </div>
       </div>
       <div class="evf" id="evFeed">
-        <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading…</div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading…</div>
       </div>
     </div>
     <div class="card">
       <div class="ch"><div class="ctitle">hCASH Moat Stats</div></div>
       <div class="cbody" id="activityStats">
-        <div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span></div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span></div>
       </div>
     </div>
   </div>
@@ -1378,13 +1305,13 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
 <div style="position:relative;z-index:1;text-align:center;padding:2rem .85rem 3rem;margin-top:.5rem;border-top:1px solid var(--bor)">
   <div style="display:inline-flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bor);border-radius:99px;padding:.55rem 1.3rem;box-shadow:0 0 24px rgba(229,62,62,.06)">
     <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/laifumoatsintel.jpg" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid rgba(229,62,62,.25)" onerror="this.style.display='none'">
-    <span class="mono" style="font-size:.58rem;color:var(--mut)">Built by</span>
-    <a href="https://x.com/precidobos" target="_blank" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem;color:var(--red);text-decoration:none">@precidobos</a>
+    <span class="mono" style="font-size:.85rem;color:var(--mut)">Built by</span>
+    <a href="https://x.com/precidobos" target="_blank" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--red);text-decoration:none">@precidobos</a>
     <span style="width:1px;height:14px;background:var(--bor);display:inline-block"></span>
-    <a href="https://moats.app" target="_blank" style="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.66rem;color:var(--gold);text-decoration:none">moats.app</a>
-    <span style="font-size:.75rem">🏆</span>
+    <a href="https://moats.app" target="_blank" style="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.92rem;color:var(--gold);text-decoration:none">moats.app</a>
+    <span style="font-size:1.25rem">🏆</span>
   </div>
-  <div style="margin-top:.55rem;font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut)">
+  <div style="margin-top:.55rem;font-family:'Share Tech Mono',monospace;font-size:.76rem;color:var(--mut)">
     hCASH MOAT INTEL · Not financial advice · Data from moats.app · HashCash API · Pharaoh Exchange
   </div>
 </div>
@@ -1605,7 +1532,7 @@ function walletDisconnect() {
   walletProvider=walletSigner=walletAddress=null;
   document.getElementById('connectBtn').style.display='block';
   document.getElementById('connectedBadge').style.display='none';
-  setHtml('myPositionCard','<div style="text-align:center;padding:1.5rem;color:var(--mut)"><div style="font-size:1.8rem;margin-bottom:.5rem">🔌</div><div class="mono" style="font-size:.65rem">Connect wallet to view your position</div><button class="btn btn-sm" style="margin-top:.8rem" onclick="walletConnect()">Connect Wallet</button></div>');
+  setHtml('myPositionCard','<div style="text-align:center;padding:1.5rem;color:var(--mut)"><div style="font-size:1.8rem;margin-bottom:.5rem">🔌</div><div class="mono" style="font-size:.92rem">Connect wallet to view your position</div><button class="btn btn-sm" style="margin-top:.8rem" onclick="walletConnect()">Connect Wallet</button></div>');
 }
 function updateWalletUI() {
   if(!walletAddress)return;
@@ -1673,7 +1600,7 @@ async function updateLpValueBreakdown(lpBal, hcashBal) {
   const myAvax = lpShare * (poolData?.avaxReserve||0);
   const myHcash = lpShare * (poolData?.hcashReserve||0);
   const myUsd = myAvax*(priceData?.avaxPrice||0) + myHcash*(priceData?.price||0);
-  setHtml('lpValueBreakdown', `<div class="mono" style="font-size:.58rem;line-height:1.8">
+  setHtml('lpValueBreakdown', `<div class="mono" style="font-size:.85rem;line-height:1.8">
     LP balance: <span style="color:var(--txt)">${lpBal.toFixed(8)}</span><br>
     ≈ <span style="color:var(--red)">${f4(myAvax)} AVAX</span> + <span style="color:var(--gold)">${fmtP(myHcash)} hCASH</span><br>
     Value: <span style="color:var(--grn)">${fmtK(myUsd)}</span>
@@ -1757,14 +1684,14 @@ async function loadPoolComposition() {
     const totalUsd = avaxUsdV+hcashUsdV;
     setHtml('poolCompositionCard',`
       <div style="margin-bottom:.6rem">
-        <div class="mono" style="font-size:.52rem;color:var(--mut);margin-bottom:4px">AVAX Reserve</div>
+        <div class="mono" style="font-size:.76rem;color:var(--mut);margin-bottom:4px">AVAX Reserve</div>
         <div class="bw">
           <div class="bt"><div class="bf" style="width:${avaxUsdV/totalUsd*100||50}%"></div></div>
           <span class="bv" style="color:var(--red)">${f2(wavaxRes)} AVAX</span>
         </div>
       </div>
       <div style="margin-bottom:.8rem">
-        <div class="mono" style="font-size:.52rem;color:var(--mut);margin-bottom:4px">hCASH Reserve</div>
+        <div class="mono" style="font-size:.76rem;color:var(--mut);margin-bottom:4px">hCASH Reserve</div>
         <div class="bw">
           <div class="bt"><div class="bf" style="width:${hcashUsdV/totalUsd*100||50}%;background:linear-gradient(90deg,var(--gold),#fbbf24)"></div></div>
           <span class="bv" style="color:var(--gold)">${fmtP(hcashRes)} hCASH</span>
@@ -1837,7 +1764,7 @@ const EV_TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df
 
 async function loadEvents() {
   const feed=document.getElementById('evFeed');
-  if(feed)feed.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading events…</div>';
+  if(feed)feed.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading events…</div>';
   try{
     const MOAT_LC=HCASH_MOAT_ADDR.toLowerCase();
     const LP_LC=HCASH_LP_ADDR.toLowerCase();
@@ -1977,7 +1904,7 @@ async function loadEvents() {
     renderActivityStats();
   }catch(e){
     console.warn('loadEvents:',e.message);
-    if(feed)setHtml('evFeed','<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1rem;text-align:center">Could not load events.<br><span style="font-size:.55rem">'+e.message?.slice(0,80)+'</span></div>');
+    if(feed)setHtml('evFeed','<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1rem;text-align:center">Could not load events.<br><span style="font-size:.80rem">'+e.message?.slice(0,80)+'</span></div>');
   }
 }
 
@@ -1991,7 +1918,7 @@ function renderEvFeed() {
   const feed = document.getElementById('evFeed');
   if(!feed)return;
   setTxt('evCount', filteredEvData.length+' events');
-  if(!filteredEvData.length){feed.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1.5rem;text-align:center">No events found.</div>';return;}
+  if(!filteredEvData.length){feed.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1.5rem;text-align:center">No events found.</div>';return;}
   const TYPE_COLOR={staked:'var(--red)',locked:'var(--gold)',burned:'var(--red)',reward:'var(--grn)',claim:'var(--grn)',withdraw:'var(--dim)',unstake:'var(--dim)',deposit:'var(--red)'};
   const TYPE_ICON={staked:'🔒',locked:'⏳',burned:'🔥',reward:'💰',claim:'💰',unstake:'↩',deposit:'⬇'};
   feed.innerHTML = filteredEvData.slice(0,80).map(e=>{
@@ -2006,20 +1933,20 @@ function renderEvFeed() {
     const txhash=e.transactionHash||e.txHash||e.hash||'';
     const prof=w?getKnownProfile(w):null;
     const walletDisplay=prof
-      ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:14px;height:14px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'"><a href="https://x.com/${prof.twitter}" target="_blank" class="mono" style="font-size:.54rem;color:var(--red);text-decoration:none">@${prof.twitter}</a></div>`
-      :(w?`<span class="mono" style="font-size:.54rem;color:var(--mut)">${shortA(w)}</span>`:'');
+      ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:14px;height:14px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'"><a href="https://x.com/${prof.twitter}" target="_blank" class="mono" style="font-size:1.25rem;color:var(--red);text-decoration:none">@${prof.twitter}</a></div>`
+      :(w?`<span class="mono" style="font-size:1.25rem;color:var(--mut)">${shortA(w)}</span>`:'');
     return `<div class="ei">
       <span style="font-size:1rem;flex-shrink:0">${ico}</span>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="mono" style="font-size:.62rem;color:${col};font-weight:700;text-transform:uppercase">${t}</span>
-          ${amt?`<span class="mono" style="font-size:.62rem;color:var(--txt);font-weight:700">${amt}</span>`:''}
-          ${e.lockDays?`<span class="mono" style="font-size:.56rem;color:var(--gold)">🔒 ${e.lockDays}d</span>`:''}
+          <span class="mono" style="font-size:1.4rem;color:${col};font-weight:700;text-transform:uppercase">${t}</span>
+          ${amt?`<span class="mono" style="font-size:1.4rem;color:var(--txt);font-weight:700">${amt}</span>`:''}
+          ${e.lockDays?`<span class="mono" style="font-size:.80rem;color:var(--gold)">🔒 ${e.lockDays}d</span>`:''}
         </div>
         <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">
           ${walletDisplay}
-          <span class="mono" style="font-size:.52rem;color:var(--dim)">${ts}</span>
-          ${txhash?`<a href="https://snowtrace.io/tx/${txhash}" target="_blank" class="mono" style="font-size:.52rem;color:var(--red);text-decoration:none">${txhash.slice(0,10)}…↗</a>`:''}
+          <span class="mono" style="font-size:.76rem;color:var(--dim)">${ts}</span>
+          ${txhash?`<a href="https://snowtrace.io/tx/${txhash}" target="_blank" class="mono" style="font-size:.76rem;color:var(--red);text-decoration:none">${txhash.slice(0,10)}…↗</a>`:''}
         </div>
       </div>
     </div>`;
@@ -2037,7 +1964,7 @@ function renderActivityStats() {
     <div class="calc-row"><span class="calc-lbl">Reward Claims</span><span class="calc-val cgn">${claims}</span></div>
     <div class="calc-row"><span class="calc-lbl">Unstake/Exit</span><span class="calc-val cd">${exits}</span></div>
     <div style="margin-top:.9rem">
-      <div class="mono" style="font-size:.52rem;color:var(--mut);margin-bottom:5px">Lock vs Stake ratio</div>
+      <div class="mono" style="font-size:.76rem;color:var(--mut);margin-bottom:5px">Lock vs Stake ratio</div>
       <div class="bw"><div class="bt"><div class="bf" style="width:${locks/(stakes+locks||1)*100}%;background:linear-gradient(90deg,var(--gold),#fbbf24)"></div></div>
       <span class="bv">${stakes+locks>0?Math.round(locks/(stakes+locks)*100):0}% locked</span></div>
     </div>
@@ -2070,10 +1997,10 @@ function renderLb() {
     const displayName = prof ? '@'+prof.twitter : (x.username||shortA(x.wallet));
     const pfpHtml = prof
       ? `<img src="${prof.pic}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid var(--bor);flex-shrink:0" onerror="this.style.display='none'">`
-      : `<div style="width:22px;height:22px;border-radius:50%;background:var(--sur);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;color:var(--mut)">${shortA(x.wallet).slice(0,2)}</div>`;
+      : `<div style="width:22px;height:22px;border-radius:50%;background:var(--sur);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0;color:var(--mut)">${shortA(x.wallet).slice(0,2)}</div>`;
     const twitterHtml = prof
-      ? `<a href="https://x.com/${prof.twitter}" target="_blank" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem;color:var(--red);text-decoration:none">@${prof.twitter}</a>`
-      : `<span class="mono" style="font-size:.62rem;color:var(--txt)">${shortA(x.wallet)}</span>`;
+      ? `<a href="https://x.com/${prof.twitter}" target="_blank" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--red);text-decoration:none">@${prof.twitter}</a>`
+      : `<span class="mono" style="font-size:1.4rem;color:var(--txt)">${shortA(x.wallet)}</span>`;
     return `<tr>
       <td><span class="rk ${rkCls}">${rank}</span></td>
       <td>
@@ -2081,13 +2008,13 @@ function renderLb() {
           ${pfpHtml}
           <div style="display:flex;flex-direction:column;min-width:0">
             ${twitterHtml}
-            <span class="mono" style="font-size:.5rem;color:var(--mut)">${shortA(x.wallet)}</span>
+            <span class="mono" style="font-size:1.25rem;color:var(--mut)">${shortA(x.wallet)}</span>
           </div>
         </div>
       </td>
       <td style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--red)">${fmtP(x.points)}</td>
-      <td class="mono" style="font-size:.58rem;color:var(--dim)">${share}%</td>
-      <td class="mono" style="font-size:.58rem;color:var(--mut)">${x.actionType||'—'}</td>
+      <td class="mono" style="font-size:.85rem;color:var(--dim)">${share}%</td>
+      <td class="mono" style="font-size:.85rem;color:var(--mut)">${x.actionType||'—'}</td>
     </tr>`;
   }).join('');
 }
@@ -2096,7 +2023,7 @@ function renderLb() {
 //  EXPLORER
 // ══════════════════════════════════════════════════════
 async function loadExplorerData() {
-  setHtml('explorerStats','<div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading on-chain data…</div>');
+  setHtml('explorerStats','<div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading on-chain data…</div>');
   try {
     const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const lp = new ethers.Contract(HCASH_LP_ADDR,LP_ABI,prov);
@@ -2122,15 +2049,15 @@ async function loadExplorerData() {
     }
     const tvl = avaxUsd>0?(avaxRes*avaxUsd + hcashRes*hcashUsd):0;
     setHtml('explorerStats',`
-      <div class="calc-row"><span class="calc-lbl">LP Contract</span><span class="calc-val" style="font-size:.65rem;color:var(--red)">0x8f96…5D9</span></div>
-      <div class="calc-row"><span class="calc-lbl">Moat Contract</span><span class="calc-val" style="font-size:.65rem;color:var(--red)">0x501f…9d53</span></div>
+      <div class="calc-row"><span class="calc-lbl">LP Contract</span><span class="calc-val" style="font-size:.92rem;color:var(--red)">0x8f96…5D9</span></div>
+      <div class="calc-row"><span class="calc-lbl">Moat Contract</span><span class="calc-val" style="font-size:.92rem;color:var(--red)">0x501f…9d53</span></div>
       <div class="calc-row"><span class="calc-lbl">Pool AVAX</span><span class="calc-val cw">${f2(avaxRes)} AVAX</span></div>
       <div class="calc-row"><span class="calc-lbl">Pool hCASH</span><span class="calc-val cg">${fmtP(hcashRes)}</span></div>
       <div class="calc-row"><span class="calc-lbl">LP Total Supply</span><span class="calc-val cd">${lpSup.toFixed(6)}</span></div>
       <div class="calc-row"><span class="calc-lbl">Pool TVL</span><span class="calc-val cgn">${tvl>0?fmtK(tvl):'—'}</span></div>
       <div class="calc-row"><span class="calc-lbl">Ratio</span><span class="calc-val">${f2(hcashRes/avaxRes)} hCASH/AVAX</span></div>
     `);
-  } catch(e){setHtml('explorerStats','<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not load on-chain data.</div>');}
+  } catch(e){setHtml('explorerStats','<div class="mono" style="font-size:1.35rem;color:var(--mut)">Could not load on-chain data.</div>');}
   // Moat Points leaderboard
   if(allLbData.length===0)await loadMoatPoints();
   const tb=document.getElementById('explorerLbBody');
@@ -2140,8 +2067,8 @@ async function loadExplorerData() {
     const rkCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
     const prof=getKnownProfile(x.wallet);
     const nameHtml=prof
-      ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-size:.62rem">@${prof.twitter}</a>`
-      :`<span class="mono" style="font-size:.58rem;color:var(--dim)">${shortA(x.wallet)}</span>`;
+      ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-size:1.4rem">@${prof.twitter}</a>`
+      :`<span class="mono" style="font-size:.85rem;color:var(--dim)">${shortA(x.wallet)}</span>`;
     return `<tr>
       <td><span class="rk ${rkCls}">${i+1}</span></td>
       <td style="display:flex;align-items:center;gap:6px">
@@ -2149,7 +2076,7 @@ async function loadExplorerData() {
         ${nameHtml}
       </td>
       <td style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--red)">${fmtP(x.points)}</td>
-      <td class="mono" style="font-size:.56rem;color:var(--dim)">${total?(x.points/total*100).toFixed(2):0}%</td>
+      <td class="mono" style="font-size:.80rem;color:var(--dim)">${total?(x.points/total*100).toFixed(2):0}%</td>
     </tr>`;
   }).join('');
 
@@ -2236,28 +2163,28 @@ async function loadLpHolders(totalLpSupply) {
       const prof=getKnownProfile(h.wallet);
       const isMoat=h._isMoat;
       const nameHtml=isMoat
-        ?`<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.7rem;color:var(--red)">🏦 hCASH Moat</span>`
+        ?`<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--red)">🏦 hCASH Moat</span>`
         :prof
-          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem">@${prof.twitter}</a>`
-          :`<span class="mono" style="font-size:.58rem">${shortA(h.wallet)}</span>`;
+          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem">@${prof.twitter}</a>`
+          :`<span class="mono" style="font-size:.85rem">${shortA(h.wallet)}</span>`;
       const rkCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
       return `<tr>
         <td><span class="rk ${rkCls}">${i+1}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
-            ${isMoat?'<span style="font-size:.9rem">🏦</span>':prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
+            ${isMoat?'<span style="font-size:1.4rem">🏦</span>':prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
             <div style="display:flex;flex-direction:column;min-width:0">
               ${nameHtml}
-              <span class="mono" style="font-size:.46rem;color:var(--mut)">${shortA(h.wallet)}</span>
+              <span class="mono" style="font-size:.72rem;color:var(--mut)">${shortA(h.wallet)}</span>
             </div>
           </div>
         </td>
         <td style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold)">${h.balance.toFixed(6)} LP</td>
-        <td class="mono" style="font-size:.56rem;color:var(--dim)">${pct}%</td>
+        <td class="mono" style="font-size:.80rem;color:var(--dim)">${pct}%</td>
       </tr>`;
     }).join('');
   }catch(e){
-    holdersEl.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--red);font-size:.6rem">Error: ${e.message?.slice(0,80)}</td></tr>`;
+    holdersEl.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--red);font-size:1.35rem">Error: ${e.message?.slice(0,80)}</td></tr>`;
   }
 }
 
@@ -2296,7 +2223,7 @@ function renderSignals(total) {
 async function loadMiners() {
   const grid=document.getElementById('minerGrid');
   const rigGrid=document.getElementById('rigGrid');
-  if(grid)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)"><span class="spin"></span><span class="mono" style="font-size:.65rem;margin-left:5px">Loading from HashCash API…</span></div>';
+  if(grid)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)"><span class="spin"></span><span class="mono" style="font-size:.92rem;margin-left:5px">Loading from HashCash API…</span></div>';
   try {
     const resp = await fetch(`${HCASH_API}/contracts`, {headers:{'x-api-key':HCASH_API_KEY}}).then(x=>x.json());
     const contracts = Array.isArray(resp)?resp:(resp?.contracts||[]);
@@ -2331,7 +2258,7 @@ async function loadMiners() {
               ${eff?`<div class="miner-stat"><span class="miner-stat-k">Efficiency</span><span class="miner-stat-v" style="color:var(--grn)">${eff}</span></div>`:''}
               ${m.symbol?`<div class="miner-stat"><span class="miner-stat-k">Symbol</span><span class="miner-stat-v">${m.symbol}</span></div>`:''}
               <div class="miner-stat" style="margin-top:.25rem">
-                <span class="mono" style="font-size:.44rem;color:var(--mut)">${shortA(m.address||'')}</span>
+                <span class="mono" style="font-size:.7rem;color:var(--mut)">${shortA(m.address||'')}</span>
               </div>
             </div>
           </div>`;
@@ -2347,18 +2274,18 @@ async function loadMiners() {
         return `<div class="card">
           <div class="ch">
             <div class="ctitle">🔧 ${r.name||r.id}</div>
-            <span class="mono" style="font-size:.48rem;color:var(--mut)">${r.rigVersion||'v1'}</span>
+            <span class="mono" style="font-size:1rem;color:var(--mut)">${r.rigVersion||'v1'}</span>
           </div>
           <div class="cbody">
             ${s.gpusPerRig?`<div class="calc-row"><span class="calc-lbl">GPUs/Rig</span><span class="calc-val">${s.gpusPerRig}</span></div>`:''}
             ${isV2&&s.recipeActive!==undefined?`<div class="calc-row"><span class="calc-lbl">Recipe</span><span class="calc-val" style="color:${s.recipeActive?'var(--grn)':'var(--mut)'}">${s.recipeActive?'🟢 Active':'⚫ Inactive'}</span></div>`:''}
             ${s.assemblyCostRaw?`<div class="calc-row"><span class="calc-lbl">Assembly Cost</span><span class="calc-val cd">${s.assemblyCostRaw}</span></div>`:''}
-            ${isV2&&s.outputNftAddress?`<div class="calc-row"><span class="calc-lbl">Output NFT</span><span class="calc-val" style="font-size:.58rem">${shortA(s.outputNftAddress)}</span></div>`:''}
-            <div class="calc-row"><span class="calc-lbl">Contract</span><a href="https://snowtrace.io/address/${r.address}" target="_blank" class="mono" style="font-size:.55rem;color:var(--red);text-decoration:none">${shortA(r.address)} ↗</a></div>
+            ${isV2&&s.outputNftAddress?`<div class="calc-row"><span class="calc-lbl">Output NFT</span><span class="calc-val" style="font-size:1.05rem">${shortA(s.outputNftAddress)}</span></div>`:''}
+            <div class="calc-row"><span class="calc-lbl">Contract</span><a href="https://snowtrace.io/address/${r.address}" target="_blank" class="mono" style="font-size:.80rem;color:var(--red);text-decoration:none">${shortA(r.address)} ↗</a></div>
             <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-top:.5rem">hashcash.club ↗</a>
           </div>
         </div>`;
-      }).join('') : '<div class="mono" style="font-size:.6rem;color:var(--mut)">No rig assemblers in current release.</div>';
+      }).join('') : '<div class="mono" style="font-size:1.35rem;color:var(--mut)">No rig assemblers in current release.</div>';
       rigGrid.innerHTML=rigHtml;
     }
 
@@ -2372,26 +2299,26 @@ async function loadMiners() {
       otherDiv.innerHTML=allOther.map(c=>`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(31,32,48,.3)">
           <div>
-            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.78rem">${c.name||c.id}</div>
-            <div class="mono" style="font-size:.48rem;color:var(--mut)">${c.category} · ${shortA(c.address)}</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem">${c.name||c.id}</div>
+            <div class="mono" style="font-size:1rem;color:var(--mut)">${c.category} · ${shortA(c.address)}</div>
           </div>
-          <a href="https://snowtrace.io/address/${c.address}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.5rem">↗</a>
+          <a href="https://snowtrace.io/address/${c.address}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:1.25rem">↗</a>
         </div>`).join('');
     }
 
   } catch(e){
     console.warn('miners:',e.message);
-    if(grid)grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:2rem" class="mono" style="font-size:.65rem;color:var(--mut)">Could not load: ${e.message?.slice(0,80)}</div>`;
+    if(grid)grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:2rem" class="mono" style="font-size:.92rem;color:var(--mut)">Could not load: ${e.message?.slice(0,80)}</div>`;
   }
 }
 
 async function loadMarketplaceListings(marketContract, miners) {
   const mktDiv=document.getElementById('marketplaceListings');
   if(!mktDiv) return;
-  mktDiv.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading marketplace listings…</div>';
+  mktDiv.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading marketplace listings…</div>';
   try{
     if(!marketContract?.address){
-      mktDiv.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)">Marketplace contract not found in API.</div>';
+      mktDiv.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut)">Marketplace contract not found in API.</div>';
       return;
     }
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
@@ -2473,32 +2400,32 @@ async function loadMarketplaceListings(marketContract, miners) {
     }
 
     if(!listings.length){
-      mktDiv.innerHTML=`<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem">No active listings found.<br><a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a></div>`;
+      mktDiv.innerHTML=`<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem">No active listings found.<br><a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a></div>`;
       return;
     }
 
     mktDiv.innerHTML=listings.map(l=>{
       const prof=getKnownProfile(l.seller);
       const sellerHtml=prof
-        ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:12px;height:12px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:.56rem;text-decoration:none">@${prof.twitter}</a></div>`
-        :`<span class="mono" style="font-size:.52rem;color:var(--mut)">${shortA(l.seller)}</span>`;
+        ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:12px;height:12px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:.80rem;text-decoration:none">@${prof.twitter}</a></div>`
+        :`<span class="mono" style="font-size:.76rem;color:var(--mut)">${shortA(l.seller)}</span>`;
       const s=l.minerStats||{};
       return `<div style="display:flex;gap:10px;align-items:flex-start;padding:.6rem;background:var(--sur);border:1px solid var(--bor);border-radius:9px;margin-bottom:.4rem">
         ${l.minerImg?`<img src="${l.minerImg}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">`:
-          '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem">⛏</div>'}
+          '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem">⛏</div>'}
         <div style="flex:1;min-width:0">
-          <div style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:.82rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:.52rem;color:var(--mut)">#${l.tokenId}</span></div>
+          <div style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:1.55rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:.76rem;color:var(--mut)">#${l.tokenId}</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin:.2rem 0">
-            ${s.hashrateFormatted?`<span class="mono" style="font-size:.54rem;color:var(--red)">${s.hashrateFormatted}</span>`:''}
-            ${s.powerFormatted?`<span class="mono" style="font-size:.54rem;color:var(--gold)">${s.powerFormatted}</span>`:''}
+            ${s.hashrateFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--red)">${s.hashrateFormatted}</span>`:''}
+            ${s.powerFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--gold)">${s.powerFormatted}</span>`:''}
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
             ${sellerHtml}
-            ${l.price>0?`<span style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:.82rem;color:var(--grn)">${f4(l.price)} AVAX</span>`:
-              l._fromEvent?`<span class="mono" style="font-size:.52rem;color:var(--mut)">Recent transfer</span>`:''}
+            ${l.price>0?`<span style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:1.55rem;color:var(--grn)">${f4(l.price)} AVAX</span>`:
+              l._fromEvent?`<span class="mono" style="font-size:.76rem;color:var(--mut)">Recent transfer</span>`:''}
           </div>
         </div>
-        ${!l._fromEvent?`<a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.5rem;flex-shrink:0">Buy ↗</a>`:''}
+        ${!l._fromEvent?`<a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:1.25rem;flex-shrink:0">Buy ↗</a>`:''}
       </div>`;
     }).join('');
 
@@ -2508,7 +2435,7 @@ async function loadMarketplaceListings(marketContract, miners) {
 
   }catch(e){
     console.warn('marketplace:',e.message);
-    mktDiv.innerHTML=`<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1rem">Could not load listings: ${e.message?.slice(0,60)}</div>`;
+    mktDiv.innerHTML=`<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1rem">Could not load listings: ${e.message?.slice(0,60)}</div>`;
   }
 }
 
@@ -2893,8 +2820,8 @@ function earlyExitLockConfirm(idx, amtFloat, daysLeft, origDurDays) {
 
   el.innerHTML=`
     <div style="background:rgba(229,62,62,.08);border:2px solid rgba(229,62,62,.35);border-radius:10px;padding:.9rem;text-align:left;margin-top:.55rem">
-      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--red);font-size:.95rem;margin-bottom:.6rem">⚠️ EEL Early Exit Penalty</div>
-      <div class="mono" style="font-size:.65rem;line-height:1.85">
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--red);font-size:1.4rem;margin-bottom:.6rem">⚠️ EEL Early Exit Penalty</div>
+      <div class="mono" style="font-size:.92rem;line-height:1.85">
         <div style="display:flex;justify-content:space-between"><span style="color:var(--mut)">Lock progress:</span><span>${donePct}% complete (${daysLeft}d left)</span></div>
         <div style="display:flex;justify-content:space-between"><span style="color:var(--mut)">Penalty rate:</span><span style="color:var(--red);font-weight:700">${penPct}% of tokens</span></div>
         <div style="border-top:1px solid var(--bor);margin:.4rem 0"></div>
@@ -2905,7 +2832,7 @@ function earlyExitLockConfirm(idx, amtFloat, daysLeft, origDurDays) {
           <span style="color:var(--grn);font-weight:700">✅ You receive:</span><span style="color:var(--grn);font-weight:700">${receiveAmt} LP</span>
         </div>
       </div>
-      <div style="margin-top:.65rem;font-size:.65rem;color:var(--mut)" class="mono">Permanently losing <b style="color:var(--red)">${loseAmt} LP</b>. Cannot be undone.</div>
+      <div style="margin-top:.65rem;font-size:.92rem;color:var(--mut)" class="mono">Permanently losing <b style="color:var(--red)">${loseAmt} LP</b>. Cannot be undone.</div>
       <div style="display:flex;gap:8px;margin-top:.75rem">
         <button class="btn btn-sm btn-g" style="flex:1" onclick="document.getElementById('${statusId}').innerHTML=''">Cancel</button>
         <button class="btn btn-sm" style="flex:2;background:var(--red);border-color:var(--red)"
@@ -2971,14 +2898,14 @@ async function hcashUnstake(){await hcashDoUnstake();}
 // ── Rewards ──
 async function loadRewards() {
   const el=document.getElementById('rewardsContent');
-  if(!walletAddress){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut)">Connect wallet to see rewards.</div>');loadMinerHolders();return;}
-  if(el)el.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading rewards…</div>';
+  if(!walletAddress){setHtml('rewardsContent','<div class="mono" style="font-size:1.35rem;color:var(--mut)">Connect wallet to see rewards.</div>');loadMinerHolders();return;}
+  if(el)el.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading rewards…</div>';
   try{
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     const res=await moatC.getAllPendingRewards(walletAddress);
     const tokens=res[0]||[],amounts=res[1]||[];
-    if(!tokens.length){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1.5rem">No pending rewards found.</div>');loadMinerHolders();return;}
+    if(!tokens.length){setHtml('rewardsContent','<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem">No pending rewards found.</div>');loadMinerHolders();return;}
     const rows=tokens.map((t,i)=>{
       const amt=parseFloat(ethers.formatEther(amounts[i]||0n));
       return `<div class="calc-row"><span class="calc-lbl mono">${shortA(t)}</span><span class="calc-val cgn">${f4(amt)}</span></div>`;
@@ -2986,9 +2913,9 @@ async function loadRewards() {
     setHtml('rewardsContent',`
       ${rows}
       ${walletSigner?`<button class="btn btn-green" style="width:100%;margin-top:.75rem" onclick="claimRewards()">💰 Claim All Rewards</button>`:''}
-      <div id="claimStatus" class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;margin-top:.4rem"></div>
+      <div id="claimStatus" class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;margin-top:.4rem"></div>
     `);
-  }catch(e){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not load rewards.</div>');}
+  }catch(e){setHtml('rewardsContent','<div class="mono" style="font-size:1.35rem;color:var(--mut)">Could not load rewards.</div>');}
   loadMinerHolders();
 }
 
@@ -2997,15 +2924,15 @@ async function loadMinerHolders() {
   async function fetchNFTHolders(contractAddr, elId, linkElId) {
     const el=document.getElementById(elId);
     if(!el)return;
-    el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)"><span class="spin"></span> Loading holders…</div>';
-    if(!contractAddr){el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">Address pending API</div>';return;}
+    el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)"><span class="spin"></span> Loading holders…</div>';
+    if(!contractAddr){el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">Address pending API</div>';return;}
     try{
       // Use Snowtrace NFT transfer API to find current holders
       const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=200`)
         .then(r=>r.json()).catch(()=>null);
 
       if(!txRes||txRes.status!=='1'||!txRes.result?.length){
-        el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">No transfer data found</div>';
+        el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">No transfer data found</div>';
         return;
       }
 
@@ -3030,7 +2957,7 @@ async function loadMinerHolders() {
       const holders=Object.values(holdersMap).sort((a,b)=>b.tokens.length-a.tokens.length);
 
       if(!holders.length){
-        el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">No current holders found</div>';
+        el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">No current holders found</div>';
         return;
       }
 
@@ -3041,20 +2968,20 @@ async function loadMinerHolders() {
       el.innerHTML=holders.slice(0,10).map((h,i)=>{
         const prof=getKnownProfile(h.addr);
         const nameHtml=prof
-          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-size:.65rem;font-family:'Rajdhani',sans-serif;font-weight:700">@${prof.twitter}</a>`
-          :`<span class="mono" style="font-size:.56rem">${shortA(h.addr)}</span>`;
+          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-size:.92rem;font-family:'Rajdhani',sans-serif;font-weight:700">@${prof.twitter}</a>`
+          :`<span class="mono" style="font-size:.80rem">${shortA(h.addr)}</span>`;
         const rkCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
         return `<div style="display:flex;align-items:center;gap:6px;padding:.3rem 0;border-bottom:1px solid rgba(31,32,48,.35)">
-          <span class="rk ${rkCls}" style="font-size:.52rem;width:18px;height:18px">${i+1}</span>
+          <span class="rk ${rkCls}" style="font-size:.76rem;width:18px;height:18px">${i+1}</span>
           ${prof?`<img src="${prof.pic}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:'' }
           <div style="flex:1;min-width:0">
             ${nameHtml}
-            <div class="mono" style="font-size:.46rem;color:var(--mut)">${h.tokens.length} token${h.tokens.length>1?'s':''} · IDs: ${h.tokens.slice(0,3).join(', ')}${h.tokens.length>3?'…':''}</div>
+            <div class="mono" style="font-size:.72rem;color:var(--mut)">${h.tokens.length} token${h.tokens.length>1?'s':''} · IDs: ${h.tokens.slice(0,3).join(', ')}${h.tokens.length>3?'…':''}</div>
           </div>
         </div>`;
       }).join('');
     }catch(e){
-      el.innerHTML=`<div class="mono" style="font-size:.55rem;color:var(--red)">${e.message?.slice(0,60)}</div>`;
+      el.innerHTML=`<div class="mono" style="font-size:.80rem;color:var(--red)">${e.message?.slice(0,60)}</div>`;
     }
   }
 
@@ -3079,7 +3006,7 @@ async function loadMinerHolders() {
     console.warn('minerHolders:',e.message);
     ['miner27Holders','miner40Holders'].forEach(id=>{
       const el=document.getElementById(id);
-      if(el)el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">Could not load</div>';
+      if(el)el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">Could not load</div>';
     });
   }
 }
@@ -3104,13 +3031,13 @@ async function renderActiveLocks() {
   const el=document.getElementById('activeLocksList');
   if(!el)return;
   if(!walletAddress){el.innerHTML='';return;}
-  el.innerHTML='<div class="mono" style="font-size:.58rem;color:var(--mut);text-align:center;margin-top:.5rem"><span class="spin"></span>Loading locks…</div>';
+  el.innerHTML='<div class="mono" style="font-size:.85rem;color:var(--mut);text-align:center;margin-top:.5rem"><span class="spin"></span>Loading locks…</div>';
   try{
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     // getUserAllLocks returns parallel arrays: amounts, endTimestamps, lockPoints, origDurations, lockIndexes, active
     const lockData=await moatC.getUserAllLocks(walletAddress).catch(()=>null);
-    if(!lockData){el.innerHTML='<div class="mono" style="font-size:.58rem;color:var(--mut);text-align:center;margin-top:.7rem">No lock data available.</div>';return;}
+    if(!lockData){el.innerHTML='<div class="mono" style="font-size:.85rem;color:var(--mut);text-align:center;margin-top:.7rem">No lock data available.</div>';return;}
     const [amounts,endTss,lockPts,origDurs,lockIdxs,actives]=lockData;
     const now=Math.floor(Date.now()/1000);
     const activeLocks=[];
@@ -3120,8 +3047,8 @@ async function renderActiveLocks() {
         origDur:Number(origDurs[i]),lockIdx:i,idx:i
       });
     }
-    if(!activeLocks.length){el.innerHTML='<div class="mono" style="font-size:.58rem;color:var(--mut);text-align:center;margin-top:.7rem">No active locks.</div>';return;}
-    el.innerHTML=`<div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.78rem;color:var(--gold);margin-bottom:.5rem;margin-top:.85rem">🔐 Your Active Locks (${activeLocks.length})</div>`+
+    if(!activeLocks.length){el.innerHTML='<div class="mono" style="font-size:.85rem;color:var(--mut);text-align:center;margin-top:.7rem">No active locks.</div>';return;}
+    el.innerHTML=`<div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem;color:var(--gold);margin-bottom:.5rem;margin-top:.85rem">🔐 Your Active Locks (${activeLocks.length})</div>`+
     activeLocks.map(l=>{
       const secsLeft=Math.max(0,l.endTs-now);
       const dL=Math.floor(secsLeft/86400);
@@ -3139,25 +3066,25 @@ async function renderActiveLocks() {
       return `<div class="lock-row">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
           <div>
-            <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--gold)">${amtFmt} LP</span>
-            <span class="mono" style="font-size:.52rem;color:var(--pur);background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.2);border-radius:3px;padding:1px 5px;margin-left:5px">${mult}×</span>
+            <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:var(--gold)">${amtFmt} LP</span>
+            <span class="mono" style="font-size:.76rem;color:var(--pur);background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.2);border-radius:3px;padding:1px 5px;margin-left:5px">${mult}×</span>
           </div>
-          <span class="mono" style="font-size:.6rem;color:${done?'var(--grn)':'var(--gold)'}">${timeStr}</span>
+          <span class="mono" style="font-size:1.35rem;color:${done?'var(--grn)':'var(--gold)'}">${timeStr}</span>
         </div>
         <div class="lock-prog"><div class="lock-prog-fill" style="width:${pct}%;background:${barColor}"></div></div>
         <div style="display:flex;justify-content:space-between" class="mono">
-          <span style="font-size:.52rem;color:var(--mut)">${pct}% · ${origDays}d lock (idx ${l.lockIdx})</span>
-          <span style="font-size:.52rem;color:${done?'var(--grn)':'var(--red)'}">${done?'No penalty':'Early: ~'+penPct+'% penalty'}</span>
+          <span style="font-size:.76rem;color:var(--mut)">${pct}% · ${origDays}d lock (idx ${l.lockIdx})</span>
+          <span style="font-size:.76rem;color:${done?'var(--grn)':'var(--red)'}">${done?'No penalty':'Early: ~'+penPct+'% penalty'}</span>
         </div>
         <div style="display:flex;gap:4px;margin-top:.5rem">
           ${done
             ?`<button class="btn btn-green btn-sm" style="flex:1" onclick="exitLock(${l.lockIdx})">✅ Exit Lock — Full Amount</button>`
-            :`<button class="btn btn-sm" style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red);font-size:.56rem" onclick="earlyExitLockConfirm(${l.lockIdx},${Number(amtFmt)},${dL},${origDays})">⚠ Early Exit (~${(Number(amtFmt)*(1-penPct/100)).toFixed(4)} LP)</button>`}
+            :`<button class="btn btn-sm" style="flex:1;background:transparent;border:1px solid var(--red);color:var(--red);font-size:.80rem" onclick="earlyExitLockConfirm(${l.lockIdx},${Number(amtFmt)},${dL},${origDays})">⚠ Early Exit (~${(Number(amtFmt)*(1-penPct/100)).toFixed(4)} LP)</button>`}
         </div>
-        <div id="lockStatus_${l.lockIdx}" class="mono" style="font-size:.65rem;margin-top:.4rem;min-height:.8rem"></div>
+        <div id="lockStatus_${l.lockIdx}" class="mono" style="font-size:.92rem;margin-top:.4rem;min-height:.8rem"></div>
       </div>`;
     }).join('');
-  }catch(e){el.innerHTML=`<div class="mono" style="font-size:.58rem;color:var(--mut)">Could not load locks: ${e.message?.slice(0,60)}</div>`;}
+  }catch(e){el.innerHTML=`<div class="mono" style="font-size:.85rem;color:var(--mut)">Could not load locks: ${e.message?.slice(0,60)}</div>`;}
 }
 
 // ══════════════════════════════════════════════════════
@@ -3276,7 +3203,7 @@ function runCalc() {
   // Fort score = additive, total pool grows with new deposits
   const fortPct=estPts>0?(estPts/(totalPts+estPts)*100).toFixed(5):'—';
   el.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:.85rem">
-    <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem;color:var(--red);margin-bottom:.6rem">📊 Projection for $${usdc} USDC</div>
+    <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--red);margin-bottom:.6rem">📊 Projection for $${usdc} USDC</div>
     <div class="calc-row"><span class="calc-lbl">Budget Split (50/50)</span><span class="calc-val">${fmtK(halfUsd)} each</span></div>
     <div class="calc-row"><span class="calc-lbl">hCASH to buy</span><span class="calc-val cg">${hcashPrice>0?fmtP(hcashTokens):'—'} hCASH</span></div>
     <div class="calc-row"><span class="calc-lbl">AVAX to pair</span><span class="calc-val cw">${avaxPrice>0?f4(avaxAmt):'—'} AVAX</span></div>
@@ -3285,9 +3212,9 @@ function runCalc() {
     <div class="calc-row"><span class="calc-lbl">Points Multiplier</span><span class="calc-val cr">${mult}×</span></div>
     <div class="calc-row" style="border-top:1px solid var(--bor);padding-top:.55rem;margin-top:.2rem">
       <span class="calc-lbl" style="color:var(--txt)">Est. Fort Score Share</span>
-      <span class="calc-val cgn" style="font-size:1.05rem">${fortPct}%</span>
+      <span class="calc-val cgn" style="font-size:1.25rem">${fortPct}%</span>
     </div>
-    <div class="mono" style="font-size:.5rem;color:var(--mut);margin-top:.55rem">
+    <div class="mono" style="font-size:1.25rem;color:var(--mut);margin-top:.55rem">
       ⚠ LP token estimate is approximate and depends on pool ratio at time of deposit.<br>
       Points estimate is rough. Actual points depend on LP contract implementation.
     </div>
@@ -3324,7 +3251,7 @@ function runCouncil() {
     <div class="calc-row"><span class="calc-lbl">Diversity Mult.</span><span class="calc-val cr">${mult}×</span></div>
     <div class="calc-row" style="border-top:1px solid var(--bor);padding-top:.5rem;margin-top:.2rem">
       <span class="calc-lbl" style="color:var(--txt)">Council Score</span>
-      <span class="calc-val cgn" style="font-size:1.05rem">${fmtP(score)}</span>
+      <span class="calc-val cgn" style="font-size:1.25rem">${fmtP(score)}</span>
     </div>
   </div>`);
 }
@@ -3342,7 +3269,7 @@ function addCouncilRow() {
 //  POSITION SUMMARY (stakelock view)
 // ══════════════════════════════════════════════════════
 async function updatePositionSummary() {
-  if(!walletAddress){setHtml('positionSummary','<div class="mono" style="font-size:.6rem;color:var(--mut)">Connect wallet to see your position.</div>');return;}
+  if(!walletAddress){setHtml('positionSummary','<div class="mono" style="font-size:1.35rem;color:var(--mut)">Connect wallet to see your position.</div>');return;}
   const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
   try{
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
@@ -3400,7 +3327,7 @@ async function updatePositionSummary() {
 async function loadUserPosition() {
   const el=document.getElementById('myPositionCard');
   if(!el||!walletAddress)return;
-  el.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1rem;text-align:center"><span class="spin"></span>Loading…</div>';
+  el.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1rem;text-align:center"><span class="spin"></span>Loading…</div>';
   try{
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
@@ -3463,40 +3390,40 @@ async function loadUserPosition() {
       <div style="background:linear-gradient(135deg,rgba(229,62,62,.1),rgba(129,140,248,.06),transparent 75%);border:1px solid rgba(229,62,62,.22);border-radius:11px;padding:.9rem;margin-bottom:.7rem">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem">
           <div>
-            <div style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Moat Points</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:2rem;line-height:1;color:var(--red)">${fmtP(points)}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.76rem;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Moat Points</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:2.4rem;line-height:1;color:var(--red)">${fmtP(points)}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Pool Rank</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.6rem;line-height:1;color:var(--pur)">${rankStr}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.76rem;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Pool Rank</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.85rem;line-height:1;color:var(--pur)">${rankStr}</div>
           </div>
         </div>
         <!-- Points share bar -->
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--mut)">YOUR POOL SHARE</span>
-          <span style="font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--red)">${ptSharePct.toFixed(4)}% of all points</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--mut)">YOUR POOL SHARE</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--red)">${ptSharePct.toFixed(4)}% of all points</span>
         </div>
         <div style="height:5px;background:var(--bor);border-radius:99px;overflow:hidden;margin-bottom:.5rem">
           <div style="height:100%;width:${ptBarW}%;background:linear-gradient(90deg,var(--red),var(--pur));border-radius:99px;transition:width .8s"></div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.35rem">
           <div style="text-align:center;background:rgba(255,255,255,.02);border-radius:6px;padding:.35rem">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:.45rem;color:var(--mut);margin-bottom:2px">STAKED LP</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--red)">${staked>0?staked.toFixed(4):'—'}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--mut);margin-bottom:2px">STAKED LP</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:var(--red)">${staked>0?staked.toFixed(4):'—'}</div>
           </div>
           <div style="text-align:center;background:rgba(255,255,255,.02);border-radius:6px;padding:.35rem">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:.45rem;color:var(--mut);margin-bottom:2px">LOCKED LP</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--gold)">${locked>0?locked.toFixed(4):'—'}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--mut);margin-bottom:2px">LOCKED LP</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:var(--gold)">${locked>0?locked.toFixed(4):'—'}</div>
           </div>
           <div style="text-align:center;background:rgba(255,255,255,.02);border-radius:6px;padding:.35rem">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:.45rem;color:var(--mut);margin-bottom:2px">LP VALUE</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--grn)">${myUsd>0?fmtK(myUsd):'—'}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--mut);margin-bottom:2px">LP VALUE</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:var(--grn)">${myUsd>0?fmtK(myUsd):'—'}</div>
           </div>
         </div>
       </div>
       ${!hasPos?`<div class="banner" style="text-align:center;margin-bottom:.55rem">
-        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:.3rem">No LP staked yet</div>
-        <div class="mono" style="font-size:.6rem;color:var(--mut);margin-bottom:.6rem">Add AVAX + hCASH liquidity → stake LP to earn Moat Points → grow Fort Score</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.4rem;margin-bottom:.3rem">No LP staked yet</div>
+        <div class="mono" style="font-size:1.35rem;color:var(--mut);margin-bottom:.6rem">Add AVAX + hCASH liquidity → stake LP to earn Moat Points → grow Fort Score</div>
         <button class="btn btn-sm" onclick="nav(document.querySelector('[data-v=liquidity]'))">💧 Add Liquidity →</button>
       </div>`:''}
       <div style="display:flex;gap:5px;flex-wrap:wrap">
@@ -3506,7 +3433,7 @@ async function loadUserPosition() {
       </div>`;
   }catch(e){
     console.warn('loadUserPosition:',e.message);
-    el.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not load position data.</div>';
+    el.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut)">Could not load position data.</div>';
   }
 }
 
@@ -3530,10 +3457,10 @@ async function loadFortScoreOptimizer() {
   const el = document.getElementById('fortScorePanel');
   if(!el) return;
   if(!walletAddress){
-    el.innerHTML='<div class="mono" style="font-size:.65rem;color:var(--mut);text-align:center;padding:1rem">Connect wallet first.</div>';
+    el.innerHTML='<div class="mono" style="font-size:.92rem;color:var(--mut);text-align:center;padding:1rem">Connect wallet first.</div>';
     return;
   }
-  el.innerHTML='<div class="mono" style="font-size:.65rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading on-chain position…</div>';
+  el.innerHTML='<div class="mono" style="font-size:.92rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading on-chain position…</div>';
 
   try {
     const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
@@ -3628,76 +3555,76 @@ async function loadFortScoreOptimizer() {
       <!-- Score hero -->
       <div style="display:flex;gap:.85rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
         <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(229,62,62,.15),rgba(129,140,248,.08));border:2px solid ${gradeCol};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:2rem;line-height:1;color:${gradeCol}">${grade}</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.4rem;color:var(--mut);letter-spacing:.1em">GRADE</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:2.4rem;line-height:1;color:${gradeCol}">${grade}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--mut);letter-spacing:.1em">GRADE</div>
         </div>
         <div style="flex:1;min-width:150px">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.3rem;line-height:1;margin-bottom:4px">Fort Score: <span style="color:${gradeCol}">${ptShare.toFixed(4)}%</span></div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--dim);">${fmtP(myPts)} pts · rank ${myRank>0?'#'+myRank:'unranked'} of ${allLbData.length||'?'} wallets</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;line-height:1;margin-bottom:4px">Fort Score: <span style="color:${gradeCol}">${ptShare.toFixed(4)}%</span></div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1.35rem;color:var(--dim);">${fmtP(myPts)} pts · rank ${myRank>0?'#'+myRank:'unranked'} of ${allLbData.length||'?'} wallets</div>
           <div style="height:6px;background:var(--bor);border-radius:99px;overflow:hidden;margin-top:.45rem">
             <div style="height:100%;width:${Math.min(100,ptShare*20).toFixed(1)}%;background:linear-gradient(90deg,${gradeCol},var(--pur));border-radius:99px;transition:width .8s"></div>
           </div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--mut);margin-top:3px">${ptShare.toFixed(4)}% of total moat points (5% = full bar)</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--mut);margin-top:3px">${ptShare.toFixed(4)}% of total moat points (5% = full bar)</div>
         </div>
       </div>
 
       <!-- LP breakdown -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.85rem">
         <div style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.6rem;text-align:center">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--mut);margin-bottom:3px">IN WALLET</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--mut);margin-bottom:3px">IN WALLET</div>
           <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--dim)">${lpWallet.toFixed(4)}</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.42rem;color:var(--mut)">0× points</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--mut)">0× points</div>
         </div>
         <div style="background:var(--sur);border:1px solid rgba(229,62,62,.3);border-radius:8px;padding:.6rem;text-align:center">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--mut);margin-bottom:3px">STAKED</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--mut);margin-bottom:3px">STAKED</div>
           <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--red)">${staked.toFixed(4)}</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.42rem;color:var(--mut)">1× points</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--mut)">1× points</div>
         </div>
         <div style="background:var(--sur);border:1px solid rgba(212,168,67,.3);border-radius:8px;padding:.6rem;text-align:center">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--mut);margin-bottom:3px">LOCKED</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--mut);margin-bottom:3px">LOCKED</div>
           <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--gold)">${locked.toFixed(4)}</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:.42rem;color:var(--mut)">${activeLocks.length>0?(activeLocks.reduce((s,l)=>s+l.mult*l.amt,0)/Math.max(locked,0.00001)).toFixed(2)+'× avg':'—'}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--mut)">${activeLocks.length>0?(activeLocks.reduce((s,l)=>s+l.mult*l.amt,0)/Math.max(locked,0.00001)).toFixed(2)+'× avg':'—'}</div>
         </div>
       </div>
 
       ${activeLocks.length>0?`
       <!-- Active lock health -->
-      <div style="font-family:'Share Tech Mono',monospace;font-size:.55rem;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Lock Health</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.80rem;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Lock Health</div>
       <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem">
         ${activeLocks.map(l=>{
           const healthColor=l.pctDone>=100?'var(--grn)':l.penPct<=20?'var(--gold)':l.penPct<=50?'var(--pur)':'var(--red)';
           const statusLabel=l.pctDone>=100?'✅ MATURED':l.daysLeft+'d left';
           return `<div style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.6rem">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
-              <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem">${l.amt.toFixed(4)} LP · ${l.origDays}d lock <span class="mono" style="font-size:.52rem;color:var(--gold)">${l.mult}×</span></span>
-              <span style="font-family:'Share Tech Mono',monospace;font-size:.55rem;color:${healthColor}">${statusLabel}</span>
+              <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem">${l.amt.toFixed(4)} LP · ${l.origDays}d lock <span class="mono" style="font-size:.76rem;color:var(--gold)">${l.mult}×</span></span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:.80rem;color:${healthColor}">${statusLabel}</span>
             </div>
             <div style="height:5px;background:var(--bor);border-radius:99px;overflow:hidden;margin-bottom:.3rem">
               <div style="height:100%;width:${l.pctDone}%;background:linear-gradient(90deg,${l.pctDone>=100?'var(--grn)':'var(--red)'},${l.pctDone>=100?'var(--grn)':'var(--gold)'});border-radius:99px"></div>
             </div>
             <div style="display:flex;justify-content:space-between">
-              <span style="font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--mut)">${l.pctDone}% complete</span>
-              <span style="font-family:'Share Tech Mono',monospace;font-size:.5rem;color:${l.pctDone>=100?'var(--grn)':'var(--red)'}">${l.pctDone>=100?'No penalty':'EEL: '+l.penPct+'% if exited now'}</span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:var(--mut)">${l.pctDone}% complete</span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:${l.pctDone>=100?'var(--grn)':'var(--red)'}">${l.pctDone>=100?'No penalty':'EEL: '+l.penPct+'% if exited now'}</span>
             </div>
           </div>`;
         }).join('')}
       </div>`:''}
 
       <!-- Recommendations -->
-      <div style="font-family:'Share Tech Mono',monospace;font-size:.55rem;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Optimization Actions</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.80rem;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Optimization Actions</div>
       <div style="display:flex;flex-direction:column;gap:.45rem">
         ${recs.map(r=>`<div style="display:flex;gap:10px;background:var(--sur);border:1px solid ${r.col}22;border-left:3px solid ${r.col};border-radius:8px;padding:.65rem .75rem;align-items:flex-start">
           <div style="font-size:1rem;flex-shrink:0;margin-top:1px">${r.icon}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:${r.col};margin-bottom:2px">${r.title}</div>
-            <div style="font-size:.7rem;color:var(--dim);line-height:1.55">${r.desc}</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;color:${r.col};margin-bottom:2px">${r.title}</div>
+            <div style="font-size:1rem;color:var(--dim);line-height:1.55">${r.desc}</div>
           </div>
-          ${r.action?`<button class="btn btn-g btn-sm" style="flex-shrink:0;font-size:.6rem;align-self:center" onclick="${r.action}">Go →</button>`:''}
+          ${r.action?`<button class="btn btn-g btn-sm" style="flex-shrink:0;font-size:1.35rem;align-self:center" onclick="${r.action}">Go →</button>`:''}
         </div>`).join('')}
       </div>`;
 
   } catch(e) {
-    el.innerHTML=`<div class="mono" style="font-size:.65rem;color:var(--mut);padding:.5rem">Could not load: ${e.message?.slice(0,80)}</div>`;
+    el.innerHTML=`<div class="mono" style="font-size:.92rem;color:var(--mut);padding:.5rem">Could not load: ${e.message?.slice(0,80)}</div>`;
     console.warn('fortScore:',e);
   }
 }
@@ -3718,8 +3645,8 @@ function buildStakeLockRefs() {
     const durs=[[1,'2.04×'],[7,'2.11×'],[30,'2.31×'],[90,'2.73×'],[180,'3.23×'],[365,'4.00×'],[540,'4.57×'],[730,'5.00×']];
     multRef.innerHTML=durs.map(([d,m])=>`
       <div style="background:var(--card);border:1px solid var(--bor);border-radius:7px;padding:.5rem;text-align:center">
-        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.78rem;color:var(--txt)">${d}d</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--gold)">${m}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem;color:var(--txt)">${d}d</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.76rem;color:var(--gold)">${m}</div>
       </div>`).join('');
   }
   const eelRef = document.getElementById('stakeLockEelRef');
@@ -3727,8 +3654,8 @@ function buildStakeLockRefs() {
     const rows=[['<10% done','95% penalty','var(--red)'],['10% done','90% penalty','var(--red)'],['20% done','80% penalty','var(--red)'],['30% done','70% penalty','var(--red)'],['40–50% done','60% penalty','var(--red)'],['60% done','50% penalty','var(--gold)'],['70% done','40% penalty','var(--gold)'],['80% done','30% penalty','var(--gold)'],['90% done','20% penalty','var(--grn)'],['100% done','0% penalty 🎉','var(--grn)']];
     eelRef.innerHTML=rows.map(([l,p,c])=>`
       <div class="pen-row">
-        <span class="mono" style="font-size:.58rem;color:var(--dim)">${l}</span>
-        <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem;color:${c}">${p}</span>
+        <span class="mono" style="font-size:.85rem;color:var(--dim)">${l}</span>
+        <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:${c}">${p}</span>
       </div>`).join('');
   }
   // How It Works steps (explorer view)
@@ -3737,8 +3664,8 @@ function buildStakeLockRefs() {
     const items=[['1','Provide Liquidity','Add equal-value AVAX + hCASH to the Pharaoh volatile pool. You receive LP tokens representing your share of the pool.','var(--red)'],['2','Deposit LP Tokens','Stake or lock your LP tokens in the hCASH Moat contract. This earns Moat Points proportional to your LP amount.','var(--gold)'],['3','Choose Duration','Stake (1×, flexible) or lock (2.04×–5.00×, time-committed). Longer lock = more points per LP token.','var(--grn)'],['4','Earn Points + Fort Score','Points accumulate continuously. Your total Moat Points = your Fort Score contribution. Fort Score % = your airdrop share.','var(--pur)']];
     steps.innerHTML=items.map(([n,t,d,c])=>`
       <div style="display:flex;gap:10px">
-        <div style="width:28px;height:28px;border-radius:50%;background:${c}22;border:1px solid ${c}44;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem;color:${c};flex-shrink:0">${n}</div>
-        <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:2px;color:${c}">${t}</div><div style="font-size:.73rem;color:var(--dim);line-height:1.6">${d}</div></div>
+        <div style="width:28px;height:28px;border-radius:50%;background:${c}22;border:1px solid ${c}44;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:${c};flex-shrink:0">${n}</div>
+        <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35rem;margin-bottom:2px;color:${c}">${t}</div><div style="font-size:1rem;color:var(--dim);line-height:1.6">${d}</div></div>
       </div>`).join('');
   }
 }
@@ -3930,7 +3857,7 @@ async function showMinerDetail(id) {
 
   const el = document.getElementById('minerDetailContent');
   if(!el) return;
-  el.innerHTML = '<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:2rem"><span class="spin"></span>Loading on-chain data…</div>';
+  el.innerHTML = '<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:2rem"><span class="spin"></span>Loading on-chain data…</div>';
 
   const miner = _minerData[id];
   const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
@@ -3960,14 +3887,14 @@ async function showMinerDetail(id) {
         <div class="card" style="margin-bottom:.85rem">
           <div class="ch">
             <div class="ctitle">📊 On-Chain Stats</div>
-            <a href="https://snowtrace.io/address/${addr}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.55rem">Snowtrace ↗</a>
+            <a href="https://snowtrace.io/address/${addr}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.80rem">Snowtrace ↗</a>
           </div>
           <div class="cbody">
             ${nameVal?`<div class="calc-row"><span class="calc-lbl">Name</span><span class="calc-val cw">${nameVal}</span></div>`:''}
             ${symbolVal?`<div class="calc-row"><span class="calc-lbl">Symbol</span><span class="calc-val cd">${symbolVal}</span></div>`:''}
             <div class="calc-row">
               <span class="calc-lbl">Contract</span>
-              <a href="https://snowtrace.io/address/${addr}" target="_blank" class="mono" style="font-size:.6rem;color:var(--red);text-decoration:none">${addr.slice(0,6)}…${addr.slice(-4)} ↗</a>
+              <a href="https://snowtrace.io/address/${addr}" target="_blank" class="mono" style="font-size:1.35rem;color:var(--red);text-decoration:none">${addr.slice(0,6)}…${addr.slice(-4)} ↗</a>
             </div>
             ${ts!==null?`<div class="calc-row"><span class="calc-lbl">Minted</span><span class="calc-val cr">${ts.toLocaleString()}</span></div>`:''}
             ${ms!==null?`<div class="calc-row"><span class="calc-lbl">Max Supply</span><span class="calc-val cg">${ms.toLocaleString()}</span></div>`:''}
@@ -3977,14 +3904,14 @@ async function showMinerDetail(id) {
             ${mintPct!==null?`
               <div style="margin-top:.65rem">
                 <div style="display:flex;justify-content:space-between" class="mono">
-                  <span style="font-size:.5rem;color:var(--mut)">Mint Progress</span>
-                  <span style="font-size:.5rem;color:var(--mut)">${mintPct}%</span>
+                  <span style="font-size:1.25rem;color:var(--mut)">Mint Progress</span>
+                  <span style="font-size:1.25rem;color:var(--mut)">${mintPct}%</span>
                 </div>
                 <div class="pool-bar-wrap" style="margin-top:3px"><div class="pool-bar-fill" style="width:${mintPct}%;background:${Number(mintPct)>=100?'var(--grn)':'linear-gradient(90deg,var(--red),var(--gold))'}"></div></div>
               </div>`:''}
           </div>
         </div>`;
-    } catch(e){ onChainHtml = `<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not fetch on-chain data: ${e.message?.slice(0,60)}</div>`; }
+    } catch(e){ onChainHtml = `<div class="mono" style="font-size:1.35rem;color:var(--mut)">Could not fetch on-chain data: ${e.message?.slice(0,60)}</div>`; }
   }
 
   if(!miner) {
@@ -4000,7 +3927,7 @@ async function showMinerDetail(id) {
         <div class="card">
           <div class="ch"><div class="ctitle">${miner.name||miner.id}</div></div>
           <div class="cbody">
-            ${miner.description?`<div style="font-size:.73rem;color:var(--dim);line-height:1.6;margin-bottom:.7rem">${miner.description}</div>`:''}
+            ${miner.description?`<div style="font-size:1rem;color:var(--dim);line-height:1.6;margin-bottom:.7rem">${miner.description}</div>`:''}
             ${s.hashrateFormatted?`<div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr">${s.hashrateFormatted}</span></div>`:''}
             ${s.powerFormatted?`<div class="calc-row"><span class="calc-lbl">Power</span><span class="calc-val cg">${s.powerFormatted}</span></div>`:''}
             ${s.efficiency?`<div class="calc-row"><span class="calc-lbl">Efficiency</span><span class="calc-val cw">${s.efficiency}</span></div>`:''}
