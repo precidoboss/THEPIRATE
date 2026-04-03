@@ -1269,6 +1269,23 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
   <div id="rigGrid" class="g2">
     <div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading rig data…</div>
   </div>
+
+  <!-- Marketplace listings -->
+  <div class="sh" style="margin-top:.5rem">
+    <div class="sh-t">🛒 Marketplace Listings</div>
+    <span class="mono" style="font-size:.52rem;color:var(--mut)" id="marketplaceHeader"></span>
+  </div>
+  <div id="marketplaceListings">
+    <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span></div>
+  </div>
+
+  <!-- Other contracts -->
+  <div class="sh" style="margin-top:.5rem"><div class="sh-t">📄 Other HashCash Contracts</div></div>
+  <div class="card">
+    <div class="cbody" id="otherContractsDiv">
+      <div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading…</div>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
@@ -2133,72 +2150,81 @@ async function loadLpHolders(totalLpSupply) {
   if(!holdersEl)return;
   holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span>Loading LP holders…</td></tr>';
   try{
-    // Use Snowtrace tokentx to get all LP token transfers — gives real address list
-    const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=500`)
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
+
+    // Start immediately with known profiles + connected wallet
+    const addressSet=new Set(Object.keys(KNOWN_PROFILES));
+    if(walletAddress) addressSet.add(walletAddress.toLowerCase());
+    // Add moat contract too (holds staked LP)
+    addressSet.add(HCASH_MOAT_ADDR.toLowerCase());
+
+    // Also query Snowtrace in parallel for additional addresses
+    const snowtracePromise=fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
       .then(r=>r.json()).catch(()=>null);
 
-    const txs=(txRes?.status==='1')?(txRes.result||[]):[];
+    // Immediately query balanceOf for known profiles (fast, no waiting)
+    const knownAddrs=[...addressSet];
+    const knownBals=await Promise.allSettled(knownAddrs.map(a=>lpC.balanceOf(a)));
 
-    // Collect all unique addresses that received LP tokens
+    // Show preliminary results right away
+    const holders=[];
     const skipAddrs=new Set([
       '0x0000000000000000000000000000000000000000',
-      HCASH_MOAT_ADDR.toLowerCase(),
       PHARAOH_ROUTER_ADDR.toLowerCase(),
       PHARAOH_FACTORY_ADDR.toLowerCase(),
     ]);
-
-    const addresses=new Set();
-    for(const tx of txs){
-      const to=(tx.to||'').toLowerCase();
-      const from=(tx.from||'').toLowerCase();
-      if(to&&!skipAddrs.has(to)) addresses.add(to);
-      if(from&&!skipAddrs.has(from)) addresses.add(from);
-    }
-
-    // Also add any known profiles who might hold LP
-    for(const addr of Object.keys(KNOWN_PROFILES)){
-      if(!skipAddrs.has(addr)) addresses.add(addr);
-    }
-
-    const toQuery=[...addresses].slice(0,60);
-    if(!toQuery.length){
-      holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No LP holders found</td></tr>';
-      return;
-    }
-
-    // Batch balanceOf calls
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
-    const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
-    const bals=await Promise.allSettled(toQuery.map(a=>lpC.balanceOf(a)));
-    const holders=[];
-    for(let i=0;i<toQuery.length;i++){
-      if(bals[i].status==='fulfilled'){
-        const b=parseFloat(ethers.formatEther(bals[i].value));
-        if(b>0.000001) holders.push({wallet:toQuery[i],balance:b});
+    for(let i=0;i<knownAddrs.length;i++){
+      if(skipAddrs.has(knownAddrs[i])) continue;
+      if(knownBals[i].status==='fulfilled'){
+        const b=parseFloat(ethers.formatEther(knownBals[i].value));
+        if(b>0.000001) holders.push({wallet:knownAddrs[i],balance:b,_isMoat:knownAddrs[i]===HCASH_MOAT_ADDR.toLowerCase()});
       }
     }
 
-    // Also fetch moat staked amounts (they hold LP inside the moat)
-    try{
-      const moatBal=parseFloat(ethers.formatEther(await lpC.balanceOf(HCASH_MOAT_ADDR)));
-      if(moatBal>0) holders.push({wallet:HCASH_MOAT_ADDR.toLowerCase(),balance:moatBal,_isMoat:true});
-    }catch(e){}
+    // Now wait for Snowtrace and add any new addresses
+    const txRes=await snowtracePromise;
+    const txs=(txRes?.status==='1')?(txRes.result||[]):[];
+    const newAddrs=new Set();
+    for(const tx of txs){
+      const to=(tx.to||'').toLowerCase();
+      const from=(tx.from||'').toLowerCase();
+      if(to&&!skipAddrs.has(to)&&!addressSet.has(to)) newAddrs.add(to);
+      if(from&&!skipAddrs.has(from)&&!addressSet.has(from)) newAddrs.add(from);
+    }
+
+    // Query new addresses found via Snowtrace
+    if(newAddrs.size>0){
+      const newArr=[...newAddrs].slice(0,40);
+      const newBals=await Promise.allSettled(newArr.map(a=>lpC.balanceOf(a)));
+      for(let i=0;i<newArr.length;i++){
+        if(newBals[i].status==='fulfilled'){
+          const b=parseFloat(ethers.formatEther(newBals[i].value));
+          if(b>0.000001) holders.push({wallet:newArr[i],balance:b});
+        }
+      }
+    }
 
     holders.sort((a,b)=>b.balance-a.balance);
 
-    // Get total supply for percentage
+    // Get total supply
     let supplyNum=totalLpSupply||0;
     if(!supplyNum){
       try{const ts=await lpC.totalSupply();supplyNum=parseFloat(ethers.formatEther(ts));}catch(e){}
     }
     if(!supplyNum) supplyNum=holders.reduce((s,h)=>s+h.balance,0)||1;
 
+    if(!holders.length){
+      holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No LP holders found</td></tr>';
+      return;
+    }
+
     holdersEl.innerHTML=holders.slice(0,25).map((h,i)=>{
       const pct=(h.balance/supplyNum*100).toFixed(3);
       const prof=getKnownProfile(h.wallet);
       const isMoat=h._isMoat;
       const nameHtml=isMoat
-        ?`<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.7rem;color:var(--red)">🔒 hCASH Moat</span>`
+        ?`<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.7rem;color:var(--red)">🏦 hCASH Moat</span>`
         :prof
           ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem">@${prof.twitter}</a>`
           :`<span class="mono" style="font-size:.58rem">${shortA(h.wallet)}</span>`;
@@ -2207,10 +2233,10 @@ async function loadLpHolders(totalLpSupply) {
         <td><span class="rk ${rkCls}">${i+1}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
-            ${!isMoat&&prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:isMoat?'<span style="font-size:.9rem">🏦</span>':''}
+            ${isMoat?'<span style="font-size:.9rem">🏦</span>':prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
             <div style="display:flex;flex-direction:column;min-width:0">
               ${nameHtml}
-              <span class="mono" style="font-size:.48rem;color:var(--mut)">${shortA(h.wallet)}</span>
+              <span class="mono" style="font-size:.46rem;color:var(--mut)">${shortA(h.wallet)}</span>
             </div>
           </div>
         </td>
@@ -2218,7 +2244,6 @@ async function loadLpHolders(totalLpSupply) {
         <td class="mono" style="font-size:.56rem;color:var(--dim)">${pct}%</td>
       </tr>`;
     }).join('');
-    if(!holders.length) holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No LP holders found</td></tr>';
   }catch(e){
     holdersEl.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--red);font-size:.6rem">Error: ${e.message?.slice(0,80)}</td></tr>`;
   }
@@ -2261,54 +2286,217 @@ async function loadMiners() {
   const rigGrid=document.getElementById('rigGrid');
   if(grid)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)"><span class="spin"></span><span class="mono" style="font-size:.65rem;margin-left:5px">Loading from HashCash API…</span></div>';
   try {
-    const d = await fetch(`${HCASH_API}/contracts`, {headers:{'x-api-key':HCASH_API_KEY}}).then(x=>x.json());
-    const contracts = d?.contracts||d||[];
-    const miners = contracts.filter(c=>c.category==='miner_nft'||c.id?.includes('miner'));
-    const rigs = contracts.filter(c=>c.category==='rig_assembler');
-    // Render miners
+    const resp = await fetch(`${HCASH_API}/contracts`, {headers:{'x-api-key':HCASH_API_KEY}}).then(x=>x.json());
+    const contracts = Array.isArray(resp)?resp:(resp?.contracts||[]);
+
+    const miners  = contracts.filter(c=>c.category==='miner_nft');
+    const rigs    = contracts.filter(c=>c.category==='rig_assembler');
+    const tokens  = contracts.filter(c=>c.category==='game_token'||c.category==='supported_token');
+    const game    = contracts.filter(c=>c.category==='game_main');
+    const extNft  = contracts.filter(c=>c.category==='external_nft');
+    const market  = contracts.find(c=>c.category==='marketplace');
+
+    // Cache all for detail view
+    contracts.forEach(c=>{ _minerData[c.id||c.name||''] = c; });
+
+    // ── MINERS GRID ──
     if(grid){
-      if(!miners.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)" class="mono">No miner NFTs found in API response.</div>';return;}
-      // Cache miner data for detail view
-      miners.forEach(m=>{ _minerData[m.id||m.name||''] = m; });
-      grid.innerHTML=miners.map(m=>{
-        const s=m.minerStats||{};
-        const img=m.imageUrl||'';
-        const mid = m.id||m.name||'';
-        return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
-          ${img?`<img class="miner-img" src="${img}" alt="${m.name||'Miner'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
-          <div class="miner-img-fb" style="${img?'display:none':''}">⛏</div>
-          <div class="miner-info">
-            <div class="miner-name">${m.name||m.id||'Miner'}</div>
-            ${s.hashrateFormatted?`<div class="miner-stat"><span class="miner-stat-k">Hashrate</span><span class="miner-stat-v" style="color:var(--red)">${s.hashrateFormatted}</span></div>`:''}
-            ${s.powerFormatted?`<div class="miner-stat"><span class="miner-stat-k">Power</span><span class="miner-stat-v" style="color:var(--gold)">${s.powerFormatted}</span></div>`:''}
-            ${m.symbol?`<div class="miner-stat"><span class="miner-stat-k">Symbol</span><span class="miner-stat-v">${m.symbol}</span></div>`:''}
-            <div class="miner-stat" style="margin-top:.35rem">
-              <span class="mono" style="font-size:.46rem;color:var(--mut)">${(m.address||'').slice(0,10)}…</span>
+      if(!miners.length){
+        grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)" class="mono">No miner NFTs found.</div>';
+      } else {
+        grid.innerHTML=miners.map(m=>{
+          const s=m.minerStats||{};
+          const img=m.imageUrl||'';
+          const mid=m.id||m.name||'';
+          const eff=s.hashrateMhps&&s.powerWatts?`${(s.hashrateMhps/s.powerWatts*100).toFixed(1)} MH/W`:'';
+          return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
+            ${img?`<img class="miner-img" src="${img}" alt="${m.name||'Miner'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
+            <div class="miner-img-fb" style="${img?'display:none':''}">⛏</div>
+            <div class="miner-info">
+              <div class="miner-name">${m.name||m.id||'Miner'}</div>
+              ${s.hashrateFormatted?`<div class="miner-stat"><span class="miner-stat-k">Hashrate</span><span class="miner-stat-v" style="color:var(--red)">${s.hashrateFormatted}</span></div>`:''}
+              ${s.powerFormatted?`<div class="miner-stat"><span class="miner-stat-k">Power</span><span class="miner-stat-v" style="color:var(--gold)">${s.powerFormatted}</span></div>`:''}
+              ${eff?`<div class="miner-stat"><span class="miner-stat-k">Efficiency</span><span class="miner-stat-v" style="color:var(--grn)">${eff}</span></div>`:''}
+              ${m.symbol?`<div class="miner-stat"><span class="miner-stat-k">Symbol</span><span class="miner-stat-v">${m.symbol}</span></div>`:''}
+              <div class="miner-stat" style="margin-top:.25rem">
+                <span class="mono" style="font-size:.44rem;color:var(--mut)">${shortA(m.address||'')}</span>
+              </div>
             </div>
-          </div>
-        </div>`;
-      }).join('');
+          </div>`;
+        }).join('');
+      }
     }
-    // Render rigs
+
+    // ── RIGS ──
     if(rigGrid){
-      if(!rigs.length){rigGrid.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)">No rig assemblers in current release.</div>';return;}
-      rigGrid.innerHTML=rigs.map(r=>{
+      const rigHtml = rigs.length ? rigs.map(r=>{
         const s=r.rigStats||{};
+        const isV2=r.rigVersion==='v2';
         return `<div class="card">
-          <div class="ch"><div class="ctitle">🔧 ${r.name||r.id}</div></div>
+          <div class="ch">
+            <div class="ctitle">🔧 ${r.name||r.id}</div>
+            <span class="mono" style="font-size:.48rem;color:var(--mut)">${r.rigVersion||'v1'}</span>
+          </div>
           <div class="cbody">
-            ${s.gpusPerRig?`<div class="calc-row"><span class="calc-lbl">GPUs per Rig</span><span class="calc-val">${s.gpusPerRig}</span></div>`:''}
-            ${s.assemblyCostRaw?`<div class="calc-row"><span class="calc-lbl">Assembly Cost</span><span class="calc-val">${s.assemblyCostRaw}</span></div>`:''}
-            ${s.recipeActive!==undefined?`<div class="calc-row"><span class="calc-lbl">Recipe Active</span><span class="calc-val" style="color:${s.recipeActive?'var(--grn)':'var(--mut)'}">${s.recipeActive?'Yes':'No'}</span></div>`:''}
-            <div class="calc-row"><span class="calc-lbl">Version</span><span class="calc-val cd">${r.rigVersion||s.version||'v1'}</span></div>
+            ${s.gpusPerRig?`<div class="calc-row"><span class="calc-lbl">GPUs/Rig</span><span class="calc-val">${s.gpusPerRig}</span></div>`:''}
+            ${isV2&&s.recipeActive!==undefined?`<div class="calc-row"><span class="calc-lbl">Recipe</span><span class="calc-val" style="color:${s.recipeActive?'var(--grn)':'var(--mut)'}">${s.recipeActive?'🟢 Active':'⚫ Inactive'}</span></div>`:''}
+            ${s.assemblyCostRaw?`<div class="calc-row"><span class="calc-lbl">Assembly Cost</span><span class="calc-val cd">${s.assemblyCostRaw}</span></div>`:''}
+            ${isV2&&s.outputNftAddress?`<div class="calc-row"><span class="calc-lbl">Output NFT</span><span class="calc-val" style="font-size:.58rem">${shortA(s.outputNftAddress)}</span></div>`:''}
+            <div class="calc-row"><span class="calc-lbl">Contract</span><a href="https://snowtrace.io/address/${r.address}" target="_blank" class="mono" style="font-size:.55rem;color:var(--red);text-decoration:none">${shortA(r.address)} ↗</a></div>
             <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-top:.5rem">hashcash.club ↗</a>
           </div>
         </div>`;
-      }).join('');
+      }).join('') : '<div class="mono" style="font-size:.6rem;color:var(--mut)">No rig assemblers in current release.</div>';
+      rigGrid.innerHTML=rigHtml;
     }
+
+    // ── MARKETPLACE LISTINGS (on-chain) ──
+    await loadMarketplaceListings(market, miners);
+
+    // ── OTHER CONTRACTS INFO ──
+    const otherDiv=document.getElementById('otherContractsDiv');
+    if(otherDiv&&(tokens.length||game.length||extNft.length)){
+      const allOther=[...game,...tokens,...extNft];
+      otherDiv.innerHTML=allOther.map(c=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(31,32,48,.3)">
+          <div>
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.78rem">${c.name||c.id}</div>
+            <div class="mono" style="font-size:.48rem;color:var(--mut)">${c.category} · ${shortA(c.address)}</div>
+          </div>
+          <a href="https://snowtrace.io/address/${c.address}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.5rem">↗</a>
+        </div>`).join('');
+    }
+
   } catch(e){
     console.warn('miners:',e.message);
-    if(grid)grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:2rem" class="mono" style="font-size:.65rem;color:var(--mut)">Could not load miner data. HashCash API may be rate-limited.</div>`;
+    if(grid)grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:2rem" class="mono" style="font-size:.65rem;color:var(--mut)">Could not load: ${e.message?.slice(0,80)}</div>`;
+  }
+}
+
+async function loadMarketplaceListings(marketContract, miners) {
+  const mktDiv=document.getElementById('marketplaceListings');
+  if(!mktDiv) return;
+  mktDiv.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading marketplace listings…</div>';
+  try{
+    if(!marketContract?.address){
+      mktDiv.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)">Marketplace contract not found in API.</div>';
+      return;
+    }
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    // Marketplace ABI — standard listing/order functions
+    const MARKET_ABI=[
+      'function getListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
+      'function getActiveListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
+      'function listingCount() view returns (uint256)',
+      'function totalListings() view returns (uint256)',
+      'function listings(uint256) view returns (address seller, address nftContract, uint256 tokenId, uint256 price, bool active)',
+    ];
+
+    // Try to get ABI from HashCash API
+    let marketAbi=MARKET_ABI;
+    if(marketContract.abiUrl){
+      try{
+        const abiResp=await fetch(marketContract.abiUrl,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json());
+        if(abiResp?.abi) marketAbi=abiResp.abi;
+      }catch(e){}
+    }
+
+    const mktC=new ethers.Contract(ethers.getAddress(marketContract.address),marketAbi,prov);
+
+    // Get listing count
+    let count=0;
+    try{count=Number(await mktC.listingCount().catch(()=>mktC.totalListings().catch(()=>0n)));}catch(e){}
+
+    // Fetch via Snowtrace tokennfttx on market contract for recent activity
+    const [snowRes]=await Promise.allSettled([
+      fetch(`${SNOWTRACE}?module=account&action=tokennfttx&address=${marketContract.address}&sort=desc&offset=50`).then(r=>r.json()),
+    ]);
+
+    const nftTxs=(snowRes.status==='fulfilled'&&snowRes.value?.status==='1')?(snowRes.value.result||[]):[];
+
+    // Build miner address→name map
+    const minerByAddr={};
+    miners.forEach(m=>{if(m.address)minerByAddr[m.address.toLowerCase()]=m;});
+
+    // Get active listings by calling listings() for recent tokenIds
+    const listings=[];
+    // Try getActiveListings first
+    try{
+      const raw=await mktC.getActiveListings(0,20).catch(()=>mktC.getListings(0,20).catch(()=>null));
+      if(raw&&raw.length){
+        for(const l of raw){
+          if(!l.active) continue;
+          const miner=minerByAddr[(l.nftContract||'').toLowerCase()];
+          listings.push({
+            listingId:Number(l.listingId||0),
+            seller:(l.seller||'').toLowerCase(),
+            nftContract:(l.nftContract||'').toLowerCase(),
+            tokenId:Number(l.tokenId||0),
+            price:parseFloat(ethers.formatEther(l.price||0n)),
+            minerName:miner?.name||null,
+            minerStats:miner?.minerStats||null,
+            minerImg:miner?.imageUrl||null,
+          });
+        }
+      }
+    }catch(e){console.warn('marketplace listings:',e.message);}
+
+    // Fall back to recent NFT transfers into/out of the marketplace
+    if(!listings.length&&nftTxs.length){
+      for(const tx of nftTxs.slice(0,20)){
+        const miner=minerByAddr[(tx.contractAddress||'').toLowerCase()];
+        listings.push({
+          listingId:null,
+          seller:(tx.from||'').toLowerCase(),
+          nftContract:(tx.contractAddress||'').toLowerCase(),
+          tokenId:Number(tx.tokenID||tx.tokenId||0),
+          price:0, // can't get price from transfer event alone
+          minerName:miner?.name||tx.tokenName||null,
+          minerStats:miner?.minerStats||null,
+          minerImg:miner?.imageUrl||null,
+          _fromEvent:true,
+          timestamp:Number(tx.timeStamp||0),
+        });
+      }
+    }
+
+    if(!listings.length){
+      mktDiv.innerHTML=`<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem">No active listings found.<br><a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a></div>`;
+      return;
+    }
+
+    mktDiv.innerHTML=listings.map(l=>{
+      const prof=getKnownProfile(l.seller);
+      const sellerHtml=prof
+        ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:12px;height:12px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:.56rem;text-decoration:none">@${prof.twitter}</a></div>`
+        :`<span class="mono" style="font-size:.52rem;color:var(--mut)">${shortA(l.seller)}</span>`;
+      const s=l.minerStats||{};
+      return `<div style="display:flex;gap:10px;align-items:flex-start;padding:.6rem;background:var(--sur);border:1px solid var(--bor);border-radius:9px;margin-bottom:.4rem">
+        ${l.minerImg?`<img src="${l.minerImg}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">`:
+          '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem">⛏</div>'}
+        <div style="flex:1;min-width:0">
+          <div style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:.82rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:.52rem;color:var(--mut)">#${l.tokenId}</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:.2rem 0">
+            ${s.hashrateFormatted?`<span class="mono" style="font-size:.54rem;color:var(--red)">${s.hashrateFormatted}</span>`:''}
+            ${s.powerFormatted?`<span class="mono" style="font-size:.54rem;color:var(--gold)">${s.powerFormatted}</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+            ${sellerHtml}
+            ${l.price>0?`<span style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:.82rem;color:var(--grn)">${f4(l.price)} AVAX</span>`:
+              l._fromEvent?`<span class="mono" style="font-size:.52rem;color:var(--mut)">Recent transfer</span>`:''}
+          </div>
+        </div>
+        ${!l._fromEvent?`<a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.5rem;flex-shrink:0">Buy ↗</a>`:''}
+      </div>`;
+    }).join('');
+
+    // Add header with count
+    const header=document.getElementById('marketplaceHeader');
+    if(header) header.textContent=`${listings.length} listing${listings.length!==1?'s':''}${count>0?' ('+count+' total)':''}`;
+
+  }catch(e){
+    console.warn('marketplace:',e.message);
+    mktDiv.innerHTML=`<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1rem">Could not load listings: ${e.message?.slice(0,60)}</div>`;
   }
 }
 
@@ -2782,10 +2970,16 @@ async function loadMinerHolders() {
 
   // Resolve contract addresses from HashCash API, then fetch holders
   try{
-    const d=await fetch(`${HCASH_API}/contracts`,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json()).catch(()=>null);
-    const contracts=d?.contracts||d||[];
-    const m27=contracts.find(c=>{const n=c.name||c.id||'';return (n.includes('#27')||n.includes('27'))&&c.category==='miner_nft';});
-    const m40=contracts.find(c=>{const n=c.name||c.id||'';return (n.includes('#40')||n.includes('40'))&&c.category==='miner_nft';});
+    const resp=await fetch(`${HCASH_API}/contracts`,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json()).catch(()=>null);
+    // API returns {contracts:[...], meta:{...}} shape
+    const contracts=Array.isArray(resp)?resp:(resp?.contracts||[]);
+    console.log('HashCash contracts loaded:',contracts.length,'categories:',contracts.map(c=>c.category).filter((v,i,a)=>a.indexOf(v)===i));
+
+    // Find by minerIndex or name containing the number
+    const m27=contracts.find(c=>c.category==='miner_nft'&&(c.minerIndex===27||c.id==='miner_nft:27'||(c.name||'').includes('27')));
+    const m40=contracts.find(c=>c.category==='miner_nft'&&(c.minerIndex===40||c.id==='miner_nft:40'||(c.name||'').includes('40')||(c.name||'').toLowerCase().includes('grotto')));
+
+    console.log('Miner27:',m27?.id,m27?.address,'Miner40:',m40?.id,m40?.address);
 
     await Promise.allSettled([
       fetchNFTHolders(m27?.address?ethers.getAddress(m27.address):null,'miner27Holders','miner27Link'),
@@ -3061,14 +3255,16 @@ async function updatePositionSummary() {
   const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
   try{
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
-    const [info,pts,lockData]=await Promise.all([
+    const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
+    const [info,pts,lockData,lpBalRaw]=await Promise.all([
       moatC.userInfo(walletAddress).catch(()=>null),
       moatC.getCurrentPoints(walletAddress).catch(()=>0n),
       moatC.getUserAllLocks(walletAddress).catch(()=>null),
+      lpC.balanceOf(walletAddress).catch(()=>0n),
     ]);
-    // userInfo: (stakedAmount, totalUserBurn, stakingPoints, burnPoints, activeLockCount)
     const staked=info?parseFloat(ethers.formatEther(info[0])):0;
-    // Sum active locked amounts
+    const lpWallet=parseFloat(ethers.formatEther(lpBalRaw||0n));
+    posData.lpBal=lpWallet;
     let locked=0;
     if(lockData&&lockData[0]){
       const [amounts,,,,, actives]=lockData;
@@ -3078,11 +3274,8 @@ async function updatePositionSummary() {
     }
     // Points: getCurrentPoints returns uint256 scaled by 1e18 — always divide
     let points=0;
-    try{
-      const ptsRaw=BigInt(pts.toString());
-      points = Number(ptsRaw) / 1e18;
-    }catch(pe){ points=0; }
-    // LP value: compute using both reserves and token prices
+    try{ points=Number(BigInt(pts.toString()))/1e18; }catch(pe){ points=0; }
+    // LP value
     let lpPrice=0;
     if(priceData&&poolData&&poolData.lpSupply>0){
       const avaxSide=(priceData.avaxPrice||0)*poolData.avaxReserve;
@@ -3098,7 +3291,7 @@ async function updatePositionSummary() {
     `);
     setHtml('pointsEstimate',`
       <div class="calc-row"><span class="calc-lbl">Current Points</span><span class="calc-val cr">${fmtP(points)}</span></div>
-      <div class="calc-row"><span class="calc-lbl">LP in Wallet</span><span class="calc-val cd">${(posData.lpBal||0).toFixed(6)}</span></div>
+      <div class="calc-row"><span class="calc-lbl">LP in Wallet</span><span class="calc-val cd">${lpWallet.toFixed(6)}</span></div>
     `);
   }catch(e){ console.warn('updatePositionSummary:',e.message); }
 }
@@ -3113,12 +3306,15 @@ async function loadUserPosition() {
   try{
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
-    const [info,pts,lockData]=await Promise.all([
+    const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
+    const [info,pts,lockData,lpBalRaw]=await Promise.all([
       moatC.userInfo(walletAddress).catch(()=>null),
       moatC.getCurrentPoints(walletAddress).catch(()=>0n),
       moatC.getUserAllLocks(walletAddress).catch(()=>null),
+      lpC.balanceOf(walletAddress).catch(()=>0n),
     ]);
     const staked=info?parseFloat(ethers.formatEther(info[0])):0;
+    const lpWallet=parseFloat(ethers.formatEther(lpBalRaw||0n));
     // Sum active locks
     let locked=0;
     if(lockData&&lockData[0]){
@@ -3127,14 +3323,13 @@ async function loadUserPosition() {
         if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
       }
     }
-    // Points: auto-detect scale (getCurrentPoints returns raw integers, not wei)
-    // Points: getCurrentPoints returns uint256 scaled by 1e18 — always divide
+    // Points: getCurrentPoints returns uint256 scaled by 1e18
     let points=0;
-    try{
-      const ptsRaw=BigInt(pts.toString());
-      points = Number(ptsRaw) / 1e18;
-    }catch(pe){ points=0; }
+    try{ points=Number(BigInt(pts.toString()))/1e18; }catch(pe){ points=0; }
+    const total=moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
+    const share=total&&points?(points/total*100).toFixed(4):0;
     const hasPos=staked>0||locked>0;
+    posData.lpBal=lpWallet;
     el.innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.7rem">
         <div class="sc" style="text-align:center"><div class="sl">Staked LP</div><div class="sv cr">${staked.toFixed(6)}</div></div>
@@ -3151,7 +3346,10 @@ async function loadUserPosition() {
         <button class="btn btn-sm" onclick="nav(document.querySelector('[data-v=liquidity]'))">Manage Position →</button>
         ${hasPos?`<button class="btn btn-g btn-sm" onclick="nav(document.querySelector('[data-v=stakelock]'))">Lock / Unstake</button>`:''}
       </div>`;
-  }catch(e){el.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not load position data.</div>';}
+  }catch(e){
+    console.warn('loadUserPosition:',e.message);
+    el.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not load position data.</div>';
+  }
 }
 
 // ══════════════════════════════════════════════════════
