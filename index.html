@@ -3116,8 +3116,8 @@ async function renderActiveLocks() {
     const activeLocks=[];
     for(let i=0;i<(amounts?.length||0);i++){
       if(actives[i]) activeLocks.push({
-        amount:amounts[i],endTs:Number(endTss[i]),lockPts:Number(lockPts[i]),
-        origDur:Number(origDurs[i]),lockIdx:Number(lockIdxs[i]),idx:i
+        amount:amounts[i],endTs:Number(endTss[i]),
+        origDur:Number(origDurs[i]),lockIdx:i,idx:i
       });
     }
     if(!activeLocks.length){el.innerHTML='<div class="mono" style="font-size:.58rem;color:var(--mut);text-align:center;margin-top:.7rem">No active locks.</div>';return;}
@@ -3363,9 +3363,16 @@ async function updatePositionSummary() {
         if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
       }
     }
-    // Points: getCurrentPoints returns uint256 scaled by 1e18 — always divide
+    // Points: API-first (already human-readable), fallback to on-chain
     let points=0;
-    try{ points=Number(BigInt(pts.toString()))/1e18; }catch(pe){ points=0; }
+    try{
+      const apiPts=moatPoints.length>0
+        ?(moatPoints.find(p=>(p.address||p.walletAddress||p.wallet||'').toLowerCase()===walletAddress.toLowerCase())?.points||0)
+        :0;
+      let chainPts=0;
+      try{chainPts=Number(BigInt(pts.toString()))/1e18;}catch(pe){}
+      points=Number(apiPts)>0?Number(apiPts):chainPts;
+    }catch(pe){points=0;}
     // LP value
     let lpPrice=0;
     if(priceData&&poolData&&poolData.lpSupply>0){
@@ -3414,9 +3421,16 @@ async function loadUserPosition() {
         if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
       }
     }
-    // Points: getCurrentPoints returns uint256 scaled by 1e18
+    // Points: try API first (already human-readable), fall back to on-chain
     let points=0;
-    try{ points=Number(BigInt(pts.toString()))/1e18; }catch(pe){ points=0; }
+    try{
+      const apiPts = moatPoints.length>0
+        ? (moatPoints.find(p=>(p.address||p.walletAddress||p.wallet||'').toLowerCase()===walletAddress.toLowerCase())?.points||0)
+        : 0;
+      let chainPts=0;
+      try{ chainPts = Number(BigInt(pts.toString()))/1e18; }catch(pe){}
+      points = Number(apiPts)>0 ? Number(apiPts) : chainPts;
+    }catch(pe){ points=0; }
     const total=moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
     const share=total&&points?(points/total*100).toFixed(4):0;
     const hasPos=staked>0||locked>0;
@@ -3536,7 +3550,14 @@ async function loadFortScoreOptimizer() {
     const staked   = info ? parseFloat(ethers.formatEther(info[0])) : 0;
     const lpWallet = parseFloat(ethers.formatEther(lpBalRaw||0n));
     let myPts = 0;
-    try { myPts = Number(BigInt(pts.toString()))/1e18; } catch(e){}
+    try {
+      const apiPts = moatPoints.length>0
+        ? (moatPoints.find(p=>(p.address||p.walletAddress||p.wallet||'').toLowerCase()===walletAddress.toLowerCase())?.points||0)
+        : 0;
+      let chainPts=0;
+      try{ chainPts = Number(BigInt(pts.toString()))/1e18; }catch(pe){}
+      myPts = Number(apiPts)>0 ? Number(apiPts) : chainPts;
+    } catch(e){}
 
     const totalPts  = moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
     const ptShare   = totalPts&&myPts ? (myPts/totalPts*100) : 0;
