@@ -982,29 +982,35 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
           </div>
           <div class="g2" id="minerRewardCards">
             <div class="card">
-              <div class="ch"><div class="ctitle">⛏ Miner #27</div><span class="mono" style="font-size:.5rem;color:var(--mut)">miner_nft</span></div>
+              <div class="ch">
+                <div class="ctitle">⛏ Miner #27</div>
+                <span class="mono" style="font-size:.5rem;color:var(--mut)">miner_nft</span>
+              </div>
               <div class="cbody">
                 <div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr">100 MH/s</span></div>
                 <div class="calc-row"><span class="calc-lbl">Power</span><span class="calc-val cg">100W</span></div>
                 <div class="calc-row"><span class="calc-lbl">Name</span><span class="calc-val cw">Miner #27</span></div>
                 <div class="calc-row"><span class="calc-lbl">Symbol</span><span class="calc-val cd">MINER27</span></div>
                 <div class="calc-row"><span class="calc-lbl">Total Supply</span><span class="calc-val">10</span></div>
-                <div class="calc-row"><span class="calc-lbl">Recipients</span><span class="mono" style="font-size:.56rem;color:var(--dim)">Top 10 Moat holders</span></div>
-                <div class="calc-row" id="miner27First"><span class="calc-lbl">First Recipient</span><span class="mono" style="font-size:.56rem;color:var(--mut)"><span class="spin"></span></span></div>
-                <a href="https://snowtrace.io/address/0xACB7A697" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-top:.5rem;font-size:.54rem">Snowtrace ↗</a>
+                <a id="miner27Link" href="https://snowtrace.io/token/0x0000000000000000000000000000000000000000" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-bottom:.6rem;font-size:.54rem;display:inline-flex">Snowtrace ↗</a>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut);margin-bottom:.4rem">Current Holders</div>
+                <div id="miner27Holders"><div class="mono" style="font-size:.55rem;color:var(--mut)"><span class="spin"></span></div></div>
               </div>
             </div>
             <div class="card">
-              <div class="ch"><div class="ctitle">⛏ Miner #40</div><span class="mono" style="font-size:.5rem;color:var(--mut)">miner_nft</span></div>
+              <div class="ch">
+                <div class="ctitle">⛏ Miner #40</div>
+                <span class="mono" style="font-size:.5rem;color:var(--mut)">miner_nft</span>
+              </div>
               <div class="cbody">
                 <div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr">150 MH/s</span></div>
                 <div class="calc-row"><span class="calc-lbl">Power</span><span class="calc-val cg">200W</span></div>
                 <div class="calc-row"><span class="calc-lbl">Name</span><span class="calc-val cw">The Grotto Miner</span></div>
                 <div class="calc-row"><span class="calc-lbl">Symbol</span><span class="calc-val cd">MINER40</span></div>
                 <div class="calc-row"><span class="calc-lbl">Total Supply</span><span class="calc-val">10</span></div>
-                <div class="calc-row"><span class="calc-lbl">Recipients</span><span class="mono" style="font-size:.56rem;color:var(--dim)">Top 10 Moat holders</span></div>
-                <div class="calc-row" id="miner40First"><span class="calc-lbl">First Recipient</span><span class="mono" style="font-size:.56rem;color:var(--mut)"><span class="spin"></span></span></div>
-                <a href="https://snowtrace.io/address/0xACB7A697" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-top:.5rem;font-size:.54rem">Snowtrace ↗</a>
+                <a id="miner40Link" href="https://snowtrace.io/token/0x0000000000000000000000000000000000000000" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-bottom:.6rem;font-size:.54rem;display:inline-flex">Snowtrace ↗</a>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--mut);margin-bottom:.4rem">Current Holders</div>
+                <div id="miner40Holders"><div class="mono" style="font-size:.55rem;color:var(--mut)"><span class="spin"></span></div></div>
               </div>
             </div>
           </div>
@@ -1137,7 +1143,7 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
     </div>
   </div>
   <!-- LP Token Holders -->
-  <div class="card" id="lpHoldersCard" style="display:none;margin-top:.85rem">
+  <div class="card" id="lpHoldersCard" style="margin-top:.85rem">
     <div class="ch">
       <div class="ctitle">💧 hCASH LP Token Holders</div>
       <button class="btn btn-g btn-sm" onclick="loadLpHolders(poolData?.lpSupply||0)">↺ Refresh</button>
@@ -1802,108 +1808,147 @@ const EV_TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df
 
 async function loadEvents() {
   const feed=document.getElementById('evFeed');
-  if(feed)feed.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading on-chain events…</div>';
+  if(feed)feed.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading events…</div>';
   try{
-    const RPC=AVAX_RPC;
-    // Fetch recent block number
-    const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
-    const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
-    const fromBlock='0x'+Math.max(0,curBlock-200000).toString(16);
-    const toBlock='0x'+curBlock.toString(16);
-
-    // Fetch all event logs from the moat contract
-    const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
-        fromBlock,toBlock,
-        address:HCASH_MOAT_ADDR
-      }]})}).then(r=>r.json());
-
-    const logs=logsRes?.result||[];
+    const MOAT_LC=HCASH_MOAT_ADDR.toLowerCase();
+    const LP_LC=HCASH_LP_ADDR.toLowerCase();
     const events=[];
 
-    // Collect unique block numbers to batch-fetch timestamps
-    const blockNums=new Set();
-    for(const log of logs) blockNums.add(log.blockNumber);
-    // Fetch timestamps for all unique blocks in parallel (batch RPC)
-    const blockTsMap={};
-    const blockArr=[...blockNums];
-    try{
-      const batchBody=blockArr.map((bn,i)=>({jsonrpc:'2.0',id:i+10,method:'eth_getBlockByNumber',params:[bn,false]}));
-      // Split into chunks of 20 to avoid oversized requests
-      for(let i=0;i<batchBody.length;i+=20){
-        const chunk=batchBody.slice(i,i+20);
-        const bRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(chunk)}).then(r=>r.json());
-        const arr=Array.isArray(bRes)?bRes:[bRes];
-        for(const r of arr){
-          if(r?.result?.timestamp) blockTsMap[r.result.number||blockArr[r.id-10]]=parseInt(r.result.timestamp,16);
-        }
-      }
-    }catch(be){console.warn('block timestamp batch:',be.message);}
+    // ── PRIMARY: Snowtrace API — normal txs to moat contract (gives real timeStamp) ──
+    const [txRes, tokenTxRes] = await Promise.allSettled([
+      // Normal transactions to the moat contract (stake/lock/unstake calls)
+      fetch(`${SNOWTRACE}?module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=200`)
+        .then(r=>r.json()),
+      // Token (LP) transfers to/from moat contract
+      fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=200`)
+        .then(r=>r.json()),
+    ]);
 
-    for(const log of logs){
-      const topic0=(log.topics||[])[0]||'';
-      const wallet=log.topics?.[1]?'0x'+log.topics[1].slice(26).toLowerCase():'';
-      const txHash=log.transactionHash||'';
-      // Decode amount from data (uint256, 32 bytes)
+    // Parse normal txs — decode method signature to determine event type
+    const METHOD_MAP={
+      '0xa694fc3a':'staked',    // stake(uint256)
+      '0xf83d08ba':'staked',    // stake() variants
+      '0x23b872dd':'deposit',   // transferFrom
+      '0xb88d4fde':'deposit',
+      '0x2e1a7d4d':'unstake',   // withdraw(uint256)
+      '0x4e71d92d':'reward',    // claim()
+      '0xe9fad8ee':'unstake',   // exit()
+      '0x84e9c9af':'locked',    // lock(uint256,uint256)
+      '0x1e83409a':'reward',    // claimAllRewards
+      '0xd96a094a':'staked',    // buy/stake
+      '0x2f48ab7d':'locked',    // lockTokens
+      '0x7acb7757':'unstake',   // earlyExitLock
+      '0x3d18b912':'reward',    // getReward
+      '0x39941fa9':'locked',    // lock variants
+    };
+    const txs=(txRes.status==='fulfilled'&&txRes.value?.status==='1')?(txRes.value.result||[]):[];
+    for(const tx of txs){
+      if(tx.isError==='1') continue;
+      const method=(tx.input||'').slice(0,10).toLowerCase();
+      let type=METHOD_MAP[method]||null;
+      // Also classify by function name if available
+      if(!type){
+        const fn=(tx.functionName||'').toLowerCase();
+        if(fn.includes('stake'))type='staked';
+        else if(fn.includes('lock'))type='locked';
+        else if(fn.includes('unstake')||fn.includes('withdraw')||fn.includes('exit'))type='unstake';
+        else if(fn.includes('claim')||fn.includes('reward'))type='reward';
+        else if(fn.includes('burn'))type='burned';
+        else type='activity';
+      }
+      // Parse amount from input data (first uint256 param = 32 bytes after method sig)
       let amt=0;
       try{
-        const hex=(log.data||'0x').replace('0x','').padStart(64,'0').slice(0,64);
-        amt=Number(BigInt('0x'+hex))/1e18;
-      }catch(e){}
-      // Get actual block timestamp, fall back to estimate
-      const blkNum=parseInt(log.blockNumber||'0',16);
-      const approxTs=blockTsMap[log.blockNumber]||blockTsMap['0x'+blkNum.toString(16)]||(Math.floor(Date.now()/1000)-(curBlock-blkNum)*2);
-      let type='activity';
-      if(topic0===EV_STAKED)type='staked';
-      else if(topic0===EV_LOCKED)type='locked';
-      else if(topic0===EV_UNSTAKED)type='unstake';
-      else if(topic0===EV_TRANSFER){
-        const from=log.topics?.[1]?'0x'+log.topics[1].slice(26).toLowerCase():'';
-        const to=log.topics?.[2]?'0x'+log.topics[2].slice(26).toLowerCase():'';
-        if(to===MOAT_ADDR_LC) type='deposit';
-        else if(from===MOAT_ADDR_LC) type='reward';
-        else continue; // skip unrelated transfers
-      } else continue; // skip unknown events
-
-      events.push({eventType:type,wallet,amount:amt,txHash,timestamp:approxTs,_onchain:true});
-    }
-
-    // API fallback for extra data
-    const ENDPOINTS=[
-      `${MOATS_API}/events?contractAddress=${HCASH_MOAT_ADDR}&limit=200`,
-      `${MOATS_API}/events?limit=200`,
-    ];
-    let apiEvs=[];
-    for(const url of ENDPOINTS){
-      try{
-        const d=await fetch(url,{headers:{'Accept':'application/json'}}).then(r=>r.ok?r.json():null);
-        const arr=d?.results||d?.data||d?.events||[];
-        if(Array.isArray(arr)&&arr.length>0){
-          apiEvs=arr.filter(e=>{
-            const c=(e.contractAddress||e.contract||e.moatAddress||'').toLowerCase();
-            return c===MOAT_ADDR_LC||!c;
-          }).slice(0,200);
-          break;
+        const data=(tx.input||'').slice(10);
+        if(data.length>=64){
+          amt=Number(BigInt('0x'+data.slice(0,64)))/1e18;
         }
-      }catch(e){console.warn('activity api:',e.message);}
+      }catch(e){}
+      events.push({
+        eventType:type,
+        wallet:(tx.from||'').toLowerCase(),
+        amount:amt,
+        txHash:tx.hash||'',
+        timestamp:Number(tx.timeStamp||0),
+        blockNumber:tx.blockNumber,
+        _onchain:true,
+      });
     }
 
-    // Merge: prefer on-chain events, supplement with API
-    const seenTx=new Set(events.map(e=>e.txHash).filter(Boolean));
-    for(const e of apiEvs){
-      if(!e.txHash||!seenTx.has(e.txHash)) events.push(e);
+    // Parse token transfer txs — gives actual LP amounts with timestamps
+    const tokenTxs=(tokenTxRes.status==='fulfilled'&&tokenTxRes.value?.status==='1')?(tokenTxRes.value.result||[]):[];
+    const seenHashes=new Set(events.map(e=>e.txHash).filter(Boolean));
+    for(const tx of tokenTxs){
+      const toLc=(tx.to||'').toLowerCase();
+      const fromLc=(tx.from||'').toLowerCase();
+      const amt=Number(tx.value||0)/1e18;
+      let type='activity', wallet='';
+      if(toLc===MOAT_LC){type='deposit';wallet=fromLc;}
+      else if(fromLc===MOAT_LC){type='reward';wallet=toLc;}
+      else continue;
+      // Enrich existing events with amount if same txhash
+      if(seenHashes.has(tx.hash)){
+        const existing=events.find(e=>e.txHash===tx.hash);
+        if(existing&&!existing.amount&&amt>0) existing.amount=amt;
+        continue;
+      }
+      events.push({
+        eventType:type,
+        wallet,
+        amount:amt,
+        txHash:tx.hash||'',
+        timestamp:Number(tx.timeStamp||0),
+        blockNumber:tx.blockNumber,
+        _onchain:true,
+      });
+      seenHashes.add(tx.hash);
     }
 
-    // Sort by timestamp desc
-    events.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    // ── FALLBACK: eth_getLogs for any events missing from Snowtrace ──
+    try{
+      const RPC=AVAX_RPC;
+      const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
+      const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
+      const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
+          fromBlock:'0x'+Math.max(0,curBlock-50000).toString(16),
+          toBlock:'0x'+curBlock.toString(16),
+          address:HCASH_MOAT_ADDR
+        }]})}).then(r=>r.json());
+      const logs=logsRes?.result||[];
+      for(const log of logs){
+        if(seenHashes.has(log.transactionHash)) continue;
+        const topic0=(log.topics||[])[0]||'';
+        const wallet=log.topics?.[1]?'0x'+log.topics[1].slice(26).toLowerCase():'';
+        let amt=0;
+        try{const hex=(log.data||'0x').replace('0x','').padStart(64,'0').slice(0,64);amt=Number(BigInt('0x'+hex))/1e18;}catch(e){}
+        let type='activity';
+        if(topic0===EV_STAKED)type='staked';
+        else if(topic0===EV_LOCKED)type='locked';
+        else if(topic0===EV_UNSTAKED)type='unstake';
+        else continue;
+        const blkNum=parseInt(log.blockNumber||'0',16);
+        const ts=Math.floor(Date.now()/1000)-(curBlock-blkNum)*2;
+        events.push({eventType:type,wallet,amount:amt,txHash:log.transactionHash||'',timestamp:ts,_onchain:true});
+        seenHashes.add(log.transactionHash);
+      }
+    }catch(re){console.warn('getLogs fallback:',re.message);}
+
+    // Sort by timestamp desc, filter zero-timestamp to bottom
+    events.sort((a,b)=>{
+      if(!a.timestamp&&!b.timestamp)return 0;
+      if(!a.timestamp)return 1;
+      if(!b.timestamp)return -1;
+      return b.timestamp-a.timestamp;
+    });
     allEvData=[...events];
     filteredEvData=[...allEvData];
     renderEvFeed();
     renderActivityStats();
   }catch(e){
     console.warn('loadEvents:',e.message);
-    if(feed)setHtml('evFeed','<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1rem;text-align:center">Could not load events — try again.<br><span style="font-size:.55rem;color:var(--mut)">'+e.message?.slice(0,80)+'</span></div>');
+    if(feed)setHtml('evFeed','<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1rem;text-align:center">Could not load events.<br><span style="font-size:.55rem">'+e.message?.slice(0,80)+'</span></div>');
   }
 }
 
@@ -2085,41 +2130,42 @@ async function loadExplorerData() {
 
 async function loadLpHolders(totalLpSupply) {
   const holdersEl=document.getElementById('lpHoldersBody');
-  const holdersCard=document.getElementById('lpHoldersCard');
-  if(!holdersEl||!holdersCard)return;
-  holdersCard.style.display='block';
+  if(!holdersEl)return;
   holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span>Loading LP holders…</td></tr>';
   try{
-    const RPC=AVAX_RPC;
-    // Get recent block
-    const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
-    const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
-    const fromBlock='0x'+Math.max(0,curBlock-500000).toString(16);
-    // Fetch Transfer events for LP token
-    const TRANSFER_TOPIC='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-    const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
-        fromBlock:'0x'+Math.max(0,curBlock-200000).toString(16),
-        toBlock:'0x'+curBlock.toString(16),
-        address:HCASH_LP_ADDR,
-        topics:[TRANSFER_TOPIC]
-      }]})}).then(r=>r.json());
-    const logs=logsRes?.result||[];
-    // Build set of unique addresses that interacted with LP token
-    const addresses=new Set();
-    for(const log of logs){
-      if(log.topics?.[1]) addresses.add('0x'+log.topics[1].slice(26).toLowerCase());
-      if(log.topics?.[2]) addresses.add('0x'+log.topics[2].slice(26).toLowerCase());
-    }
-    // Remove zero address and moat/router contracts
+    // Use Snowtrace tokentx to get all LP token transfers — gives real address list
+    const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=500`)
+      .then(r=>r.json()).catch(()=>null);
+
+    const txs=(txRes?.status==='1')?(txRes.result||[]):[];
+
+    // Collect all unique addresses that received LP tokens
     const skipAddrs=new Set([
-      ethers.ZeroAddress.toLowerCase(),
+      '0x0000000000000000000000000000000000000000',
       HCASH_MOAT_ADDR.toLowerCase(),
       PHARAOH_ROUTER_ADDR.toLowerCase(),
+      PHARAOH_FACTORY_ADDR.toLowerCase(),
     ]);
-    const toQuery=[...addresses].filter(a=>!skipAddrs.has(a)).slice(0,50);
-    if(!toQuery.length){holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No recent LP transfers found</td></tr>';return;}
+
+    const addresses=new Set();
+    for(const tx of txs){
+      const to=(tx.to||'').toLowerCase();
+      const from=(tx.from||'').toLowerCase();
+      if(to&&!skipAddrs.has(to)) addresses.add(to);
+      if(from&&!skipAddrs.has(from)) addresses.add(from);
+    }
+
+    // Also add any known profiles who might hold LP
+    for(const addr of Object.keys(KNOWN_PROFILES)){
+      if(!skipAddrs.has(addr)) addresses.add(addr);
+    }
+
+    const toQuery=[...addresses].slice(0,60);
+    if(!toQuery.length){
+      holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No LP holders found</td></tr>';
+      return;
+    }
+
     // Batch balanceOf calls
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
@@ -2131,26 +2177,48 @@ async function loadLpHolders(totalLpSupply) {
         if(b>0.000001) holders.push({wallet:toQuery[i],balance:b});
       }
     }
+
+    // Also fetch moat staked amounts (they hold LP inside the moat)
+    try{
+      const moatBal=parseFloat(ethers.formatEther(await lpC.balanceOf(HCASH_MOAT_ADDR)));
+      if(moatBal>0) holders.push({wallet:HCASH_MOAT_ADDR.toLowerCase(),balance:moatBal,_isMoat:true});
+    }catch(e){}
+
     holders.sort((a,b)=>b.balance-a.balance);
-    const supplyNum=totalLpSupply||holders.reduce((s,h)=>s+h.balance,0)||1;
-    holdersEl.innerHTML=holders.slice(0,20).map((h,i)=>{
-      const pct=(h.balance/supplyNum*100).toFixed(2);
+
+    // Get total supply for percentage
+    let supplyNum=totalLpSupply||0;
+    if(!supplyNum){
+      try{const ts=await lpC.totalSupply();supplyNum=parseFloat(ethers.formatEther(ts));}catch(e){}
+    }
+    if(!supplyNum) supplyNum=holders.reduce((s,h)=>s+h.balance,0)||1;
+
+    holdersEl.innerHTML=holders.slice(0,25).map((h,i)=>{
+      const pct=(h.balance/supplyNum*100).toFixed(3);
       const prof=getKnownProfile(h.wallet);
-      const nameHtml=prof
-        ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem">@${prof.twitter}</a>`
-        :`<span class="mono" style="font-size:.58rem">${shortA(h.wallet)}</span>`;
+      const isMoat=h._isMoat;
+      const nameHtml=isMoat
+        ?`<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.7rem;color:var(--red)">🔒 hCASH Moat</span>`
+        :prof
+          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem">@${prof.twitter}</a>`
+          :`<span class="mono" style="font-size:.58rem">${shortA(h.wallet)}</span>`;
       const rkCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
       return `<tr>
         <td><span class="rk ${rkCls}">${i+1}</span></td>
-        <td style="display:flex;align-items:center;gap:6px">
-          ${prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
-          ${nameHtml}
+        <td>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${!isMoat&&prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:isMoat?'<span style="font-size:.9rem">🏦</span>':''}
+            <div style="display:flex;flex-direction:column;min-width:0">
+              ${nameHtml}
+              <span class="mono" style="font-size:.48rem;color:var(--mut)">${shortA(h.wallet)}</span>
+            </div>
+          </div>
         </td>
-        <td style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold)">${h.balance.toFixed(4)} LP</td>
+        <td style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold)">${h.balance.toFixed(6)} LP</td>
         <td class="mono" style="font-size:.56rem;color:var(--dim)">${pct}%</td>
       </tr>`;
     }).join('');
-    if(!holders.length) holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No holders found in recent blocks</td></tr>';
+    if(!holders.length) holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut)">No LP holders found</td></tr>';
   }catch(e){
     holdersEl.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--red);font-size:.6rem">Error: ${e.message?.slice(0,80)}</td></tr>`;
   }
@@ -2581,7 +2649,7 @@ async function exitLock(idx, early=false) {
   try{
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,walletSigner);
     notif('Exiting lock… confirm in wallet','info',3000);
-    const tx=early?await moatC.earlyExitLock(idx,{gasLimit:300000n}):await moatC.exitLock(idx,{gasLimit:300000n});
+    const tx=early?await moatC.earlyExitLock(BigInt(idx),{gasLimit:400000n}):await moatC.exitLock(BigInt(idx),{gasLimit:400000n});
     await tx.wait();
     notif(early?'⚠ Early exit done. EEL penalty applied.':'✅ Lock exited — full amount returned!',early?'warn':'success',6000);
     renderActiveLocks();updateLpBalances();
@@ -2625,14 +2693,14 @@ async function hcashUnstake(){await hcashDoUnstake();}
 // ── Rewards ──
 async function loadRewards() {
   const el=document.getElementById('rewardsContent');
-  if(!walletAddress){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut)">Connect wallet to see rewards.</div>');loadMinerFirstRecipients();return;}
+  if(!walletAddress){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut)">Connect wallet to see rewards.</div>');loadMinerHolders();return;}
   if(el)el.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)"><span class="spin"></span>Loading rewards…</div>';
   try{
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     const res=await moatC.getAllPendingRewards(walletAddress);
     const tokens=res[0]||[],amounts=res[1]||[];
-    if(!tokens.length){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1.5rem">No pending rewards found.</div>');loadMinerFirstRecipients();return;}
+    if(!tokens.length){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1.5rem">No pending rewards found.</div>');loadMinerHolders();return;}
     const rows=tokens.map((t,i)=>{
       const amt=parseFloat(ethers.formatEther(amounts[i]||0n));
       return `<div class="calc-row"><span class="calc-lbl mono">${shortA(t)}</span><span class="calc-val cgn">${f4(amt)}</span></div>`;
@@ -2643,70 +2711,93 @@ async function loadRewards() {
       <div id="claimStatus" class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;margin-top:.4rem"></div>
     `);
   }catch(e){setHtml('rewardsContent','<div class="mono" style="font-size:.6rem;color:var(--mut)">Could not load rewards.</div>');}
-  loadMinerFirstRecipients();
+  loadMinerHolders();
 }
 
-// Fetch first recipient of miner NFTs via Transfer event from zero address
-async function loadMinerFirstRecipients() {
-  const MINER27_ADDR = '0xACB7a697c8B20e0f5a60a80fBf00c6a5F3D5FA26'; // placeholder — resolved from API
-  const MINER40_ADDR = '0xACB7A697c8B20e0f5a60a80fBf00c6a5F3D5FA26'; // placeholder
-  const TRANSFER_TOPIC='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-  const ZERO='0x0000000000000000000000000000000000000000000000000000000000000000';
-  // Try to resolve addresses from API data
-  async function getFirstMint(contractAddr, elId) {
+// Fetch current holders of Miner #27 and Miner #40 NFTs via Snowtrace tokennfttx
+async function loadMinerHolders() {
+  async function fetchNFTHolders(contractAddr, elId, linkElId) {
     const el=document.getElementById(elId);
     if(!el)return;
-    if(!contractAddr||contractAddr.toLowerCase().includes('acb7a697c8b20e0f5a60a80fbf00c6a5f3d5fa26')){
-      // Need to look up real address from hashcash API
-      try{
-        const d=await fetch(`${HCASH_API}/contracts`,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json());
-        const contracts=d?.contracts||d||[];
-        const minerId=elId.replace('First','').replace('miner','miner_nft:');
-        const miner=contracts.find(c=>{
-          const name=c.name||c.id||'';
-          if(elId.includes('27')) return name.includes('27')||c.id?.includes('27');
-          if(elId.includes('40')) return name.includes('40')||c.id?.includes('40');
-          return false;
-        });
-        if(miner?.address) contractAddr=ethers.getAddress(miner.address);
-        else {el.querySelector('span:last-child').innerHTML='<span style="color:var(--mut)">Address pending API</span>';return;}
-      }catch(e){el.querySelector('span:last-child').innerHTML='<span style="color:var(--mut)">API unavailable</span>';return;}
-    }
+    el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)"><span class="spin"></span> Loading holders…</div>';
+    if(!contractAddr){el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">Address pending API</div>';return;}
     try{
-      const RPC=AVAX_RPC;
-      const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
-      const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
-      const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{fromBlock:'0x0',toBlock:'0x'+curBlock.toString(16),address:contractAddr,topics:[TRANSFER_TOPIC,ZERO]}]})}).then(r=>r.json());
-      const logs=logsRes?.result||[];
-      if(logs.length>0){
-        const firstLog=logs[0];
-        const firstRecipient='0x'+firstLog.topics?.[2]?.slice(26)||'';
-        const prof=getKnownProfile(firstRecipient);
-        const displayHtml=prof
-          ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:14px;height:14px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:.6rem;text-decoration:none">@${prof.twitter}</a></div>`
-          :`<span class="mono" style="font-size:.58rem;color:var(--txt)">${shortA(firstRecipient)}</span>`;
-        el.querySelector('span:last-child').innerHTML=displayHtml;
-      } else {
-        el.querySelector('span:last-child').innerHTML='<span style="color:var(--mut)">No mint events found</span>';
+      // Use Snowtrace NFT transfer API to find current holders
+      const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=200`)
+        .then(r=>r.json()).catch(()=>null);
+
+      if(!txRes||txRes.status!=='1'||!txRes.result?.length){
+        el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">No transfer data found</div>';
+        return;
       }
-    }catch(e){el.querySelector('span:last-child').innerHTML=`<span style="color:var(--mut)">${e.message?.slice(0,40)}</span>`;}
+
+      // Build current holder map — track all transfers to find current owner of each tokenId
+      const tokenOwner={};
+      const txs=txRes.result||[];
+      // Sort ascending by block to replay ownership
+      const sorted=[...txs].sort((a,b)=>Number(a.blockNumber)-Number(b.blockNumber));
+      for(const tx of sorted){
+        const tokenId=tx.tokenID||tx.tokenId;
+        tokenOwner[tokenId]=(tx.to||'').toLowerCase();
+      }
+
+      // Get unique current holders (not zero addr)
+      const holdersMap={};
+      for(const [tid,owner] of Object.entries(tokenOwner)){
+        if(!owner||owner==='0x0000000000000000000000000000000000000000') continue;
+        if(!holdersMap[owner]) holdersMap[owner]={addr:owner,tokens:[]};
+        holdersMap[owner].tokens.push(tid);
+      }
+
+      const holders=Object.values(holdersMap).sort((a,b)=>b.tokens.length-a.tokens.length);
+
+      if(!holders.length){
+        el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">No current holders found</div>';
+        return;
+      }
+
+      // Update Snowtrace link
+      const linkEl=document.getElementById(linkElId);
+      if(linkEl) linkEl.href=`https://snowtrace.io/token/${contractAddr}`;
+
+      el.innerHTML=holders.slice(0,10).map((h,i)=>{
+        const prof=getKnownProfile(h.addr);
+        const nameHtml=prof
+          ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-size:.65rem;font-family:'Rajdhani',sans-serif;font-weight:700">@${prof.twitter}</a>`
+          :`<span class="mono" style="font-size:.56rem">${shortA(h.addr)}</span>`;
+        const rkCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+        return `<div style="display:flex;align-items:center;gap:6px;padding:.3rem 0;border-bottom:1px solid rgba(31,32,48,.35)">
+          <span class="rk ${rkCls}" style="font-size:.52rem;width:18px;height:18px">${i+1}</span>
+          ${prof?`<img src="${prof.pic}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:'' }
+          <div style="flex:1;min-width:0">
+            ${nameHtml}
+            <div class="mono" style="font-size:.46rem;color:var(--mut)">${h.tokens.length} token${h.tokens.length>1?'s':''} · IDs: ${h.tokens.slice(0,3).join(', ')}${h.tokens.length>3?'…':''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      el.innerHTML=`<div class="mono" style="font-size:.55rem;color:var(--red)">${e.message?.slice(0,60)}</div>`;
+    }
   }
-  // Load from API first to get real addresses
+
+  // Resolve contract addresses from HashCash API, then fetch holders
   try{
-    const d=await fetch(`${HCASH_API}/contracts`,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json());
+    const d=await fetch(`${HCASH_API}/contracts`,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json()).catch(()=>null);
     const contracts=d?.contracts||d||[];
     const m27=contracts.find(c=>{const n=c.name||c.id||'';return (n.includes('#27')||n.includes('27'))&&c.category==='miner_nft';});
     const m40=contracts.find(c=>{const n=c.name||c.id||'';return (n.includes('#40')||n.includes('40'))&&c.category==='miner_nft';});
-    // Update contract links
-    if(m27?.address){
-      document.querySelectorAll('#minerRewardCards a').forEach((a,i)=>{if(i===0)a.href='https://snowtrace.io/address/'+m27.address;});
-      await getFirstMint(ethers.getAddress(m27.address),'miner27First');
-    } else await getFirstMint(null,'miner27First');
-    if(m40?.address){
-      document.querySelectorAll('#minerRewardCards a').forEach((a,i)=>{if(i===1)a.href='https://snowtrace.io/address/'+m40.address;});
-      await getFirstMint(ethers.getAddress(m40.address),'miner40First');
-    } else await getFirstMint(null,'miner40First');
-  }catch(e){console.warn('miner recipients:',e.message);}
+
+    await Promise.allSettled([
+      fetchNFTHolders(m27?.address?ethers.getAddress(m27.address):null,'miner27Holders','miner27Link'),
+      fetchNFTHolders(m40?.address?ethers.getAddress(m40.address):null,'miner40Holders','miner40Link'),
+    ]);
+  }catch(e){
+    console.warn('minerHolders:',e.message);
+    ['miner27Holders','miner40Holders'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.innerHTML='<div class="mono" style="font-size:.55rem;color:var(--mut)">Could not load</div>';
+    });
+  }
 }
 async function claimRewards() {
   if(!walletSigner)return;
@@ -2985,16 +3076,11 @@ async function updatePositionSummary() {
         if(actives[i]) locked+=parseFloat(ethers.formatEther(amounts[i]));
       }
     }
-    // Points: getCurrentPoints returns raw integer points (NOT 18-decimal)
+    // Points: getCurrentPoints returns uint256 scaled by 1e18 — always divide
     let points=0;
     try{
       const ptsRaw=BigInt(pts.toString());
-      // The contract stores points as plain integers (not wei)
-      // Values like 178000 = 178K points (correct)
-      // Only apply formatEther if value is astronomically large (>1e30)
-      points = ptsRaw > 1000000000000000000000000000000n
-        ? parseFloat(ethers.formatEther(ptsRaw))
-        : Number(ptsRaw);
+      points = Number(ptsRaw) / 1e18;
     }catch(pe){ points=0; }
     // LP value: compute using both reserves and token prices
     let lpPrice=0;
@@ -3042,15 +3128,12 @@ async function loadUserPosition() {
       }
     }
     // Points: auto-detect scale (getCurrentPoints returns raw integers, not wei)
+    // Points: getCurrentPoints returns uint256 scaled by 1e18 — always divide
     let points=0;
     try{
       const ptsRaw=BigInt(pts.toString());
-      points = ptsRaw > 1000000000000000000000000000000n
-        ? parseFloat(ethers.formatEther(ptsRaw))
-        : Number(ptsRaw);
+      points = Number(ptsRaw) / 1e18;
     }catch(pe){ points=0; }
-    const total=moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
-    const share=total&&points?(points/total*100).toFixed(4):0;
     const hasPos=staked>0||locked>0;
     el.innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.7rem">
