@@ -335,6 +335,137 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
 .miner-stat-k{color:var(--mut)}
 .miner-stat-v{color:var(--txt)}
 
+/* ── MARKETPLACE GRID ── */
+.mkt-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:.7rem;
+  margin-bottom:.85rem;
+}
+@media(min-width:480px){.mkt-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.mkt-grid{grid-template-columns:repeat(4,1fr)}}
+.mkt-card{
+  background:var(--card);
+  border:1px solid var(--bor);
+  border-radius:12px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:all .2s;
+  position:relative;
+}
+.mkt-card:hover{
+  border-color:rgba(74,222,128,.35);
+  transform:translateY(-3px);
+  box-shadow:0 10px 28px rgba(0,0,0,.5);
+}
+.mkt-card-img-wrap{
+  position:relative;
+  aspect-ratio:1;
+  overflow:hidden;
+  background:var(--sur);
+}
+.mkt-card-img{
+  width:100%;height:100%;
+  object-fit:cover;
+  transition:transform .3s;
+}
+.mkt-card:hover .mkt-card-img{transform:scale(1.04)}
+.mkt-card-img-fb{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:3rem;color:var(--mut);
+}
+.mkt-badge-active{
+  position:absolute;top:7px;left:7px;
+  background:rgba(74,222,128,.15);
+  border:1px solid rgba(74,222,128,.4);
+  border-radius:5px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:.44rem;letter-spacing:.08em;
+  color:var(--grn);padding:2px 6px;
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:3px;
+}
+.mkt-badge-id{
+  position:absolute;top:7px;right:7px;
+  background:rgba(6,6,8,.75);
+  border:1px solid var(--bor);
+  border-radius:5px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:.44rem;color:var(--dim);
+  padding:2px 6px;
+  backdrop-filter:blur(4px);
+}
+.mkt-card-body{
+  padding:.65rem;
+  display:flex;flex-direction:column;
+  gap:.35rem;flex:1;
+}
+.mkt-card-name{
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:.88rem;line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mkt-stat-row{
+  display:flex;justify-content:space-between;
+  font-family:'Share Tech Mono',monospace;font-size:.5rem;
+}
+.mkt-stat-k{color:var(--mut)}
+.mkt-stat-v{color:var(--txt)}
+.mkt-price-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;padding-top:.45rem;
+  border-top:1px solid rgba(31,32,48,.5);
+}
+.mkt-price{
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:1rem;color:var(--grn);
+  line-height:1;
+}
+.mkt-price-sub{
+  font-family:'Share Tech Mono',monospace;
+  font-size:.44rem;color:var(--mut);
+  margin-top:1px;
+}
+.mkt-buy-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--grn);color:#0a0a0f;
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:.65rem;letter-spacing:.04em;text-transform:uppercase;
+  padding:5px 10px;border-radius:7px;
+  text-decoration:none;
+  transition:all .15s;
+  border:none;cursor:pointer;flex-shrink:0;
+  white-space:nowrap;
+}
+.mkt-buy-btn:hover{filter:brightness(1.12);transform:scale(1.04)}
+.mkt-buy-btn-ghost{
+  background:transparent;
+  border:1px solid var(--bor);
+  color:var(--dim);font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:.6rem;text-transform:uppercase;letter-spacing:.04em;
+  padding:4px 9px;border-radius:7px;
+  text-decoration:none;transition:all .15s;
+  display:inline-flex;align-items:center;gap:4px;
+  flex-shrink:0;white-space:nowrap;
+}
+.mkt-buy-btn-ghost:hover{border-color:rgba(74,222,128,.35);color:var(--txt)}
+.mkt-seller-strip{
+  display:flex;align-items:center;gap:5px;
+  padding:.4rem .65rem;
+  background:rgba(255,255,255,.02);
+  border-top:1px solid rgba(31,32,48,.35);
+  font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--mut);
+}
+.mkt-empty{
+  grid-column:1/-1;
+  text-align:center;
+  padding:3rem 1rem;
+}
+.mkt-empty-icon{font-size:2.5rem;margin-bottom:.7rem}
+.mkt-empty-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.95rem;color:var(--dim);margin-bottom:.4rem}
+.mkt-empty-sub{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--mut);margin-bottom:1rem}
+
 /* ── NOTIF ── */
 #notif{
   position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;
@@ -1273,10 +1404,21 @@ main{position:relative;z-index:1;padding:.85rem;max-width:1440px;margin:0 auto}
   <!-- Marketplace listings -->
   <div class="sh" style="margin-top:.5rem">
     <div class="sh-t">🛒 Marketplace Listings</div>
-    <span class="mono" style="font-size:.52rem;color:var(--mut)" id="marketplaceHeader"></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="mono" style="font-size:.52rem;color:var(--mut)" id="marketplaceHeader"></span>
+      <a href="https://hashcash.club/marketplace" target="_blank" class="btn btn-sm" style="text-decoration:none;font-size:.6rem">Buy on HashCash ↗</a>
+    </div>
   </div>
-  <div id="marketplaceListings">
-    <div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span></div>
+  <!-- Marketplace filter bar -->
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:.85rem" id="mktFilterBar">
+    <span class="mono" style="font-size:.55rem;color:var(--mut)">Filter:</span>
+    <button class="slip-btn active" onclick="filterMarket('',this)">All</button>
+    <button class="slip-btn" onclick="filterMarket('price_asc',this)">Price ↑</button>
+    <button class="slip-btn" onclick="filterMarket('price_desc',this)">Price ↓</button>
+    <button class="slip-btn" onclick="filterMarket('hashrate',this)">Hashrate ↓</button>
+  </div>
+  <div id="marketplaceListings" class="mkt-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)" class="mono"><span class="spin"></span> Loading marketplace…</div>
   </div>
 
   <!-- Other contracts -->
@@ -2373,131 +2515,230 @@ async function loadMiners() {
   }
 }
 
+// ── Marketplace state for client-side filtering ──
+let _allMarketListings = [];
+
 async function loadMarketplaceListings(marketContract, miners) {
-  const mktDiv=document.getElementById('marketplaceListings');
-  if(!mktDiv) return;
-  mktDiv.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading marketplace listings…</div>';
-  try{
-    if(!marketContract?.address){
-      mktDiv.innerHTML='<div class="mono" style="font-size:.6rem;color:var(--mut)">Marketplace contract not found in API.</div>';
-      return;
-    }
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
-    // Marketplace ABI — standard listing/order functions
-    const MARKET_ABI=[
-      'function getListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
-      'function getActiveListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
-      'function listingCount() view returns (uint256)',
-      'function totalListings() view returns (uint256)',
-      'function listings(uint256) view returns (address seller, address nftContract, uint256 tokenId, uint256 price, bool active)',
-    ];
+  const mktDiv = document.getElementById('marketplaceListings');
+  if (!mktDiv) return;
+  mktDiv.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--mut)" class="mono"><span class="spin"></span> Fetching live listings…</div>';
 
-    // Try to get ABI from HashCash API
-    let marketAbi=MARKET_ABI;
-    if(marketContract.abiUrl){
-      try{
-        const abiResp=await fetch(marketContract.abiUrl,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json());
-        if(abiResp?.abi) marketAbi=abiResp.abi;
-      }catch(e){}
-    }
+  try {
+    const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
 
-    const mktC=new ethers.Contract(ethers.getAddress(marketContract.address),marketAbi,prov);
+    // Build miner address → contract map
+    const minerByAddr = {};
+    miners.forEach(m => { if (m.address) minerByAddr[m.address.toLowerCase()] = m; });
 
-    // Get listing count
-    let count=0;
-    try{count=Number(await mktC.listingCount().catch(()=>mktC.totalListings().catch(()=>0n)));}catch(e){}
+    const listings = [];
+    let totalCount = 0;
 
-    // Fetch via Snowtrace tokennfttx on market contract for recent activity
-    const [snowRes]=await Promise.allSettled([
-      fetch(`${SNOWTRACE}?module=account&action=tokennfttx&address=${marketContract.address}&sort=desc&offset=50`).then(r=>r.json()),
-    ]);
+    // ── STEP 1: Try on-chain getActiveListings / getListings ──
+    if (marketContract?.address) {
+      const MARKET_ABI = [
+        'function getListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
+        'function getActiveListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
+        'function listingCount() view returns (uint256)',
+        'function totalListings() view returns (uint256)',
+        'function listings(uint256) view returns (address seller, address nftContract, uint256 tokenId, uint256 price, bool active)',
+      ];
 
-    const nftTxs=(snowRes.status==='fulfilled'&&snowRes.value?.status==='1')?(snowRes.value.result||[]):[];
+      // Prefer ABI from HashCash API
+      let marketAbi = MARKET_ABI;
+      if (marketContract.abiUrl) {
+        try {
+          const abiResp = await fetch(marketContract.abiUrl, { headers: { 'x-api-key': HCASH_API_KEY } }).then(r => r.json());
+          if (abiResp?.abi) marketAbi = abiResp.abi;
+        } catch(e) {}
+      }
 
-    // Build miner address→name map
-    const minerByAddr={};
-    miners.forEach(m=>{if(m.address)minerByAddr[m.address.toLowerCase()]=m;});
+      const mktC = new ethers.Contract(ethers.getAddress(marketContract.address), marketAbi, prov);
 
-    // Get active listings by calling listings() for recent tokenIds
-    const listings=[];
-    // Try getActiveListings first
-    try{
-      const raw=await mktC.getActiveListings(0,20).catch(()=>mktC.getListings(0,20).catch(()=>null));
-      if(raw&&raw.length){
-        for(const l of raw){
-          if(!l.active) continue;
-          const miner=minerByAddr[(l.nftContract||'').toLowerCase()];
+      // Get total count
+      try { totalCount = Number(await mktC.listingCount().catch(() => mktC.totalListings().catch(() => 0n))); } catch(e) {}
+
+      // Try paginated active listings (up to 50)
+      try {
+        const raw = await mktC.getActiveListings(0, 50).catch(() => mktC.getListings(0, 50).catch(() => null));
+        if (raw && raw.length) {
+          for (const l of raw) {
+            if (!l.active) continue;
+            const miner = minerByAddr[(l.nftContract || '').toLowerCase()];
+            const priceAvax = parseFloat(ethers.formatEther(l.price || 0n));
+            const priceUsd = priceAvax * (priceData?.avaxPrice || 0);
+            listings.push({
+              listingId: Number(l.listingId || 0),
+              seller: (l.seller || '').toLowerCase(),
+              nftContract: (l.nftContract || '').toLowerCase(),
+              tokenId: Number(l.tokenId || 0),
+              price: priceAvax,
+              priceUsd,
+              minerName: miner?.name || null,
+              minerStats: miner?.minerStats || null,
+              minerImg: miner?.imageUrl || null,
+              minerId: miner?.id || null,
+              _active: true,
+            });
+          }
+        }
+      } catch(e) { console.warn('marketplace getActiveListings:', e.message); }
+
+      // If no on-chain results, try iterating last N listing IDs directly
+      if (!listings.length && totalCount > 0) {
+        const start = Math.max(0, totalCount - 20);
+        const checks = [];
+        for (let i = totalCount; i > start; i--) checks.push(i);
+        const results = await Promise.allSettled(checks.map(id => mktC.listings(id)));
+        for (let i = 0; i < results.length; i++) {
+          if (results[i].status !== 'fulfilled') continue;
+          const l = results[i].value;
+          if (!l.active) continue;
+          const miner = minerByAddr[(l.nftContract || '').toLowerCase()];
+          const priceAvax = parseFloat(ethers.formatEther(l.price || 0n));
           listings.push({
-            listingId:Number(l.listingId||0),
-            seller:(l.seller||'').toLowerCase(),
-            nftContract:(l.nftContract||'').toLowerCase(),
-            tokenId:Number(l.tokenId||0),
-            price:parseFloat(ethers.formatEther(l.price||0n)),
-            minerName:miner?.name||null,
-            minerStats:miner?.minerStats||null,
-            minerImg:miner?.imageUrl||null,
+            listingId: checks[i],
+            seller: (l.seller || '').toLowerCase(),
+            nftContract: (l.nftContract || '').toLowerCase(),
+            tokenId: Number(l.tokenId || 0),
+            price: priceAvax,
+            priceUsd: priceAvax * (priceData?.avaxPrice || 0),
+            minerName: miner?.name || null,
+            minerStats: miner?.minerStats || null,
+            minerImg: miner?.imageUrl || null,
+            minerId: miner?.id || null,
+            _active: true,
           });
         }
       }
-    }catch(e){console.warn('marketplace listings:',e.message);}
+    }
 
-    // Fall back to recent NFT transfers into/out of the marketplace
-    if(!listings.length&&nftTxs.length){
-      for(const tx of nftTxs.slice(0,20)){
-        const miner=minerByAddr[(tx.contractAddress||'').toLowerCase()];
+    // ── STEP 2: Snowtrace NFT tx fallback ──
+    if (!listings.length && marketContract?.address) {
+      const snowRes = await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&address=${marketContract.address}&sort=desc&offset=50`)
+        .then(r => r.json()).catch(() => null);
+      const nftTxs = (snowRes?.status === '1') ? (snowRes.result || []) : [];
+      // Deduplicate by tokenId+contract — keep most recent
+      const seen = new Set();
+      for (const tx of nftTxs) {
+        const key = `${(tx.contractAddress||'').toLowerCase()}_${tx.tokenID||tx.tokenId}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const miner = minerByAddr[(tx.contractAddress || '').toLowerCase()];
         listings.push({
-          listingId:null,
-          seller:(tx.from||'').toLowerCase(),
-          nftContract:(tx.contractAddress||'').toLowerCase(),
-          tokenId:Number(tx.tokenID||tx.tokenId||0),
-          price:0, // can't get price from transfer event alone
-          minerName:miner?.name||tx.tokenName||null,
-          minerStats:miner?.minerStats||null,
-          minerImg:miner?.imageUrl||null,
-          _fromEvent:true,
-          timestamp:Number(tx.timeStamp||0),
+          listingId: null,
+          seller: (tx.from || '').toLowerCase(),
+          nftContract: (tx.contractAddress || '').toLowerCase(),
+          tokenId: Number(tx.tokenID || tx.tokenId || 0),
+          price: 0,
+          priceUsd: 0,
+          minerName: miner?.name || tx.tokenName || null,
+          minerStats: miner?.minerStats || null,
+          minerImg: miner?.imageUrl || null,
+          minerId: miner?.id || null,
+          _fromEvent: true,
+          timestamp: Number(tx.timeStamp || 0),
         });
       }
     }
 
-    if(!listings.length){
-      mktDiv.innerHTML=`<div class="mono" style="font-size:.6rem;color:var(--mut);text-align:center;padding:1rem">No active listings found.<br><a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a></div>`;
-      return;
-    }
+    // ── Update header ──
+    const header = document.getElementById('marketplaceHeader');
+    if (header) header.textContent = listings.length
+      ? `${listings.length} listing${listings.length !== 1 ? 's' : ''}${totalCount > 0 ? ' · ' + totalCount + ' total' : ''}`
+      : '';
 
-    mktDiv.innerHTML=listings.map(l=>{
-      const prof=getKnownProfile(l.seller);
-      const sellerHtml=prof
-        ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:12px;height:12px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:.56rem;text-decoration:none">@${prof.twitter}</a></div>`
-        :`<span class="mono" style="font-size:.52rem;color:var(--mut)">${shortA(l.seller)}</span>`;
-      const s=l.minerStats||{};
-      return `<div style="display:flex;gap:10px;align-items:flex-start;padding:.6rem;background:var(--sur);border:1px solid var(--bor);border-radius:9px;margin-bottom:.4rem">
-        ${l.minerImg?`<img src="${l.minerImg}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">`:
-          '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem">⛏</div>'}
-        <div style="flex:1;min-width:0">
-          <div style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:.82rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:.52rem;color:var(--mut)">#${l.tokenId}</span></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:.2rem 0">
-            ${s.hashrateFormatted?`<span class="mono" style="font-size:.54rem;color:var(--red)">${s.hashrateFormatted}</span>`:''}
-            ${s.powerFormatted?`<span class="mono" style="font-size:.54rem;color:var(--gold)">${s.powerFormatted}</span>`:''}
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-            ${sellerHtml}
-            ${l.price>0?`<span style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:.82rem;color:var(--grn)">${f4(l.price)} AVAX</span>`:
-              l._fromEvent?`<span class="mono" style="font-size:.52rem;color:var(--mut)">Recent transfer</span>`:''}
-          </div>
-        </div>
-        ${!l._fromEvent?`<a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:.5rem;flex-shrink:0">Buy ↗</a>`:''}
-      </div>`;
-    }).join('');
+    // Cache and render
+    _allMarketListings = listings;
+    renderMarketListings(_allMarketListings);
 
-    // Add header with count
-    const header=document.getElementById('marketplaceHeader');
-    if(header) header.textContent=`${listings.length} listing${listings.length!==1?'s':''}${count>0?' ('+count+' total)':''}`;
-
-  }catch(e){
-    console.warn('marketplace:',e.message);
-    mktDiv.innerHTML=`<div class="mono" style="font-size:.6rem;color:var(--mut);padding:1rem">Could not load listings: ${e.message?.slice(0,60)}</div>`;
+  } catch(e) {
+    console.warn('marketplace:', e.message);
+    const mktDiv = document.getElementById('marketplaceListings');
+    if (mktDiv) mktDiv.innerHTML = `<div class="mkt-empty">
+      <div class="mkt-empty-icon">🛒</div>
+      <div class="mkt-empty-title">Couldn't load listings</div>
+      <div class="mkt-empty-sub">${e.message?.slice(0, 80) || 'Network error'}</div>
+      <a href="https://hashcash.club/marketplace" target="_blank" class="btn btn-sm" style="text-decoration:none">Browse on HashCash ↗</a>
+    </div>`;
   }
+}
+
+function renderMarketListings(listings) {
+  const mktDiv = document.getElementById('marketplaceListings');
+  if (!mktDiv) return;
+
+  if (!listings.length) {
+    mktDiv.innerHTML = `<div class="mkt-empty">
+      <div class="mkt-empty-icon">🛒</div>
+      <div class="mkt-empty-title">No Active Listings</div>
+      <div class="mkt-empty-sub">The marketplace is quiet right now. Check back soon or browse directly on HashCash.</div>
+      <a href="https://hashcash.club/marketplace" target="_blank" class="btn btn-sm" style="text-decoration:none;margin-top:.35rem">Browse HashCash Marketplace ↗</a>
+    </div>`;
+    return;
+  }
+
+  mktDiv.innerHTML = listings.map(l => {
+    const s = l.minerStats || {};
+    const prof = getKnownProfile(l.seller);
+    const eff = s.hashrateMhps && s.powerWatts ? `${(s.hashrateMhps / s.powerWatts * 100).toFixed(1)} MH/W` : null;
+
+    // Buy link — deep-link to hashcash marketplace with listing ID if known
+    const buyHref = l.listingId
+      ? `https://hashcash.club/marketplace?listing=${l.listingId}`
+      : `https://hashcash.club/marketplace`;
+
+    const sellerDisplay = prof
+      ? `<img src="${prof.pic}" style="width:13px;height:13px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@${prof.twitter}</a>`
+      : `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${shortA(l.seller)}</span>`;
+
+    const imgHtml = l.minerImg
+      ? `<img class="mkt-card-img" src="${l.minerImg}" alt="${l.minerName||'Miner'}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+      : '';
+
+    return `<div class="mkt-card">
+      <div class="mkt-card-img-wrap">
+        ${imgHtml}
+        <div class="mkt-card-img-fb" style="${l.minerImg ? 'display:none' : ''}">⛏</div>
+        ${l._active ? `<div class="mkt-badge-active"><span class="ld" style="width:5px;height:5px;background:var(--grn);box-shadow:0 0 5px var(--grn);animation:pulse 1.8s ease-in-out infinite;border-radius:50%"></span>Live</div>` : ''}
+        ${l.tokenId ? `<div class="mkt-badge-id">#${l.tokenId}</div>` : ''}
+      </div>
+      <div class="mkt-card-body">
+        <div class="mkt-card-name">${l.minerName || 'Miner NFT'}</div>
+        ${s.hashrateFormatted ? `<div class="mkt-stat-row"><span class="mkt-stat-k">Hashrate</span><span class="mkt-stat-v" style="color:var(--red)">${s.hashrateFormatted}</span></div>` : ''}
+        ${s.powerFormatted ? `<div class="mkt-stat-row"><span class="mkt-stat-k">Power</span><span class="mkt-stat-v" style="color:var(--gold)">${s.powerFormatted}</span></div>` : ''}
+        ${eff ? `<div class="mkt-stat-row"><span class="mkt-stat-k">Efficiency</span><span class="mkt-stat-v" style="color:var(--grn)">${eff}</span></div>` : ''}
+        <div class="mkt-price-row">
+          <div>
+            ${l.price > 0
+              ? `<div class="mkt-price">${f4(l.price)} <span style="font-size:.65rem;font-weight:400">AVAX</span></div>${l.priceUsd > 0 ? `<div class="mkt-price-sub">≈ $${l.priceUsd.toFixed(2)} USD</div>` : ''}`
+              : l._fromEvent
+                ? `<div class="mkt-price" style="color:var(--dim);font-size:.75rem">Price TBD</div><div class="mkt-price-sub">Recent transfer</div>`
+                : `<div class="mkt-price" style="color:var(--dim);font-size:.75rem">—</div>`
+            }
+          </div>
+          <a href="${buyHref}" target="_blank" class="${l._active ? 'mkt-buy-btn' : 'mkt-buy-btn-ghost'}">
+            ${l._active ? '🛒 Buy' : 'View ↗'}
+          </a>
+        </div>
+      </div>
+      <div class="mkt-seller-strip">
+        <span style="flex-shrink:0">Seller:</span>
+        ${sellerDisplay}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterMarket(mode, btn) {
+  // Update button styles
+  document.querySelectorAll('#mktFilterBar .slip-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  let sorted = [..._allMarketListings];
+  if (mode === 'price_asc') sorted.sort((a, b) => (a.price || Infinity) - (b.price || Infinity));
+  else if (mode === 'price_desc') sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+  else if (mode === 'hashrate') sorted.sort((a, b) => (b.minerStats?.hashrateMhps || 0) - (a.minerStats?.hashrateMhps || 0));
+  renderMarketListings(sorted);
 }
 
 const _minerData = {};
