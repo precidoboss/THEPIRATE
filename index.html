@@ -1737,6 +1737,7 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
           <div class="calc-row"><span class="calc-lbl">LP fee rate</span><span class="calc-val cg">0.3% of volume</span></div>
           <div class="calc-row"><span class="calc-lbl">Miner electricity rate</span><span class="calc-val" id="wi-assumElec">—</span></div>
           <div class="calc-row"><span class="calc-lbl">hCASH emission/day</span><span class="calc-val cg" id="wi-assumEmission">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Next halving in</span><span class="calc-val cr" id="wi-assumHalving">—</span></div>
           <div style="margin-top:.65rem;padding:.5rem .65rem;background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.1);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);line-height:1.6">
             ⚠ Projections assume constant price, hashrate, and pool volume. Real returns will vary. This is not financial advice.
           </div>
@@ -4639,10 +4640,12 @@ async function wiFetchFacilityRates() {
 
     _wiFacilityRatesLoaded = found;
 
-    // ── Fallback: read game contract on-chain if API gave nothing ──
-    if (!found) {
-      await wiFetchFacilityRatesOnChain();
-    } else {
+    // ── Always fetch on-chain for live network stats + better facility data ──
+    // This runs in parallel and updates UI when done
+    wiFetchFacilityRatesOnChain();
+
+    // If API gave nothing, we wait for on-chain; otherwise show API data now
+    if (found) {
       wiFacilityRatesUpdateUI();
       wiRenderSlotTable();
     }
@@ -4653,77 +4656,102 @@ async function wiFetchFacilityRates() {
 }
 
 // Read facility electricity rates directly from the game contract on-chain
-// The game contract stores rates as uint256 in wei-like units (multiply by 1e-18 or similar)
+// Uses the verified Main contract at 0x105fecae0c48d683dA63620De1f2d1582De9e98a
 async function wiFetchFacilityRatesOnChain() {
   try {
-    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
-    // Game main contract ABI — getFacilityInfo(level) returns (slots, maxPower, elecRate, ...)
-    // Try multiple known function signatures
-    const GAME_ABI = [
-      'function getFacilityInfo(uint256 level) view returns (uint256 slots, uint256 maxPower, uint256 elecRate)',
-      'function facilityData(uint256 level) view returns (uint256 slots, uint256 maxPower, uint256 elecRate)',
-      'function getElectricityRate(uint256 level) view returns (uint256)',
-      'function facilityLevels(uint256 level) view returns (uint256 slots, uint256 watts, uint256 rateRaw)',
+    const MAIN_CONTRACT = '0x105fecae0c48d683dA63620De1f2d1582De9e98a';
+    const MAIN_ABI = [
+      'function facilities(uint256) view returns (uint256 maxMiners, uint256 totalPowerOutput, uint256 cost, bool inProduction, uint256 x, uint256 y, uint256 electricityCost, uint256 cooldown)',
+      'function facilityCount() view returns (uint256)',
+      'function totalHashrate() view returns (uint256)',
+      'function getBigcoinPerBlock() view returns (uint256)',
+      'function blocksUntilNextHalving() view returns (uint256)',
+      'function HALVING_INTERVAL() view returns (uint256)',
+      'function INITIAL_BIGCOIN_PER_BLOCK() view returns (uint256)',
     ];
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
 
-    // Find game_main contract address from contracts list we fetched in wiLoadMiners
-    // _wiMiners may have a game contract cached — look for it
-    // Also try the known HCASH_MOAT_ADDR's factory address
-    // Best approach: re-fetch contracts and find game_main
-    const r = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY }, signal: AbortSignal.timeout(6000) });
-    if (!r.ok) throw new Error('contracts API not ok');
-    const data = await r.json();
-    const contracts = Array.isArray(data) ? data : (data.contracts || []);
-    const gameContract = contracts.find(c =>
-      c.category === 'game_main' || c.category === 'game_facility' || c.category === 'facility'
-    );
-
-    if (gameContract?.address) {
-      for (const sig of GAME_ABI) {
-        try {
-          const game = new ethers.Contract(gameContract.address, [sig], prov);
-          const fn = sig.match(/function (\w+)/)[1];
-          let found = false;
-          for (let lv = 1; lv <= 5; lv++) {
-            try {
-              const result = await game[fn](lv);
-              // Result may be a single value or tuple
-              let rate = 0;
-              if (Array.isArray(result) || (result && typeof result === 'object' && result.length)) {
-                // tuple: [slots, watts, rateRaw]
-                const rateRaw = result[2] || result.elecRate || result.rateRaw || 0n;
-                // Rate stored as fixed-point: divide by 1e18 or 1e2 depending on contract
-                const rateNum = Number(rateRaw);
-                rate = rateNum > 1e15 ? rateNum / 1e18 : rateNum > 1000 ? rateNum / 100 : rateNum;
-                const slots = Number(result[0] || result.slots || 0);
-                const watts = Number(result[1] || result.maxPower || 0);
-                if (slots > 0 && _wiFacilityData[lv]) _wiFacilityData[lv].slots = slots;
-                if (watts > 0 && _wiFacilityData[lv]) _wiFacilityData[lv].watts = watts;
-              } else {
-                const rateRaw = Number(result);
-                rate = rateRaw > 1e15 ? rateRaw / 1e18 : rateRaw > 1000 ? rateRaw / 100 : rateRaw;
-              }
-              if (rate > 0 && rate < 50) {
-                _wiFacilityRates[lv] = parseFloat(rate.toFixed(2));
-                if (_wiFacilityData[lv]) _wiFacilityData[lv].rate = _wiFacilityRates[lv];
-                found = true;
-              }
-            } catch(e2) { /* this level failed */ }
-          }
-          if (found) {
-            _wiFacilityRatesLoaded = true;
-            console.log('wiFetchFacilityRatesOnChain: success via', fn);
-            break;
-          }
-        } catch(e3) { /* this ABI sig didn't work */ }
+    // ── 1. Fetch live network stats ──
+    try {
+      const [totalHash, bigcoinPerBlock, blocksToHalving, halvingInterval, initialPerBlock] = await Promise.all([
+        game.totalHashrate().catch(() => 0n),
+        game.getBigcoinPerBlock().catch(() => 0n),
+        game.blocksUntilNextHalving().catch(() => 0n),
+        game.HALVING_INTERVAL().catch(() => 0n),
+        game.INITIAL_BIGCOIN_PER_BLOCK().catch(() => 0n),
+      ]);
+      // totalHashrate is in raw hashrate units — divide by 1e6 for MH/s (contract stores in H/s or kH/s)
+      const hashNum = Number(totalHash);
+      // Try to detect unit: if > 1e12 it's H/s, else MH/s already
+      if (hashNum > 0) {
+        const hashMhs = hashNum > 1e12 ? hashNum / 1e6 : hashNum > 1e9 ? hashNum / 1e3 : hashNum;
+        _wiNetHashMhs = hashMhs;
       }
+      // getBigcoinPerBlock returns with 18 decimals (it's in wei-like bigcoin units)
+      const bpbNum = Number(bigcoinPerBlock);
+      if (bpbNum > 0) {
+        const bpb = bpbNum > 1e15 ? bpbNum / 1e18 : bpbNum > 1e9 ? bpbNum / 1e9 : bpbNum;
+        // ~85,460 blocks/day on Avalanche (1s blocks)
+        const BLOCKS_PER_DAY = 85460;
+        _wiDailyEmission = bpb * BLOCKS_PER_DAY;
+        console.log('[wiOnChain] getBigcoinPerBlock raw:', bpbNum, '→ bpb:', bpb, '→ daily:', _wiDailyEmission);
+      }
+      const halvNum = Number(blocksToHalving);
+      if (halvNum > 0) {
+        // Store for display
+        window._wiBlocksToHalving = halvNum;
+        window._wiHalvingInterval = Number(halvingInterval);
+      }
+      console.log('[wiOnChain] Network stats fetched — Hash:', _wiNetHashMhs, 'MH/s | Daily:', _wiDailyEmission, 'hCASH');
+    } catch(ne) { console.warn('[wiOnChain] network stats:', ne.message); }
+
+    // ── 2. Fetch facility data (electricity cost per level) ──
+    let facilityCount = 0;
+    try { facilityCount = Number(await game.facilityCount()); } catch(e) {}
+    if (facilityCount === 0) facilityCount = 5; // fallback: try 5 levels
+
+    let found = false;
+    for (let i = 0; i < Math.min(facilityCount, 10); i++) {
+      try {
+        const fac = await game.facilities(i);
+        // fac: [maxMiners, totalPowerOutput, cost, inProduction, x, y, electricityCost, cooldown]
+        const maxMiners    = Number(fac[0]);
+        const totalPower   = Number(fac[1]); // watts
+        const elecCostRaw  = Number(fac[6]); // electricity cost in hCASH (may be scaled)
+        const inProduction = fac[3];
+
+        if (!inProduction && i > 0) continue; // skip inactive (except index 0 = starter)
+
+        // electricityCost may be stored as fixed-point with 18 decimals
+        let rate = elecCostRaw > 1e15 ? elecCostRaw / 1e18
+                 : elecCostRaw > 1e9  ? elecCostRaw / 1e9
+                 : elecCostRaw > 1000 ? elecCostRaw / 100
+                 : elecCostRaw;
+
+        // Map to level 1-5 based on maxMiners / totalPower
+        const lv = i + 1; // facilities are 0-indexed in contract, 1-indexed in UI
+        if (lv >= 1 && lv <= 5) {
+          if (rate > 0 && rate < 100) {
+            _wiFacilityRates[lv] = parseFloat(rate.toFixed(4));
+            _wiFacilityRatesLoaded = true;
+            found = true;
+          }
+          if (maxMiners > 0 && _wiFacilityData[lv]) _wiFacilityData[lv].slots = maxMiners;
+          if (totalPower > 0 && _wiFacilityData[lv]) _wiFacilityData[lv].watts = totalPower;
+          if (rate > 0 && rate < 100 && _wiFacilityData[lv]) _wiFacilityData[lv].rate = _wiFacilityRates[lv];
+          console.log(`[wiOnChain] Facility lv${lv}: maxMiners=${maxMiners}, power=${totalPower}W, elecRate=${rate} hCASH/kWh`);
+        }
+      } catch(fe) { /* this index may not exist */ }
     }
+    if (found) console.log('[wiOnChain] Facility rates fetched live:', _wiFacilityRates);
   } catch(e) {
-    console.warn('wiFetchFacilityRatesOnChain:', e.message);
+    console.warn('[wiOnChain] wiFetchFacilityRatesOnChain:', e.message);
   }
   // Always update UI whether on-chain worked or not (will show defaults with ● defaults badge)
   wiFacilityRatesUpdateUI();
   wiRenderSlotTable();
+  wiCalc();
 }
 
 // ── Slot table state ──
@@ -5264,20 +5292,27 @@ function wiCalc() {
   const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 5.77 : 5.77;
 
   // Convert miner price to USD
-  // Primary miner price from input, OR sum of all slot buy prices
-  let minerUsd = 0;
+  // Always = primary miner price (if any) + ALL "buy" slot miner prices
+  let primaryUsd = 0;
   if (priceRaw > 0) {
-    if (currency === 'hcash') minerUsd = priceRaw * hcashUsd;
-    else minerUsd = priceRaw * avaxUsd;
-  } else if (_wiSlots.length > 0) {
-    // Sum buy-priced slots (hCASH prices converted to USD)
+    primaryUsd = currency === 'hcash' ? priceRaw * hcashUsd : priceRaw * avaxUsd;
+  }
+  // Sum ALL "buy" slot miners that are NOT the primary miner in slot 0
+  const extraSlotBuyTotal = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
+    .filter(sl => sl.source === 'buy')
+    .reduce((s, sl) => s + (sl.price || 0), 0);
+  const extraSlotUsd = extraSlotBuyTotal * (hcashUsd || 0);
+  let minerUsd = primaryUsd + extraSlotUsd;
+  // Fallback: if no primary price and no slot prices, use slot 0 price if present
+  if (minerUsd === 0 && _wiSlots.length > 0) {
     const slotBuyTotal = _wiSlots.filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
     minerUsd = slotBuyTotal * (hcashUsd || 0);
   }
 
   // Update USD display
   const priceUsdEl = document.getElementById('wi-priceUsdDisplay');
-  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD` : '≈ $— USD';
+  const extraLabel = extraSlotUsd > 0 ? ` + $${extraSlotUsd.toFixed(2)} extra slots` : '';
+  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD total${extraLabel}` : '≈ $— USD';
 
   // Get miner stats
   const s = _wiSelectedMiner?.minerStats || {};
@@ -5303,7 +5338,7 @@ function wiCalc() {
     return;
   }
 
-  // ── NETWORK DATA ──
+  // ── NETWORK DATA — prefer live on-chain values fetched by wiFetchFacilityRatesOnChain ──
   const liveNetHash    = _wiNetHashMhs    || 199143;
   const dailyEmission  = _wiDailyEmission || 106825;
 
@@ -5331,7 +5366,11 @@ function wiCalc() {
   // Use slot totals if we have slots, else use single selected miner
   const totalMhs   = slotTotalMhs   > 0 ? slotTotalMhs   : mhs;
   const totalWatts = slotTotalWatts > 0 ? slotTotalWatts : watts;
-  const totalCostHcash = slotTotalBuyCost > 0 ? slotTotalBuyCost : priceRaw;
+  // totalCostHcash = primary price (raw, in hCASH) + all buy-slot prices
+  const primaryCostHcash = (currency === 'hcash' ? priceRaw : (priceRaw * avaxUsd / (hcashUsd || 1)));
+  const extraSlotsCostHcash = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
+    .filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
+  const totalCostHcash = primaryCostHcash + extraSlotsCostHcash || slotTotalBuyCost || priceRaw;
 
   // ── PATH A: MINER ──
   const minerShare     = totalMhs / liveNetHash;
@@ -5439,11 +5478,22 @@ function wiCalc() {
   // Assumptions
   document.getElementById('wi-assumHcash').textContent    = hcashUsd > 0 ? '$' + hcashUsd.toFixed(6) : 'fetching…';
   document.getElementById('wi-assumAvax').textContent     = avaxUsd  > 0 ? '$' + avaxUsd.toFixed(2)  : 'fetching…';
-  document.getElementById('wi-assumNetHash').textContent  = (liveNetHash / 1000).toFixed(2) + ' GH/s';
+  document.getElementById('wi-assumNetHash').textContent  = (liveNetHash / 1000).toFixed(2) + ' GH/s' + (_wiNetHashMhs ? ' ✓ live' : '');
   document.getElementById('wi-assumLiq').textContent      = poolTvlUsd > 0 ? '$' + (poolTvlUsd/1000).toFixed(1) + 'K' + (poolData?.avaxReserve ? ' (on-chain)' : ' (dex)') : '—';
   document.getElementById('wi-assumVol').textContent      = vol24h > 0 ? '$' + (vol24h/1000).toFixed(1) + 'K' : '—';
   document.getElementById('wi-assumElec').textContent     = elecRate + ' hCASH/kWh' + (_wiFacilityRatesLoaded ? ' ✓ live' : '');
-  document.getElementById('wi-assumEmission').textContent = fmtP(dailyEmission) + ' hCASH';
+  document.getElementById('wi-assumEmission').textContent = fmtP(dailyEmission) + ' hCASH' + (_wiDailyEmission ? ' ✓ live' : '');
+  // Halving countdown if available
+  const halvEl = document.getElementById('wi-assumHalving');
+  if (halvEl) {
+    const blk = window._wiBlocksToHalving;
+    if (blk > 0) {
+      const days = (blk / 85460).toFixed(1);
+      halvEl.textContent = blk.toLocaleString() + ' blocks (~' + days + 'd)';
+    } else {
+      halvEl.textContent = '—';
+    }
+  }
 
   // ── RISK TAGS ──
   const mRiskEl = document.getElementById('wi-mRisk');
@@ -5737,6 +5787,9 @@ async function wiSyncLiveData() {
     }
     wiCalc();
   } catch(e) { /* silent — fallbacks remain active */ }
+  // Always also fetch live on-chain data from Main contract
+  // This updates _wiNetHashMhs, _wiDailyEmission and facility rates in parallel
+  wiFetchFacilityRatesOnChain();
 }
 
 // Initialize What If page when navigated to
