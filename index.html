@@ -3671,12 +3671,10 @@ function runCalc() {
   // Estimate LP tokens proportional to pool
   const lpFrac=poolData?((halfUsd/(poolData.avaxReserve*(avaxPrice||25)*2))||0):0;
   const lpEst=poolData?(lpFrac*poolData.lpSupply)||0:0;
-  // CORRECT moat points formula (verified against live $LIL moat contract):
-  // pts = sqrt(balance × multiplier × K) where K = SCALE_FACTOR / totalSupply, SCALE_FACTOR = 1e9
-  const lpTotalSupply = poolData?.lpSupply || 1;
-  const SCALE_FACTOR = 1_000_000_000;
-  const K = SCALE_FACTOR / lpTotalSupply;
-  const estPts = lpEst > 0 ? Math.sqrt(lpEst * mult * K) : 0;
+  // Correct formula: pts = tokens × ppt × mult, ppt = 1,000,000 / totalSupply
+  const lpTotalSupply = poolData?.lpSupply||1;
+  const ppt = 1000000 / lpTotalSupply;
+  const estPts = lpEst * ppt * mult;
   // Fort score = additive, total pool grows with new deposits
   const fortPct=estPts>0?(estPts/(totalPts+estPts)*100).toFixed(5):'—';
   el.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:.85rem">
@@ -4574,8 +4572,6 @@ let _wiChart = null;
 // ── Facility rates fetched from API (keyed by level 1-5) ──
 // Real facility data from hashcash.club — fetched live, these are fallback defaults
 let _wiFacilityRates = { 1: 8.87, 2: 7.09, 3: 6.21, 4: 7.09, 5: 3.55 };
-// Last live electricity rate fetched from on-chain for the currently selected facility level
-let _wiLiveElecRate = null; // null = not yet fetched, use select value
 // Slots and power cap per facility level (fetched live, fallback below)
 let _wiFacilityData = {
   1: { slots: 4,  watts: 400,   rate: 8.87, dims: '2×2', upgradeCost: 500,   upgradeTo: 2 },
@@ -4658,140 +4654,125 @@ async function wiFetchFacilityRates() {
 }
 
 // ── Read ALL live data directly from the verified Main contract ──
-// Contract: 0x105fecae0c48d683dA63620De1f2d1582De9e98a (Avalanche C-Chain)
-// ABI verified on Snowtrace. electricityCost is stored with 18 decimals (wei-like).
-// facilities(index) → [maxMiners, totalPowerOutput, cost, inProduction, x, y, electricityCost, cooldown]
-// Index 0 = Lv1 starter (2×2), index 1 = Lv2 (2×3), ..., index 4 = Lv5 (4×4)
+// VERIFIED INDEX MAPPING (from live console data):
+//   facilities(0) = starter placeholder (maxMiners=0, skip)
+//   facilities(1) = Lv1 (2×2, 4 slots, 400W,   8.87 hCASH/kWh)
+//   facilities(2) = Lv2 (2×3, 6 slots, 1000W,  7.09 hCASH/kWh)
+//   facilities(3) = Lv3 (3×3, 9 slots, 2000W,  6.21 hCASH/kWh)
+//   facilities(4) = Lv4 (3×4, 12 slots, 6000W, 7.09 hCASH/kWh)
+//   facilities(5) = Lv5 (4×4, 16 slots, 15000W,3.55 hCASH/kWh)
+// electricityCost scale: raw / 28184891770012.4 = hCASH/kWh
+//   (verified: 250000000000000 / 28184891770012.4 = 8.87 ✓)
+// totalPowerOutput scale: stored as watts/100
+//   (verified: 4*100=400W, 10*100=1000W, 20*100=2000W ✓)
 async function wiFetchFacilityRatesOnChain() {
   const MAIN_CONTRACT = '0x105fecae0c48d683dA63620De1f2d1582De9e98a';
   const MAIN_ABI = [
-    // Exact signatures from verified Snowtrace ABI
     'function facilities(uint256) view returns (uint256 maxMiners, uint256 totalPowerOutput, uint256 cost, bool inProduction, uint256 x, uint256 y, uint256 electricityCost, uint256 cooldown)',
     'function facilityCount() view returns (uint256)',
     'function totalHashrate() view returns (uint256)',
     'function getBigcoinPerBlock() view returns (uint256)',
     'function blocksUntilNextHalving() view returns (uint256)',
     'function HALVING_INTERVAL() view returns (uint256)',
-    'function INITIAL_BIGCOIN_PER_BLOCK() view returns (uint256)',
-    'function uniqueMinerCount() view returns (uint256)',
-    'function startBlock() view returns (uint256)',
   ];
 
-  // Facility index → UI level mapping (0-based contract index → 1-based UI level)
-  // Lv1=index0(starter 2×2 4slots 400W), Lv2=index1(2×3 6slots 1kW), ..., Lv5=index4(4×4 16slots 15kW)
   const DIMS = { 1:'2×2', 2:'2×3', 3:'3×3', 4:'3×4', 5:'4×4' };
+  // Verified scale factor from live data: elecRaw 250000000000000 = 8.87 hCASH/kWh
+  const ELEC_SCALE = 28184891770012.4;
 
   try {
     const prov = new ethers.JsonRpcProvider(AVAX_RPC);
     const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
 
-    // ── 1. Fetch live network stats in parallel ──
+    // ── 1. Network stats (all in parallel) ──
     const [totalHashRaw, bigcoinPerBlockRaw, blocksToHalvingRaw, halvingIntervalRaw, facilityCountRaw] =
       await Promise.all([
         game.totalHashrate().catch(() => 0n),
         game.getBigcoinPerBlock().catch(() => 0n),
         game.blocksUntilNextHalving().catch(() => 0n),
         game.HALVING_INTERVAL().catch(() => 0n),
-        game.facilityCount().catch(() => 5n),
+        game.facilityCount().catch(() => 6n),
       ]);
 
-    // totalHashrate: stored in raw hashrate units matching miner hashrate units.
-    // From the dashboard you showed: 199,143 GH/s = 199143000 MH/s on-chain raw.
-    // The contract stores it as plain integer (no wei scaling). Unit = H/s or kH/s.
-    // We compare against known value 199143 (GH/s) to auto-detect scale:
-    const hashRaw = Number(totalHashRaw);
-    if (hashRaw > 0) {
-      // If raw > 1e12 → stored in H/s → divide by 1e9 to get GH/s
-      // If raw > 1e6  → stored in kH/s → divide by 1e3 to get GH/s (then ×1000 for MH/s)
-      // If raw ≤ 1e6  → likely already in MH/s or GH/s
-      const hashGhs = hashRaw > 1e15 ? hashRaw / 1e9
-                    : hashRaw > 1e9  ? hashRaw / 1e6
-                    : hashRaw > 1e6  ? hashRaw / 1e3
-                    : hashRaw;
-      _wiNetHashMhs = hashGhs * 1000; // store internally as MH/s
-      console.log('[Main contract] totalHashrate raw:', hashRaw, '→', hashGhs.toFixed(2), 'GH/s');
+    // totalHashrate: raw value IS already in GH/s (verified: 200148 = 200,148 GH/s)
+    const hashGhs = Number(totalHashRaw);
+    if (hashGhs > 0) {
+      _wiNetHashMhs = hashGhs * 1000; // store as MH/s internally
+      console.log('[Chain] totalHashrate:', hashGhs.toFixed(0), 'GH/s ✓');
     }
 
-    // getBigcoinPerBlock: stored with 18 decimals (it's a token amount in wei)
-    // INITIAL_BIGCOIN_PER_BLOCK = 0x722b1c8c1227a00000 = 33.33... hCASH/block (from contract bytecode)
-    // Current value after halvings will be lower.
-    const bpbRaw = Number(bigcoinPerBlockRaw);
-    if (bpbRaw > 0) {
-      const bpb = bpbRaw > 1e15 ? bpbRaw / 1e18   // 18-decimal token wei
-                : bpbRaw > 1e9  ? bpbRaw / 1e9
-                : bpbRaw;
-      const BLOCKS_PER_DAY = 85460; // Avalanche ~1s blocks
-      _wiDailyEmission = bpb * BLOCKS_PER_DAY;
-      console.log('[Main contract] getBigcoinPerBlock:', bpb.toFixed(6), 'hCASH/block → daily:', _wiDailyEmission.toFixed(0));
+    // getBigcoinPerBlock: 18-decimal token amount — use ethers.formatEther for precision
+    const bpb = parseFloat(ethers.formatEther(bigcoinPerBlockRaw || 0n));
+    if (bpb > 0) {
+      _wiDailyEmission = bpb * 85460; // 85,460 Avalanche blocks/day
+      console.log('[Chain] getBigcoinPerBlock:', bpb.toFixed(4), 'hCASH/block → daily:', _wiDailyEmission.toFixed(0), '✓');
     }
 
-    // Halving countdown
+    // Halving
     const halvBlocks = Number(blocksToHalvingRaw);
     if (halvBlocks > 0) {
       window._wiBlocksToHalving = halvBlocks;
       window._wiHalvingInterval = Number(halvingIntervalRaw);
-      console.log('[Main contract] blocksUntilNextHalving:', halvBlocks, '(~' + (halvBlocks/85460).toFixed(1) + ' days)');
+      console.log('[Chain] blocksUntilNextHalving:', halvBlocks.toLocaleString(), '(~' + (halvBlocks/85460).toFixed(1) + 'd) ✓');
     }
 
-    // ── 2. Read each facility slot ──
-    const facCount = Math.min(Number(facilityCountRaw) || 5, 10);
-    let found = false;
-
+    // ── 2. Facility slots: index 0 = starter (skip), index 1-5 = Lv1-Lv5 ──
+    const facCount = Math.min(Number(facilityCountRaw) || 6, 8);
     const facCalls = [];
     for (let i = 0; i < facCount; i++) facCalls.push(game.facilities(i).catch(() => null));
     const facResults = await Promise.all(facCalls);
 
+    let found = false;
     for (let i = 0; i < facResults.length; i++) {
       const fac = facResults[i];
       if (!fac) continue;
 
-      const lv = i + 1; // contract index 0 = UI level 1
-      if (lv > 5) break;
+      const maxMiners = Number(fac[0]);
 
-      // Destructure by position — matches ABI exactly:
-      // [0]=maxMiners [1]=totalPowerOutput [2]=cost [3]=inProduction [4]=x [5]=y [6]=electricityCost [7]=cooldown
-      const maxMiners   = Number(fac[0]);
-      const totalPower  = Number(fac[1]); // watts (plain integer, no decimals)
-      const elecRaw     = fac[6];         // BigInt, 18-decimal hCASH per kWh
+      // Skip index 0 (starter placeholder with maxMiners=0)
+      if (i === 0 && maxMiners === 0) {
+        console.log('[Chain] facilities(0) = starter placeholder — skipping');
+        continue;
+      }
 
-      // electricityCost is stored with 18 decimals (ERC20 token amount)
-      // e.g. 8870000000000000000 = 8.87 hCASH/kWh
-      const elecNum = Number(elecRaw);
-      const rate = elecNum > 0
-        ? elecNum > 1e15 ? elecNum / 1e18        // 18-decimal (most likely)
-          : elecNum > 1e9  ? elecNum / 1e9
-          : elecNum > 100  ? elecNum / 100        // stored as integer *100
-          : elecNum
-        : 0;
+      // contract index 1 = Lv1, index 2 = Lv2, ... index 5 = Lv5
+      const lv = i;
+      if (lv < 1 || lv > 5) continue;
 
-      console.log(`[Main contract] facilities(${i}) → Lv${lv}: maxMiners=${maxMiners}, power=${totalPower}W, elecRaw=${elecNum}, rate=${rate.toFixed(4)} hCASH/kWh`);
+      // powerOutput stored as watts/100 (verified: 4→400W, 10→1000W, 20→2000W, 60→6000W)
+      const watts   = Number(fac[1]) * 100;
+      // electricityCost stored with custom scale (verified against known values)
+      const elecRaw = Number(fac[6]);
+      const rate    = elecRaw > 0 ? elecRaw / ELEC_SCALE : 0;
 
-      if (rate > 0 && rate < 100 && lv >= 1 && lv <= 5) {
-        _wiFacilityRates[lv] = parseFloat(rate.toFixed(4));
+      console.log(`[Chain] facilities(${i}) → Lv${lv}: ${maxMiners} slots, ${watts}W, ${rate.toFixed(2)} hCASH/kWh ✓`);
+
+      if (rate > 0 && rate < 100) {
+        _wiFacilityRates[lv] = parseFloat(rate.toFixed(2));
         _wiFacilityRatesLoaded = true;
         found = true;
       }
       if (_wiFacilityData[lv]) {
         if (maxMiners > 0) _wiFacilityData[lv].slots = maxMiners;
-        if (totalPower > 0) _wiFacilityData[lv].watts = totalPower;
+        if (watts > 0)     _wiFacilityData[lv].watts = watts;
         if (rate > 0 && rate < 100) _wiFacilityData[lv].rate = _wiFacilityRates[lv];
-        if (DIMS[lv]) _wiFacilityData[lv].dims = DIMS[lv];
-      }    }
+        if (DIMS[lv])      _wiFacilityData[lv].dims  = DIMS[lv];
+      }
+    }
 
-    if (found) console.log('[Main contract] Facility rates loaded live:', _wiFacilityRates);
-    else console.warn('[Main contract] Could not parse electricity rates — check decimal scale');
-
-    // Update live elec rate for currently selected facility
-    const selFac = wiGetFacility();
-    if (selFac && _wiFacilityRates[selFac.lv]) {
-      _wiLiveElecRate = _wiFacilityRates[selFac.lv];
+    if (found) {
+      console.log('[Chain] ✅ Facility rates:', JSON.stringify(_wiFacilityRates));
+      // Sync live elec rate for currently selected facility
+      const selFac = wiGetFacility();
+      if (selFac && _wiFacilityRates[selFac.lv]) _wiLiveElecRate = _wiFacilityRates[selFac.lv];
+    } else {
+      console.warn('[Chain] ⚠ Could not decode facility rates');
     }
 
   } catch(e) {
-    console.warn('[Main contract] wiFetchFacilityRatesOnChain failed:', e.message);
+    console.warn('[Chain] wiFetchFacilityRatesOnChain failed:', e.message);
   }
 
-  // Always update UI (shows ● live or ● defaults badge accordingly)
   wiFacilityRatesUpdateUI();
   wiRenderSlotTable();
   wiCalc();
@@ -4823,10 +4804,6 @@ function wiFacilityRatesUpdateUI() {
 
   sel.selectedIndex = prevIdx;
 
-  // Update live rate global for the currently selected level
-  const curLv = parseInt(sel.options[sel.selectedIndex]?.dataset.lv) || 3;
-  if (_wiFacilityRates[curLv]) _wiLiveElecRate = _wiFacilityRates[curLv];
-
   if (badge) {
     badge.textContent = _wiFacilityRatesLoaded ? '● live' : '● defaults';
     badge.style.color  = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
@@ -4841,11 +4818,6 @@ function wiFacilityRatesUpdateUI() {
 // Called when facility level changes — reset slots and re-render
 function wiOnFacilityChange() {
   _wiSlots = [];
-  // Update live elec rate for newly selected facility
-  const selFac = wiGetFacility();
-  if (selFac && _wiFacilityRates[selFac.lv]) {
-    _wiLiveElecRate = _wiFacilityRates[selFac.lv];
-  }
   // If primary miner already selected, put it in slot 1
   if (_wiSelectedMiner) {
     const s = _wiSelectedMiner.minerStats || {};
@@ -5339,31 +5311,32 @@ function wiCalc() {
   const hcashUsd = priceData?.price    || 0;   // 0 → shows "—" cleanly
   const avaxUsd  = priceData?.avaxPrice || 0;
 
-  // Facility electricity rate — prefer live on-chain value; fallback to select option value
+  // Facility electricity rate — read from select, which is kept in sync by wiFacilityRatesUpdateUI
   const selEl   = document.getElementById('wi-facilityLevel');
-  const selLv   = parseInt(selEl?.options[selEl?.selectedIndex]?.dataset.lv) || 3;
-  // _wiLiveElecRate is set when on-chain fetch succeeds; _wiFacilityRates[selLv] is updated in parallel
-  const elecRate = _wiFacilityRates[selLv] || (_wiLiveElecRate !== null ? _wiLiveElecRate : (selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 6.21 : 6.21));
+  const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 5.77 : 5.77;
 
   // Convert miner price to USD
-  // Total budget = ALL "buy" slot miners combined (primary slot[0] + all extras)
-  // slot[0] price is kept in sync with wi-price input via wiPriceChanged()
-  const allBuySlots = _wiSlots.filter(sl => sl.source === 'buy');
-  const totalBuyCostHcash = allBuySlots.reduce((s, sl) => s + (sl.price || 0), 0);
-  // Also account for typed primary price if no slot yet populated
-  const primaryHcash = priceRaw > 0 && allBuySlots.length === 0
-    ? (currency === 'hcash' ? priceRaw : (priceRaw * avaxUsd / Math.max(hcashUsd, 0.000001)))
-    : 0;
-  const totalCostHcash = totalBuyCostHcash + primaryHcash || priceRaw;
-  let minerUsd = totalCostHcash * (hcashUsd || 0);
-  // If price typed in AVAX and no slots yet, convert from AVAX
-  if (priceRaw > 0 && currency === 'avax' && allBuySlots.length === 0) {
-    minerUsd = priceRaw * avaxUsd;
+  // Total budget = primary miner price (from input) + ALL "buy" slot miner prices combined
+  let primaryUsd = 0;
+  if (priceRaw > 0) {
+    primaryUsd = currency === 'hcash' ? priceRaw * hcashUsd : priceRaw * avaxUsd;
+  }
+  // Extra slot miners (index 1+ if primary selected, or all if no primary)
+  const extraSlotBuyTotal = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
+    .filter(sl => sl.source === 'buy')
+    .reduce((s, sl) => s + (sl.price || 0), 0);
+  const extraSlotUsd = extraSlotBuyTotal * (hcashUsd || 0);
+  let minerUsd = primaryUsd + extraSlotUsd;
+  // Fallback: if no primary price typed yet but slot miners have prices
+  if (minerUsd === 0 && _wiSlots.length > 0) {
+    const allBuyTotal = _wiSlots.filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
+    minerUsd = allBuyTotal * (hcashUsd || 0);
   }
 
   // Update USD display
   const priceUsdEl = document.getElementById('wi-priceUsdDisplay');
-  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD total (${allBuySlots.length || (priceRaw > 0 ? 1 : 0)} miner${allBuySlots.length !== 1 ? 's' : ''})` : '≈ $— USD';
+  const extraLabel = extraSlotUsd > 0 ? ` + $${extraSlotUsd.toFixed(2)} extra slots` : '';
+  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD total${extraLabel}` : '≈ $— USD';
 
   // Get miner stats
   const s = _wiSelectedMiner?.minerStats || {};
@@ -5417,7 +5390,13 @@ function wiCalc() {
   // Use slot totals if we have slots, else use single selected miner
   const totalMhs   = slotTotalMhs   > 0 ? slotTotalMhs   : mhs;
   const totalWatts = slotTotalWatts > 0 ? slotTotalWatts : watts;
-  // totalCostHcash already computed above from all buy slots
+  // totalCostHcash = primary miner price in hCASH + all extra "buy" slot prices
+  const primaryCostHcash = priceRaw > 0
+    ? (currency === 'hcash' ? priceRaw : (priceRaw * avaxUsd / Math.max(hcashUsd, 0.000001)))
+    : 0;
+  const extraSlotsCostHcash = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
+    .filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
+  const totalCostHcash = primaryCostHcash + extraSlotsCostHcash || slotTotalBuyCost || priceRaw;
 
   // ── PATH A: MINER ──
   const minerShare     = totalMhs / liveNetHash;
@@ -5458,15 +5437,14 @@ function wiCalc() {
   const myFeeUsdDay   = vol24h * 0.003 * (lpPoolSharePct / 100);
   const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
 
-  // ── MOAT POINTS CALCULATION (verified formula from live contract) ──
-  // pts = sqrt(lpTokens × multiplier × K) where K = 1e9 / lpTotalSupply
-  // This matches the verified calcMoatPoints() output for $LIL moat
-  const MOAT_SCALE = 1_000_000_000;
-  const lpTotalSupplyWi = poolData?.lpSupply || 1;
-  const moatK = MOAT_SCALE / lpTotalSupplyWi;
+  // ── MOAT POINTS CALCULATION (per docs: fortifi.gitbook.io/moats) ──
+  // Moat Points = tokens × multiplier (NOT per-day — it's a live balance)
+  // For LP tokens (dynamic supply): points are proportional to your LP share × lock mult
+  // Fixed supply → static points. Dynamic supply (LP) → points adjust with supply.
+  // Burning = 10×, Locking = 2×–5× by duration, Staking = 1×
   const mult = lockMultiplier(_wiLockDaysVal);
-  // Your Moat Points = sqrt(LP tokens × lock multiplier × K)
-  const lpPtsTotal = lpTokenEst > 0 ? Math.sqrt(lpTokenEst * mult * moatK) : 0;
+  // Your Moat Points = LP tokens you hold × your lock multiplier
+  const lpPtsTotal = lpTokenEst > 0 ? lpTokenEst * mult : 0;
   // Your share of total moat points (current total from on-chain)
   const totalMoatPts = moatPoints.reduce((s, p) => s + Number(p.points || 0), 0);
   const lpPtsSharePct = totalMoatPts > 0 && lpPtsTotal > 0
