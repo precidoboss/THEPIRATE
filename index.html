@@ -4747,22 +4747,32 @@ function wiFacilityRatesUpdateUI() {
   if (!sel) return;
   const badge = document.getElementById('wi-rateSourceBadge');
   const note  = document.getElementById('wi-rateNote');
-  // Update each option's rate label from fetched data
+
+  // Remember which level was selected by index before we touch values
+  const prevIdx = sel.selectedIndex >= 0 ? sel.selectedIndex : 2;
+
+  // Update each option's value and label from fetched rates
   for (const opt of sel.options) {
     const lv = parseInt(opt.dataset.lv);
     if (!lv) continue;
     const rate = _wiFacilityRates[lv];
     if (rate) {
-      const tag = lv === 5 ? ' (best)' : lv === 3 ? ' (default)' : '';
-      opt.value = rate;
+      const tag = lv === 5 ? ' ⚡ best' : lv === 1 ? ' slowest' : '';
+      opt.value = String(rate);
       opt.textContent = `Lv${lv} — ${rate} hCASH/kWh${tag}`;
     }
   }
-  if (badge) badge.textContent = _wiFacilityRatesLoaded ? '● live' : '● default';
-  if (badge) badge.style.color = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
+
+  // Restore selection by index (not by value — value just changed)
+  sel.selectedIndex = prevIdx;
+
+  if (badge) {
+    badge.textContent = _wiFacilityRatesLoaded ? '● live' : '● defaults';
+    badge.style.color  = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
+  }
   if (note) note.textContent = _wiFacilityRatesLoaded
     ? 'Rates fetched live from HashCash API'
-    : 'Using default rates — API rates unavailable';
+    : 'Using built-in default rates (API did not return facility data)';
   wiCalc();
 }
 
@@ -5002,16 +5012,81 @@ function wiSelectLock(d, el) {
   wiCalc();
 }
 
+// ── Ensure live data is present before computing ──
+// Called once on init and whenever the What If tab is opened.
+// Re-uses priceData/poolData if already loaded by the main app; fetches independently if not.
+async function wiEnsureLiveData() {
+  const needs = !priceData?.price || !priceData?.avaxPrice || !poolData?.lpSupply;
+  if (!needs) { wiCalc(); return; }
+
+  // 1. hCASH price + vol24 + liq from DexScreener pair
+  try {
+    const r = await fetch(DSC_PAIR + '0x8f961980518bc9ab302948de7948580666dc35d9',
+      { signal: AbortSignal.timeout(6000) });
+    const d = await r.json();
+    const p = d?.pairs?.[0] || d?.pair;
+    if (p) {
+      priceData = priceData || {};
+      priceData.price = Number(p.priceUsd || 0);
+      priceData.liq   = Number(p.liquidity?.usd || 0);
+      priceData.vol24 = Number(p.volume?.h24 || 0);
+      priceData.ch24  = Number(p.priceChange?.h24 || 0);
+    }
+  } catch(e) { console.warn('wiEnsureLiveData hCASH price:', e.message); }
+
+  // 2. AVAX price — try CoinGecko, fall back to DexScreener AVAX/USDC
+  let avaxPrice = 0;
+  const avaxSources = [
+    () => fetch('https://api.coingecko.com/api/v3/simple/price?ids=avalanche-2&vs_currencies=usd',
+      { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json()).then(d => Number(d['avalanche-2']?.usd || 0)),
+    () => fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7',
+      { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json()).then(d => Number(d?.pairs?.[0]?.priceUsd || 0)),
+  ];
+  for (const fn of avaxSources) {
+    try { avaxPrice = await fn(); if (avaxPrice > 1) break; } catch(e) {}
+  }
+  if (avaxPrice > 1) {
+    priceData = priceData || {};
+    priceData.avaxPrice = avaxPrice;
+  }
+
+  // 3. Pool composition (LP supply, reserves) from on-chain
+  if (!poolData?.lpSupply) {
+    try {
+      const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+      const lp = new ethers.Contract(HCASH_LP_ADDR, LP_ABI, prov);
+      const [res, t0, ts] = await Promise.all([lp.getReserves(), lp.token0(), lp.totalSupply()]);
+      const isWavaxT0 = t0.toLowerCase() === WAVAX_ADDR.toLowerCase();
+      const wavaxRes  = parseFloat(ethers.formatEther(isWavaxT0 ? res[0] : res[1]));
+      const hcashRes  = parseFloat(ethers.formatEther(isWavaxT0 ? res[1] : res[0]));
+      const lpSupply  = parseFloat(ethers.formatEther(ts));
+      poolData = { avaxReserve: wavaxRes, hcashReserve: hcashRes, lpSupply, ratio: hcashRes / wavaxRes };
+      // Recompute liq from reserves if DexScreener didn't give it
+      if (priceData && (!priceData.liq || priceData.liq === 0)) {
+        const avaxUsdNow = priceData.avaxPrice || avaxPrice || 20;
+        priceData.liq = (wavaxRes * avaxUsdNow * 2); // symmetric pool TVL estimate
+      }
+    } catch(e) { console.warn('wiEnsureLiveData pool:', e.message); }
+  }
+
+  wiCalc();
+}
+
 // Core calculation
 function wiCalc() {
-  const priceRaw = parseFloat(document.getElementById('wi-price')?.value) || 0;
-  const currency = document.getElementById('wi-priceCurrency')?.value || 'hcash';
-  const elecRate  = parseFloat(document.getElementById('wi-facilityLevel')?.value) || 5.77;
+  const priceRaw  = parseFloat(document.getElementById('wi-price')?.value) || 0;
+  const currency  = document.getElementById('wi-priceCurrency')?.value || 'hcash';
   const customMhs = parseFloat(document.getElementById('wi-customMhs')?.value) || 0;
 
-  // Get live prices
-  const hcashUsd = priceData?.price || 0.07;
-  const avaxUsd  = priceData?.avaxPrice || 20;
+  // ── LIVE PRICES (never fall back to stale hardcodes) ──
+  const hcashUsd = priceData?.price    || 0;   // 0 → shows "—" cleanly
+  const avaxUsd  = priceData?.avaxPrice || 0;
+
+  // Facility electricity rate — read from select, which is kept in sync by wiFacilityRatesUpdateUI
+  const selEl   = document.getElementById('wi-facilityLevel');
+  const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 5.77 : 5.77;
 
   // Convert miner price to USD
   let minerUsd = 0;
@@ -5035,41 +5110,56 @@ function wiCalc() {
   document.getElementById('wi-emptyState').style.display = hasInputs ? 'none' : '';
   if (!hasInputs) return;
 
+  // ── If live prices aren't loaded yet, trigger fetch and bail ──
+  if (!priceData?.price || !priceData?.avaxPrice) {
+    // Show loading state in assumptions
+    const assumAvax = document.getElementById('wi-assumAvax');
+    if (assumAvax) assumAvax.textContent = 'fetching…';
+    wiEnsureLiveData(); // will call wiCalc() when done
+    return;
+  }
+
   // ── NETWORK DATA ──
-  const netHashMhs = (poolData?.avaxReserve ? 0 : 0) || 184978; // fallback
-  const liveNetHash = _wiNetHashMhs || netHashMhs;
-  const dailyEmission = _wiDailyEmission || 108000;
+  const liveNetHash    = _wiNetHashMhs    || 184978;
+  const dailyEmission  = _wiDailyEmission || 108000;
 
   // ── PATH A: MINER ──
-  const minerShare = mhs / liveNetHash;
-  const grossHcashDay = minerShare * dailyEmission;
-  const elecHcashDay  = watts > 0 ? (watts / 1000) * 24 * elecRate : 0;
-  const netHcashDay   = grossHcashDay - elecHcashDay;
-  const netUsdDay     = netHcashDay * hcashUsd;
-  const net30         = netHcashDay * 30;
-  const net365        = netHcashDay * 365;
-  const breakevenDays = netHcashDay > 0 ? Math.ceil(priceRaw / netHcashDay) : null;
-  const minerUsd30    = net30 * hcashUsd;
-  const minerUsd365   = net365 * hcashUsd;
+  const minerShare     = mhs / liveNetHash;
+  const grossHcashDay  = minerShare * dailyEmission;
+  const elecHcashDay   = watts > 0 ? (watts / 1000) * 24 * elecRate : 0;
+  const netHcashDay    = grossHcashDay - elecHcashDay;
+  const netUsdDay      = netHcashDay * hcashUsd;
+  const net30          = netHcashDay * 30;
+  const net365         = netHcashDay * 365;
+  const breakevenDays  = netHcashDay > 0 ? Math.ceil(priceRaw / netHcashDay) : null;
+  const minerUsd30     = net30  * hcashUsd;
+  const minerUsd365    = net365 * hcashUsd;
 
   // ── PATH B: LP MOAT ──
-  // Split the same USD budget 50/50
+  // Split the same USD budget 50/50 into AVAX + hCASH
   const halfUsd   = minerUsd / 2;
-  const avaxSide  = halfUsd / avaxUsd;   // AVAX amount
-  const hcashSide = halfUsd / hcashUsd;  // hCASH amount
+  const avaxSide  = avaxUsd  > 0 ? halfUsd / avaxUsd  : 0;
+  const hcashSide = hcashUsd > 0 ? halfUsd / hcashUsd : 0;
 
-  // Estimate LP tokens using current pool composition
-  const poolLiq  = priceData?.liq || 10000;
-  const lpTokenEst = poolData?.lpSupply > 0
-    ? (minerUsd / (poolLiq > 0 ? poolLiq : 1)) * poolData.lpSupply
+  // Pool liquidity: prefer on-chain data (poolData), fall back to DexScreener liq field
+  const avaxUsdNow  = priceData.avaxPrice;
+  const poolTvlUsd  = poolData?.avaxReserve
+    ? poolData.avaxReserve * avaxUsdNow * 2   // symmetric pool: 2× AVAX-side USD
+    : (priceData.liq || 0);
+  const poolLiq     = poolTvlUsd;
+
+  // LP tokens proportional to share of pool TVL contributed
+  // lpTokenEst = (myUsd / poolTvl) × totalLpSupply
+  const lpTokenEst = poolData?.lpSupply > 0 && poolLiq > 0
+    ? (minerUsd / poolLiq) * poolData.lpSupply
     : 0;
   const lpPoolSharePct = poolData?.lpSupply > 0 && lpTokenEst > 0
-    ? (lpTokenEst / poolData.lpSupply * 100)
+    ? (lpTokenEst / poolData.lpSupply) * 100
     : 0;
 
-  // LP swap fees: pool volume × 0.3% × my pool share
-  const vol24h      = priceData?.vol24 || 0;
-  const myFeeUsdDay = vol24h * 0.003 * (lpPoolSharePct / 100);
+  // LP swap fees: 24h pool volume × 0.3% fee × my share of pool
+  const vol24h        = priceData.vol24 || 0;
+  const myFeeUsdDay   = vol24h * 0.003 * (lpPoolSharePct / 100);
   const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
 
   // ── MOAT POINTS CALCULATION ──
@@ -5138,12 +5228,12 @@ function wiCalc() {
   document.getElementById('wi-lpCapital').textContent     = fmtU(minerUsd) + ' (LP redeemable)';
 
   // Assumptions
-  document.getElementById('wi-assumHcash').textContent    = '$' + hcashUsd.toFixed(6);
-  document.getElementById('wi-assumAvax').textContent     = '$' + avaxUsd.toFixed(2);
+  document.getElementById('wi-assumHcash').textContent    = hcashUsd > 0 ? '$' + hcashUsd.toFixed(6) : 'fetching…';
+  document.getElementById('wi-assumAvax').textContent     = avaxUsd  > 0 ? '$' + avaxUsd.toFixed(2)  : 'fetching…';
   document.getElementById('wi-assumNetHash').textContent  = (liveNetHash / 1000).toFixed(2) + ' GH/s';
-  document.getElementById('wi-assumLiq').textContent      = poolLiq > 0 ? '$' + (poolLiq/1000).toFixed(0) + 'K' : '—';
+  document.getElementById('wi-assumLiq').textContent      = poolTvlUsd > 0 ? '$' + (poolTvlUsd/1000).toFixed(1) + 'K' + (poolData?.avaxReserve ? ' (on-chain)' : ' (dex)') : '—';
   document.getElementById('wi-assumVol').textContent      = vol24h > 0 ? '$' + (vol24h/1000).toFixed(1) + 'K' : '—';
-  document.getElementById('wi-assumElec').textContent     = elecRate + ' hCASH/kWh';
+  document.getElementById('wi-assumElec').textContent     = elecRate + ' hCASH/kWh' + (_wiFacilityRatesLoaded ? ' ✓ live' : '');
   document.getElementById('wi-assumEmission').textContent = fmtP(dailyEmission) + ' hCASH';
 
   // ── RISK TAGS ──
@@ -5443,19 +5533,20 @@ async function wiSyncLiveData() {
 // Initialize What If page when navigated to
 function initWhatIf() {
   wiBuildLockGrid();
-  // Parallel fetches — miners, facility rates, AVAX price, network stats
-  Promise.all([
-    wiLoadMiners(),
-    wiFetchFacilityRates(),
-    wiFetchAvaxPrice(),
-    wiSyncLiveData(),
-  ]).then(() => wiCalc());
+  // Load miners + facility rates in parallel
+  wiLoadMiners();
+  wiFetchFacilityRates();
+  wiSyncLiveData();
+  // Ensure live prices + pool data are fetched, then run calc
+  wiEnsureLiveData();
   // Re-draw chart on theme change
   document.getElementById('themeBtn')?.addEventListener('click', () => {
     setTimeout(() => { if (_wiChart) wiCalc(); }, 150);
   });
-  // Refresh AVAX price every 2 minutes while on this page
-  setInterval(wiFetchAvaxPrice, 2 * 60 * 1000);
+  // Keep AVAX price fresh every 90 seconds while on this page
+  setInterval(() => {
+    wiFetchAvaxPrice().then(() => wiCalc());
+  }, 90 * 1000);
 }
 </script>
 
