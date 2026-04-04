@@ -3671,10 +3671,12 @@ function runCalc() {
   // Estimate LP tokens proportional to pool
   const lpFrac=poolData?((halfUsd/(poolData.avaxReserve*(avaxPrice||25)*2))||0):0;
   const lpEst=poolData?(lpFrac*poolData.lpSupply)||0:0;
-  // Correct formula: pts = tokens × ppt × mult, ppt = 1,000,000 / totalSupply
-  const lpTotalSupply = poolData?.lpSupply||1;
-  const ppt = 1000000 / lpTotalSupply;
-  const estPts = lpEst * ppt * mult;
+  // CORRECT moat points formula (verified against live $LIL moat contract):
+  // pts = sqrt(balance × multiplier × K) where K = SCALE_FACTOR / totalSupply, SCALE_FACTOR = 1e9
+  const lpTotalSupply = poolData?.lpSupply || 1;
+  const SCALE_FACTOR = 1_000_000_000;
+  const K = SCALE_FACTOR / lpTotalSupply;
+  const estPts = lpEst > 0 ? Math.sqrt(lpEst * mult * K) : 0;
   // Fort score = additive, total pool grows with new deposits
   const fortPct=estPts>0?(estPts/(totalPts+estPts)*100).toFixed(5):'—';
   el.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:.85rem">
@@ -4572,6 +4574,8 @@ let _wiChart = null;
 // ── Facility rates fetched from API (keyed by level 1-5) ──
 // Real facility data from hashcash.club — fetched live, these are fallback defaults
 let _wiFacilityRates = { 1: 8.87, 2: 7.09, 3: 6.21, 4: 7.09, 5: 3.55 };
+// Last live electricity rate fetched from on-chain for the currently selected facility level
+let _wiLiveElecRate = null; // null = not yet fetched, use select value
 // Slots and power cap per facility level (fetched live, fallback below)
 let _wiFacilityData = {
   1: { slots: 4,  watts: 400,   rate: 8.87, dims: '2×2', upgradeCost: 500,   upgradeTo: 2 },
@@ -4772,11 +4776,16 @@ async function wiFetchFacilityRatesOnChain() {
         if (totalPower > 0) _wiFacilityData[lv].watts = totalPower;
         if (rate > 0 && rate < 100) _wiFacilityData[lv].rate = _wiFacilityRates[lv];
         if (DIMS[lv]) _wiFacilityData[lv].dims = DIMS[lv];
-      }
-    }
+      }    }
 
     if (found) console.log('[Main contract] Facility rates loaded live:', _wiFacilityRates);
     else console.warn('[Main contract] Could not parse electricity rates — check decimal scale');
+
+    // Update live elec rate for currently selected facility
+    const selFac = wiGetFacility();
+    if (selFac && _wiFacilityRates[selFac.lv]) {
+      _wiLiveElecRate = _wiFacilityRates[selFac.lv];
+    }
 
   } catch(e) {
     console.warn('[Main contract] wiFetchFacilityRatesOnChain failed:', e.message);
@@ -4814,6 +4823,10 @@ function wiFacilityRatesUpdateUI() {
 
   sel.selectedIndex = prevIdx;
 
+  // Update live rate global for the currently selected level
+  const curLv = parseInt(sel.options[sel.selectedIndex]?.dataset.lv) || 3;
+  if (_wiFacilityRates[curLv]) _wiLiveElecRate = _wiFacilityRates[curLv];
+
   if (badge) {
     badge.textContent = _wiFacilityRatesLoaded ? '● live' : '● defaults';
     badge.style.color  = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
@@ -4828,6 +4841,11 @@ function wiFacilityRatesUpdateUI() {
 // Called when facility level changes — reset slots and re-render
 function wiOnFacilityChange() {
   _wiSlots = [];
+  // Update live elec rate for newly selected facility
+  const selFac = wiGetFacility();
+  if (selFac && _wiFacilityRates[selFac.lv]) {
+    _wiLiveElecRate = _wiFacilityRates[selFac.lv];
+  }
   // If primary miner already selected, put it in slot 1
   if (_wiSelectedMiner) {
     const s = _wiSelectedMiner.minerStats || {};
@@ -5321,32 +5339,31 @@ function wiCalc() {
   const hcashUsd = priceData?.price    || 0;   // 0 → shows "—" cleanly
   const avaxUsd  = priceData?.avaxPrice || 0;
 
-  // Facility electricity rate — read from select, which is kept in sync by wiFacilityRatesUpdateUI
+  // Facility electricity rate — prefer live on-chain value; fallback to select option value
   const selEl   = document.getElementById('wi-facilityLevel');
-  const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 5.77 : 5.77;
+  const selLv   = parseInt(selEl?.options[selEl?.selectedIndex]?.dataset.lv) || 3;
+  // _wiLiveElecRate is set when on-chain fetch succeeds; _wiFacilityRates[selLv] is updated in parallel
+  const elecRate = _wiFacilityRates[selLv] || (_wiLiveElecRate !== null ? _wiLiveElecRate : (selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 6.21 : 6.21));
 
   // Convert miner price to USD
-  // Total budget = primary miner price (from input) + ALL "buy" slot miner prices combined
-  let primaryUsd = 0;
-  if (priceRaw > 0) {
-    primaryUsd = currency === 'hcash' ? priceRaw * hcashUsd : priceRaw * avaxUsd;
-  }
-  // Extra slot miners (index 1+ if primary selected, or all if no primary)
-  const extraSlotBuyTotal = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
-    .filter(sl => sl.source === 'buy')
-    .reduce((s, sl) => s + (sl.price || 0), 0);
-  const extraSlotUsd = extraSlotBuyTotal * (hcashUsd || 0);
-  let minerUsd = primaryUsd + extraSlotUsd;
-  // Fallback: if no primary price typed yet but slot miners have prices
-  if (minerUsd === 0 && _wiSlots.length > 0) {
-    const allBuyTotal = _wiSlots.filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
-    minerUsd = allBuyTotal * (hcashUsd || 0);
+  // Total budget = ALL "buy" slot miners combined (primary slot[0] + all extras)
+  // slot[0] price is kept in sync with wi-price input via wiPriceChanged()
+  const allBuySlots = _wiSlots.filter(sl => sl.source === 'buy');
+  const totalBuyCostHcash = allBuySlots.reduce((s, sl) => s + (sl.price || 0), 0);
+  // Also account for typed primary price if no slot yet populated
+  const primaryHcash = priceRaw > 0 && allBuySlots.length === 0
+    ? (currency === 'hcash' ? priceRaw : (priceRaw * avaxUsd / Math.max(hcashUsd, 0.000001)))
+    : 0;
+  const totalCostHcash = totalBuyCostHcash + primaryHcash || priceRaw;
+  let minerUsd = totalCostHcash * (hcashUsd || 0);
+  // If price typed in AVAX and no slots yet, convert from AVAX
+  if (priceRaw > 0 && currency === 'avax' && allBuySlots.length === 0) {
+    minerUsd = priceRaw * avaxUsd;
   }
 
   // Update USD display
   const priceUsdEl = document.getElementById('wi-priceUsdDisplay');
-  const extraLabel = extraSlotUsd > 0 ? ` + $${extraSlotUsd.toFixed(2)} extra slots` : '';
-  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD total${extraLabel}` : '≈ $— USD';
+  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD total (${allBuySlots.length || (priceRaw > 0 ? 1 : 0)} miner${allBuySlots.length !== 1 ? 's' : ''})` : '≈ $— USD';
 
   // Get miner stats
   const s = _wiSelectedMiner?.minerStats || {};
@@ -5400,13 +5417,7 @@ function wiCalc() {
   // Use slot totals if we have slots, else use single selected miner
   const totalMhs   = slotTotalMhs   > 0 ? slotTotalMhs   : mhs;
   const totalWatts = slotTotalWatts > 0 ? slotTotalWatts : watts;
-  // totalCostHcash = primary miner price in hCASH + all extra "buy" slot prices
-  const primaryCostHcash = priceRaw > 0
-    ? (currency === 'hcash' ? priceRaw : (priceRaw * avaxUsd / Math.max(hcashUsd, 0.000001)))
-    : 0;
-  const extraSlotsCostHcash = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
-    .filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
-  const totalCostHcash = primaryCostHcash + extraSlotsCostHcash || slotTotalBuyCost || priceRaw;
+  // totalCostHcash already computed above from all buy slots
 
   // ── PATH A: MINER ──
   const minerShare     = totalMhs / liveNetHash;
@@ -5447,14 +5458,15 @@ function wiCalc() {
   const myFeeUsdDay   = vol24h * 0.003 * (lpPoolSharePct / 100);
   const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
 
-  // ── MOAT POINTS CALCULATION (per docs: fortifi.gitbook.io/moats) ──
-  // Moat Points = tokens × multiplier (NOT per-day — it's a live balance)
-  // For LP tokens (dynamic supply): points are proportional to your LP share × lock mult
-  // Fixed supply → static points. Dynamic supply (LP) → points adjust with supply.
-  // Burning = 10×, Locking = 2×–5× by duration, Staking = 1×
+  // ── MOAT POINTS CALCULATION (verified formula from live contract) ──
+  // pts = sqrt(lpTokens × multiplier × K) where K = 1e9 / lpTotalSupply
+  // This matches the verified calcMoatPoints() output for $LIL moat
+  const MOAT_SCALE = 1_000_000_000;
+  const lpTotalSupplyWi = poolData?.lpSupply || 1;
+  const moatK = MOAT_SCALE / lpTotalSupplyWi;
   const mult = lockMultiplier(_wiLockDaysVal);
-  // Your Moat Points = LP tokens you hold × your lock multiplier
-  const lpPtsTotal = lpTokenEst > 0 ? lpTokenEst * mult : 0;
+  // Your Moat Points = sqrt(LP tokens × lock multiplier × K)
+  const lpPtsTotal = lpTokenEst > 0 ? Math.sqrt(lpTokenEst * mult * moatK) : 0;
   // Your share of total moat points (current total from on-chain)
   const totalMoatPts = moatPoints.reduce((s, p) => s + Number(p.points || 0), 0);
   const lpPtsSharePct = totalMoatPts > 0 && lpPtsTotal > 0
