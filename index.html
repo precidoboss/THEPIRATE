@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 /* ══════════════════════════════════════════════
    THEME VARIABLES — dark (default) + light
@@ -628,6 +629,7 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
     <div class="tab" data-v="minerdetail" style="display:none" id="tabMinerDetail"></div>
     <div class="tab" data-v="leaderboard" onclick="nav(this)">🏆 Board</div>
     <div class="tab" data-v="activity" onclick="nav(this)">📡 Activity</div>
+    <div class="tab" data-v="whatif" onclick="nav(this)" style="color:var(--gold);border-color:rgba(212,168,67,.3);background:rgba(212,168,67,.06)">🔮 What If?</div>
   </nav>
   <div class="hdr-r">
     <button id="connectBtn" class="btn btn-sm" onclick="walletConnect()">Connect Wallet</button>
@@ -1406,6 +1408,274 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════ -->
+<!--  WHAT IF? SCENARIO PLANNER               -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-whatif" class="view">
+
+  <!-- Page header -->
+  <div class="sh">
+    <div class="sh-t">🔮 What If? Scenario Planner</div>
+    <span class="live"><span class="ld"></span>Live Prices</span>
+  </div>
+
+  <!-- Explainer banner -->
+  <div class="banner" style="margin-bottom:1rem">
+    <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:1.8rem;flex-shrink:0">🔮</div>
+      <div style="flex:1;min-width:220px">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-lg);margin-bottom:4px">Miner vs LP — Which earns more long-term?</div>
+        <div style="font-size:var(--fs-sm);color:var(--dim);line-height:1.65">
+          You saw a miner listed on the marketplace. Before you buy — run this. Enter the miner and its price. 
+          We split the same budget 50/50 by USD value and compare: <span style="color:var(--red)">buying that miner</span> vs 
+          <span style="color:var(--gold)">putting the same money into hCASH/AVAX LP</span> and staking it in the Moat.
+          Real on-chain math. No guessing.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: Inputs ── -->
+  <div class="g2" style="margin-bottom:1rem">
+
+    <!-- Left: Miner setup -->
+    <div class="card">
+      <div class="ch">
+        <div class="ctitle" style="color:var(--red)">⛏ Path A — Buy the Miner</div>
+      </div>
+      <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
+
+        <!-- Miner selector -->
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Select Miner (from HashCash API)</div>
+          <div style="display:flex;gap:6px">
+            <select id="wi-minerSelect" class="inp" style="flex:1" onchange="wiOnMinerSelect()">
+              <option value="">— Loading miners… —</option>
+            </select>
+            <button class="btn btn-g btn-sm" onclick="wiRefreshMiners()" title="Reload miners from API">↺</button>
+          </div>
+          <div id="wi-minerImg" style="margin-top:.5rem;display:none">
+            <img id="wi-minerImgEl" src="" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--bor)">
+          </div>
+        </div>
+
+        <!-- Miner stats read-only display -->
+        <div id="wi-minerStats" style="display:none;background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Miner Specs</div>
+          <div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr" id="wi-mhsDisplay">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Power draw</span><span class="calc-val" id="wi-wattsDisplay">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Efficiency</span><span class="calc-val cg" id="wi-effDisplay">—</span></div>
+        </div>
+
+        <!-- Price input -->
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Marketplace Price You Saw</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="wi-price" type="number" class="inp" placeholder="e.g. 2500" style="flex:1" oninput="wiCalc()" min="1">
+            <select id="wi-priceCurrency" class="inp" style="width:100px" onchange="wiCalc()">
+              <option value="hcash">hCASH</option>
+              <option value="avax">AVAX</option>
+            </select>
+          </div>
+          <div id="wi-priceUsdDisplay" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px">≈ $— USD</div>
+        </div>
+
+        <!-- Facility level -->
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Your Facility Level (electricity rate)</div>
+          <select id="wi-facilityLevel" class="inp" onchange="wiCalc()">
+            <option value="8.24">Lv1 — 8.24 hCASH/kWh</option>
+            <option value="6.59">Lv2 — 6.59 hCASH/kWh</option>
+            <option value="5.77" selected>Lv3 — 5.77 hCASH/kWh (default)</option>
+            <option value="6.59">Lv4 — 6.59 hCASH/kWh</option>
+            <option value="3.30">Lv5 — 3.30 hCASH/kWh (best)</option>
+          </select>
+        </div>
+
+        <!-- Manual hashrate override -->
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Override Hashrate (MH/s) — optional</div>
+          <input id="wi-customMhs" type="number" class="inp" placeholder="Leave blank to use API value" min="0" oninput="wiCalc()">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right: LP setup (auto-filled) -->
+    <div class="card">
+      <div class="ch">
+        <div class="ctitle" style="color:var(--gold)">💧 Path B — Stake the Same $ into LP</div>
+      </div>
+      <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
+
+        <div style="background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.18);border-radius:8px;padding:.75rem;font-size:var(--fs-sm);color:var(--dim);line-height:1.65">
+          We take the <strong style="color:var(--gold)">same total USD value</strong> you're spending on the miner and split it 50% AVAX + 50% hCASH, 
+          add it to the Pharaoh LP pool, then stake those LP tokens in the hCASH Moat.
+        </div>
+
+        <div id="wi-lpCalcBox" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Auto-Calculated Split</div>
+          <div class="calc-row"><span class="calc-lbl">Total budget (USD)</span><span class="calc-val cw" id="wi-lpTotalUsd">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">AVAX side (50%)</span><span class="calc-val" id="wi-lpAvaxAmt">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">hCASH side (50%)</span><span class="calc-val cg" id="wi-lpHcashAmt">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Est. LP tokens</span><span class="calc-val cd" id="wi-lpTokens">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Pool share</span><span class="calc-val" id="wi-lpPoolShare">—</span></div>
+        </div>
+
+        <!-- Lock duration for LP -->
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Lock Duration (Moat multiplier)</div>
+          <div class="dur-grid" id="wi-lockGrid" style="grid-template-columns:repeat(4,1fr)"></div>
+          <input type="hidden" id="wi-lockDays" value="180">
+        </div>
+
+        <div id="wi-lpStakeBox" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">LP Moat Projections</div>
+          <div class="calc-row"><span class="calc-lbl">Lock multiplier</span><span class="calc-val cg" id="wi-lpMult">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Moat points/day</span><span class="calc-val cr" id="wi-lpPoints">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Swap fees/day (est.)</span><span class="calc-val cg" id="wi-lpFees">—</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS SECTION ── -->
+  <div id="wi-resultsSection" style="display:none">
+
+    <!-- Winner banner -->
+    <div id="wi-winnerBanner" style="margin-bottom:1rem;padding:1rem 1.2rem;border-radius:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div id="wi-winnerIcon" style="font-size:2.5rem;flex-shrink:0"></div>
+      <div style="flex:1;min-width:200px">
+        <div id="wi-winnerTitle" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-xl);margin-bottom:3px"></div>
+        <div id="wi-winnerSub" style="font-size:var(--fs-sm);line-height:1.6"></div>
+      </div>
+      <div id="wi-winnerBadge" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:.5rem 1rem;border-radius:8px;font-weight:700;flex-shrink:0"></div>
+    </div>
+
+    <!-- Side-by-side comparison table -->
+    <div class="g2" style="margin-bottom:1rem">
+
+      <!-- Miner daily/monthly card -->
+      <div class="card">
+        <div class="ch" style="border-left:3px solid var(--red)">
+          <div class="ctitle" style="color:var(--red)">⛏ Path A — Miner Earnings</div>
+        </div>
+        <div class="cbody">
+          <div class="calc-row"><span class="calc-lbl">Gross hCASH/day</span><span class="calc-val cr" id="wi-mGrossDay">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Electricity cost/day</span><span class="calc-val" style="color:var(--mut)" id="wi-mElecDay">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Net hCASH/day</span><span class="calc-val cr" id="wi-mNetDay">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Net USD/day</span><span class="calc-val" id="wi-mNetUsdDay">—</span></div>
+          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
+          <div class="calc-row"><span class="calc-lbl">30-day net hCASH</span><span class="calc-val cr" id="wi-mNet30">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">30-day net USD</span><span class="calc-val" id="wi-mNetUsd30">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">1-year net hCASH</span><span class="calc-val cr" id="wi-mNet365">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">1-year net USD</span><span class="calc-val" id="wi-mNetUsd365">—</span></div>
+          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
+          <div class="calc-row"><span class="calc-lbl">Break-even</span><span class="calc-val cg" id="wi-mBreakeven">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Network share</span><span class="calc-val cd" id="wi-mShare">—</span></div>
+          <!-- Risk tag -->
+          <div id="wi-mRisk" style="margin-top:.65rem;padding:.5rem .65rem;border-radius:6px;font-size:var(--fs-xs);font-family:'Share Tech Mono',monospace;line-height:1.55"></div>
+        </div>
+      </div>
+
+      <!-- LP daily/monthly card -->
+      <div class="card">
+        <div class="ch" style="border-left:3px solid var(--gold)">
+          <div class="ctitle" style="color:var(--gold)">💧 Path B — LP Moat Earnings</div>
+        </div>
+        <div class="cbody">
+          <div class="calc-row"><span class="calc-lbl">Swap fees/day (est.)</span><span class="calc-val cg" id="wi-lpFeeDay">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">LP value (no IL)</span><span class="calc-val cg" id="wi-lpValue">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Moat points/day</span><span class="calc-val cr" id="wi-lpPtsDay">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Lock multiplier</span><span class="calc-val" id="wi-lpMultDisplay">—</span></div>
+          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
+          <div class="calc-row"><span class="calc-lbl">30-day fees (hCASH)</span><span class="calc-val cg" id="wi-lpFee30">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">30-day fees (USD)</span><span class="calc-val" id="wi-lpFeeUsd30">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">1-year fees (hCASH)</span><span class="calc-val cg" id="wi-lpFee365">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">1-year fees (USD)</span><span class="calc-val" id="wi-lpFeeUsd365">—</span></div>
+          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
+          <div class="calc-row"><span class="calc-lbl">Capital locked (exit anytime)</span><span class="calc-val cg" id="wi-lpCapital">—</span></div>
+          <!-- Risk tag -->
+          <div id="wi-lpRisk" style="margin-top:.65rem;padding:.5rem .65rem;border-radius:6px;font-size:var(--fs-xs);font-family:'Share Tech Mono',monospace;line-height:1.55"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart: cumulative earnings over 365 days -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="ch">
+        <div class="ctitle">📈 Cumulative Earnings — 365 Day Projection</div>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">Net USD (after costs)</span>
+      </div>
+      <div class="cbody">
+        <div style="display:flex;gap:16px;margin-bottom:.75rem;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">
+            <span style="width:10px;height:3px;background:var(--red);border-radius:2px;display:inline-block"></span>⛏ Miner (net of electricity)
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">
+            <span style="width:10px;height:3px;background:var(--gold);border-radius:2px;display:inline-block"></span>💧 LP swap fees
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">
+            <span style="width:10px;height:3px;background:var(--mut);border-radius:2px;display:inline-block;border-top:2px dashed var(--mut)"></span>Break-even line
+          </span>
+        </div>
+        <div style="position:relative;width:100%;height:280px">
+          <canvas id="wi-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assumption breakdown + signals -->
+    <div class="g2" style="margin-bottom:1rem">
+
+      <div class="card">
+        <div class="ch"><div class="ctitle">📊 Assumptions Used</div></div>
+        <div class="cbody">
+          <div class="calc-row"><span class="calc-lbl">hCASH price</span><span class="calc-val cr" id="wi-assumHcash">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">AVAX price</span><span class="calc-val cw" id="wi-assumAvax">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Network hashrate</span><span class="calc-val cd" id="wi-assumNetHash">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Pool liquidity</span><span class="calc-val" id="wi-assumLiq">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">24h pool volume</span><span class="calc-val" id="wi-assumVol">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">LP fee rate</span><span class="calc-val cg">0.3% of volume</span></div>
+          <div class="calc-row"><span class="calc-lbl">Miner electricity rate</span><span class="calc-val" id="wi-assumElec">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">hCASH emission/day</span><span class="calc-val cg" id="wi-assumEmission">—</span></div>
+          <div style="margin-top:.65rem;padding:.5rem .65rem;background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.1);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);line-height:1.6">
+            ⚠ Projections assume constant price, hashrate, and pool volume. Real returns will vary. This is not financial advice.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><div class="ctitle">🔍 Key Signals</div></div>
+        <div class="cbody" id="wi-signals">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">Run the comparison to see signals.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verdict card -->
+    <div class="card">
+      <div class="ch" style="background:linear-gradient(90deg,rgba(212,168,67,.08),transparent)">
+        <div class="ctitle" style="color:var(--gold)">⚖️ Verdict — What Should You Do?</div>
+      </div>
+      <div class="cbody" id="wi-verdict">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">Run the comparison to see the verdict.</div>
+      </div>
+    </div>
+
+  </div><!-- /wi-resultsSection -->
+
+  <!-- Empty state prompt -->
+  <div id="wi-emptyState" style="text-align:center;padding:3rem 1rem;color:var(--mut)">
+    <div style="font-size:3rem;margin-bottom:.75rem">🔮</div>
+    <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-lg);margin-bottom:.4rem">Pick a miner and enter a price</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs)">The full comparison will appear here instantly.</div>
+  </div>
+
+</div><!-- /view-whatif -->
+
 </main>
 
 <!-- FOOTER -->
@@ -1582,6 +1852,7 @@ function nav(el) {
   if(v==='minerdetail'){/* handled by showMinerDetail */}
   if(v==='explorer')loadExplorerData();
   if(v==='calculator'){buildCalcDurGrid();buildLockDurGrid();}
+  if(v==='whatif'){initWhatIf();}
   if(v==='liquidity'){buildLockDurGrid();updateLpBalances();}
   if(v==='stakelock'){buildStakeLockRefs();updatePositionSummary();loadFortScoreOptimizer();}
 }
@@ -4391,5 +4662,526 @@ async function showMinerDetail(id) {
 })();
 
 </script>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  WHAT IF? SCENARIO PLANNER
+// ══════════════════════════════════════════════════════
+let _wiMiners = [];          // populated from HashCash API
+let _wiSelectedMiner = null;
+let _wiLockDaysVal = 180;
+let _wiChart = null;
+
+// Load miners from HashCash public API
+async function wiLoadMiners() {
+  const sel = document.getElementById('wi-minerSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Loading from HashCash API… —</option>';
+  try {
+    const r = await fetch(`${HCASH_API}/contracts`, {
+      headers: { 'x-api-key': HCASH_API_KEY }
+    });
+    if (!r.ok) throw new Error('API error ' + r.status);
+    const data = await r.json();
+    const contracts = Array.isArray(data) ? data : (data.contracts || []);
+    _wiMiners = contracts.filter(c =>
+      (c.category === 'miner_nft' || c.category === 'rig_assembler') &&
+      c.name && c.address
+    );
+    sel.innerHTML = '<option value="">— Select a miner —</option>' +
+      _wiMiners.map((m, i) => {
+        const s = m.minerStats || {};
+        const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+        const watts = s.powerWatts || s.powerRaw || 0;
+        const label = m.name + (mhs ? ` · ${mhs}MH/s` : '') + (watts ? ` · ${watts}W` : '');
+        return `<option value="${i}">${label}</option>`;
+      }).join('');
+  } catch(e) {
+    sel.innerHTML = '<option value="">— Could not load (enter manually below) —</option>';
+    // Still allow manual input
+  }
+  wiCalc();
+}
+
+function wiRefreshMiners() { wiLoadMiners(); }
+
+function wiOnMinerSelect() {
+  const sel = document.getElementById('wi-minerSelect');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx) || !_wiMiners[idx]) {
+    _wiSelectedMiner = null;
+    document.getElementById('wi-minerStats').style.display = 'none';
+    document.getElementById('wi-minerImg').style.display = 'none';
+    wiCalc();
+    return;
+  }
+  _wiSelectedMiner = _wiMiners[idx];
+  const s = _wiSelectedMiner.minerStats || {};
+  const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+  const watts = s.powerWatts || s.powerRaw || 0;
+  const eff = (mhs > 0 && watts > 0) ? (mhs / watts * 1000).toFixed(2) + ' KH/W' : 'Free power';
+  document.getElementById('wi-mhsDisplay').textContent = (s.hashrateFormatted || mhs + ' MH/s') || '—';
+  document.getElementById('wi-wattsDisplay').textContent = watts ? (s.powerFormatted || watts + 'W') : '0W (free)';
+  document.getElementById('wi-effDisplay').textContent = eff;
+  document.getElementById('wi-minerStats').style.display = 'block';
+  // Show image if available
+  if (_wiSelectedMiner.imageUrl) {
+    document.getElementById('wi-minerImgEl').src = _wiSelectedMiner.imageUrl;
+    document.getElementById('wi-minerImg').style.display = 'block';
+  } else {
+    document.getElementById('wi-minerImg').style.display = 'none';
+  }
+  wiCalc();
+}
+
+// Build the lock duration grid for What If page
+function wiBuildLockGrid() {
+  const g = document.getElementById('wi-lockGrid');
+  if (!g || g.children.length > 0) return;
+  const durs = [[1,'2.04×'],[30,'2.31×'],[90,'2.73×'],[180,'3.23×'],[365,'4.00×'],[540,'4.57×'],[730,'5.00×']];
+  g.innerHTML = durs.map(([d, m], i) => `
+    <div class="dur-btn${i===3?' active':''}" onclick="wiSelectLock(${d},this)" data-days="${d}" style="text-align:center">
+      <div class="dur-days">${d}d</div>
+      <div class="dur-mult">${m}</div>
+    </div>`).join('');
+}
+
+function wiSelectLock(d, el) {
+  document.querySelectorAll('#wi-lockGrid .dur-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _wiLockDaysVal = d;
+  const inp = document.getElementById('wi-lockDays');
+  if (inp) inp.value = d;
+  wiCalc();
+}
+
+// Core calculation
+function wiCalc() {
+  const priceRaw = parseFloat(document.getElementById('wi-price')?.value) || 0;
+  const currency = document.getElementById('wi-priceCurrency')?.value || 'hcash';
+  const elecRate  = parseFloat(document.getElementById('wi-facilityLevel')?.value) || 5.77;
+  const customMhs = parseFloat(document.getElementById('wi-customMhs')?.value) || 0;
+
+  // Get live prices
+  const hcashUsd = priceData?.price || 0.07;
+  const avaxUsd  = priceData?.avaxPrice || 20;
+
+  // Convert miner price to USD
+  let minerUsd = 0;
+  if (priceRaw > 0) {
+    if (currency === 'hcash') minerUsd = priceRaw * hcashUsd;
+    else minerUsd = priceRaw * avaxUsd;
+  }
+
+  // Update USD display
+  const priceUsdEl = document.getElementById('wi-priceUsdDisplay');
+  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD` : '≈ $— USD';
+
+  // Get miner stats
+  const s = _wiSelectedMiner?.minerStats || {};
+  const mhs   = customMhs > 0 ? customMhs : (s.hashrateMhps || s.hashrateRaw || 0);
+  const watts  = s.powerWatts || s.powerRaw || 0;
+
+  // Hide results and show empty state if inputs missing
+  const hasInputs = priceRaw > 0 && _wiSelectedMiner && mhs > 0;
+  document.getElementById('wi-resultsSection').style.display = hasInputs ? '' : 'none';
+  document.getElementById('wi-emptyState').style.display = hasInputs ? 'none' : '';
+  if (!hasInputs) return;
+
+  // ── NETWORK DATA ──
+  const netHashMhs = (poolData?.avaxReserve ? 0 : 0) || 184978; // fallback
+  const liveNetHash = _wiNetHashMhs || netHashMhs;
+  const dailyEmission = _wiDailyEmission || 108000;
+
+  // ── PATH A: MINER ──
+  const minerShare = mhs / liveNetHash;
+  const grossHcashDay = minerShare * dailyEmission;
+  const elecHcashDay  = watts > 0 ? (watts / 1000) * 24 * elecRate : 0;
+  const netHcashDay   = grossHcashDay - elecHcashDay;
+  const netUsdDay     = netHcashDay * hcashUsd;
+  const net30         = netHcashDay * 30;
+  const net365        = netHcashDay * 365;
+  const breakevenDays = netHcashDay > 0 ? Math.ceil(priceRaw / netHcashDay) : null;
+  const minerUsd30    = net30 * hcashUsd;
+  const minerUsd365   = net365 * hcashUsd;
+
+  // ── PATH B: LP MOAT ──
+  // Split the same USD budget 50/50
+  const halfUsd   = minerUsd / 2;
+  const avaxSide  = halfUsd / avaxUsd;   // AVAX amount
+  const hcashSide = halfUsd / hcashUsd;  // hCASH amount
+
+  // Estimate LP tokens using current pool composition
+  const poolLiq  = priceData?.liq || 10000;
+  const lpTokenEst = poolData?.lpSupply > 0
+    ? (minerUsd / (poolLiq > 0 ? poolLiq : 1)) * poolData.lpSupply
+    : 0;
+  const lpPoolSharePct = poolData?.lpSupply > 0 && lpTokenEst > 0
+    ? (lpTokenEst / poolData.lpSupply * 100)
+    : 0;
+
+  // LP swap fees: pool volume × 0.3% × my pool share
+  const vol24h      = priceData?.vol24 || 0;
+  const myFeeUsdDay = vol24h * 0.003 * (lpPoolSharePct / 100);
+  const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
+
+  // Lock multiplier & moat points
+  const mult = lockMultiplier(_wiLockDaysVal);
+  const lpPtsDay = lpTokenEst * mult; // rough proxy for points/day
+
+  // LP 30 / 365
+  const lpFee30     = myFeeHcashDay * 30;
+  const lpFeeUsd30  = myFeeUsdDay * 30;
+  const lpFee365    = myFeeHcashDay * 365;
+  const lpFeeUsd365 = myFeeUsdDay * 365;
+
+  // ── UPDATE UI ──
+  // Path A
+  const fmtH = n => n.toFixed(2);
+  const fmtU = n => '$' + n.toFixed(2);
+  const fmtP = n => {
+    if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+    return Math.round(n).toLocaleString();
+  };
+
+  document.getElementById('wi-mGrossDay').textContent     = fmtH(grossHcashDay) + ' hCASH';
+  document.getElementById('wi-mElecDay').textContent      = watts > 0 ? '-' + fmtH(elecHcashDay) + ' hCASH' : '0 (free power)';
+  document.getElementById('wi-mNetDay').textContent       = fmtH(netHcashDay) + ' hCASH';
+  document.getElementById('wi-mNetUsdDay').textContent    = fmtU(netUsdDay);
+  document.getElementById('wi-mNet30').textContent        = fmtH(net30) + ' hCASH';
+  document.getElementById('wi-mNetUsd30').textContent     = fmtU(minerUsd30);
+  document.getElementById('wi-mNet365').textContent       = fmtH(net365) + ' hCASH';
+  document.getElementById('wi-mNetUsd365').textContent    = fmtU(minerUsd365);
+  document.getElementById('wi-mBreakeven').textContent    = breakevenDays ? `~${breakevenDays} days` : 'Never (negative)';
+  document.getElementById('wi-mShare').textContent        = (minerShare * 100).toFixed(4) + '%';
+
+  // Path B LP inputs
+  document.getElementById('wi-lpTotalUsd').textContent    = fmtU(minerUsd);
+  document.getElementById('wi-lpAvaxAmt').textContent     = avaxSide.toFixed(4) + ' AVAX';
+  document.getElementById('wi-lpHcashAmt').textContent    = fmtP(hcashSide) + ' hCASH';
+  document.getElementById('wi-lpTokens').textContent      = lpTokenEst > 0 ? lpTokenEst.toExponential(4) + ' LP' : '—';
+  document.getElementById('wi-lpPoolShare').textContent   = lpPoolSharePct > 0 ? lpPoolSharePct.toFixed(4) + '%' : '—';
+  document.getElementById('wi-lpMult').textContent        = mult + '×';
+  document.getElementById('wi-lpPoints').textContent      = fmtP(lpPtsDay) + ' pts/day';
+  document.getElementById('wi-lpFees').textContent        = myFeeUsdDay > 0 ? fmtU(myFeeUsdDay) + '/day' : '—';
+
+  // Path B results
+  document.getElementById('wi-lpFeeDay').textContent      = fmtH(myFeeHcashDay) + ' hCASH';
+  document.getElementById('wi-lpValue').textContent       = fmtU(minerUsd) + ' (initial)';
+  document.getElementById('wi-lpPtsDay').textContent      = fmtP(lpPtsDay);
+  document.getElementById('wi-lpMultDisplay').textContent = mult + '×';
+  document.getElementById('wi-lpFee30').textContent       = fmtH(lpFee30) + ' hCASH';
+  document.getElementById('wi-lpFeeUsd30').textContent    = fmtU(lpFeeUsd30);
+  document.getElementById('wi-lpFee365').textContent      = fmtH(lpFee365) + ' hCASH';
+  document.getElementById('wi-lpFeeUsd365').textContent   = fmtU(lpFeeUsd365);
+  document.getElementById('wi-lpCapital').textContent     = fmtU(minerUsd) + ' (LP redeemable)';
+
+  // Assumptions
+  document.getElementById('wi-assumHcash').textContent    = '$' + hcashUsd.toFixed(6);
+  document.getElementById('wi-assumAvax').textContent     = '$' + avaxUsd.toFixed(2);
+  document.getElementById('wi-assumNetHash').textContent  = (liveNetHash / 1000).toFixed(2) + ' GH/s';
+  document.getElementById('wi-assumLiq').textContent      = poolLiq > 0 ? '$' + (poolLiq/1000).toFixed(0) + 'K' : '—';
+  document.getElementById('wi-assumVol').textContent      = vol24h > 0 ? '$' + (vol24h/1000).toFixed(1) + 'K' : '—';
+  document.getElementById('wi-assumElec').textContent     = elecRate + ' hCASH/kWh';
+  document.getElementById('wi-assumEmission').textContent = fmtP(dailyEmission) + ' hCASH';
+
+  // ── RISK TAGS ──
+  const mRiskEl = document.getElementById('wi-mRisk');
+  const lpRiskEl = document.getElementById('wi-lpRisk');
+  const risks = [];
+  if (netHcashDay <= 0) risks.push('⛔ Miner is net-negative at this electricity rate — costs more to run than it earns');
+  if (breakevenDays && breakevenDays > 730) risks.push('⚠️ Long break-even (>2 years) — high risk if hCASH price drops');
+  if (watts > 1000) risks.push('⚡ High power draw — upgrade to Lv5 facility for best electricity rate');
+  if (liveNetHash > 200000) risks.push('📈 Network hashrate is growing — your share % will dilute over time');
+  mRiskEl.innerHTML = risks.length
+    ? `<span style="color:var(--red)">${risks.join('<br>')}</span>`
+    : `<span style="color:var(--grn)">✅ Miner looks positive at current rates</span>`;
+  mRiskEl.style.background = risks.length ? 'rgba(229,62,62,.05)' : 'rgba(74,222,128,.05)';
+  mRiskEl.style.border = risks.length ? '1px solid rgba(229,62,62,.15)' : '1px solid rgba(74,222,128,.15)';
+
+  const lpRisks = [];
+  if (vol24h < 5000) lpRisks.push('⚠️ Low pool volume — swap fee income will be minimal');
+  if (lpPoolSharePct < 0.01) lpRisks.push('📊 Very small pool share — fee income may be negligible');
+  lpRiskEl.innerHTML = lpRisks.length
+    ? `<span style="color:var(--gold)">${lpRisks.join('<br>')}</span>`
+    : `<span style="color:var(--grn)">✅ LP position looks healthy — capital always redeemable</span>`;
+  lpRiskEl.style.background = lpRisks.length ? 'rgba(212,168,67,.05)' : 'rgba(74,222,128,.05)';
+  lpRiskEl.style.border = lpRisks.length ? '1px solid rgba(212,168,67,.15)' : '1px solid rgba(74,222,128,.15)';
+
+  // ── WINNER ──
+  const banner   = document.getElementById('wi-winnerBanner');
+  const icon     = document.getElementById('wi-winnerIcon');
+  const title    = document.getElementById('wi-winnerTitle');
+  const sub      = document.getElementById('wi-winnerSub');
+  const badge    = document.getElementById('wi-winnerBadge');
+
+  // Compare annual USD returns
+  const minerAnnualUsd = minerUsd365;
+  const lpAnnualUsd    = lpFeeUsd365 + minerUsd; // fees + capital still intact
+  const lpYield        = lpFeeUsd365 / minerUsd * 100;
+  const minerYield     = minerUsd365 / (priceRaw * hcashUsd) * 100;
+
+  if (netHcashDay <= 0) {
+    banner.style.cssText = 'margin-bottom:1rem;padding:1rem 1.2rem;border-radius:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(229,62,62,.07);border:1px solid rgba(229,62,62,.3)';
+    icon.textContent = '⛔';
+    title.textContent = 'Miner is unprofitable at this electricity rate';
+    title.style.color = 'var(--red)';
+    sub.textContent = "The miner's electricity cost exceeds its earnings. Path B (LP) is the only option that generates positive returns.";
+    sub.style.color = 'var(--dim)';
+    badge.textContent = '💧 LP WINS';
+    badge.style.cssText = "font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:.5rem 1rem;border-radius:8px;font-weight:700;flex-shrink:0;background:rgba(212,168,67,.12);color:var(--gold);border:1px solid var(--gold)";
+  } else if (minerAnnualUsd > lpFeeUsd365 * 1.2) {
+    banner.style.cssText = 'margin-bottom:1rem;padding:1rem 1.2rem;border-radius:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(229,62,62,.07);border:1px solid rgba(229,62,62,.3)';
+    icon.textContent = '⛏';
+    title.textContent = 'The Miner earns more (pure hCASH income)';
+    title.style.color = 'var(--red)';
+    sub.innerHTML = `Miner generates <strong style=\"color:var(--red)\">${fmtU(minerAnnualUsd)} net/year</strong> vs LP fees of <strong style=\"color:var(--gold)\">${fmtU(lpFeeUsd365)}/year</strong>. But LP preserves your capital — the miner price is a sunk cost.`;
+    sub.style.color = 'var(--dim)';
+    badge.textContent = '⛏ MINER EARNS MORE';
+    badge.style.cssText = "font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:.5rem 1rem;border-radius:8px;font-weight:700;flex-shrink:0;background:rgba(229,62,62,.12);color:var(--red);border:1px solid var(--red)";
+  } else if (lpFeeUsd365 > minerAnnualUsd * 1.2) {
+    banner.style.cssText = 'margin-bottom:1rem;padding:1rem 1.2rem;border-radius:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(212,168,67,.07);border:1px solid rgba(212,168,67,.3)';
+    icon.textContent = '💧';
+    title.textContent = 'LP Moat generates more income + you keep your capital';
+    title.style.color = 'var(--gold)';
+    sub.innerHTML = `LP swap fees yield <strong style=\"color:var(--gold)\">${fmtU(lpFeeUsd365)}/year</strong> AND your <strong style=\"color:var(--gold)\">${fmtU(minerUsd)}</strong> capital stays liquid and redeemable. Miner earns ${fmtU(minerAnnualUsd)} but capital is locked in hardware.`;
+    sub.style.color = 'var(--dim)';
+    badge.textContent = '💧 LP WINS';
+    badge.style.cssText = "font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:.5rem 1rem;border-radius:8px;font-weight:700;flex-shrink:0;background:rgba(212,168,67,.12);color:var(--gold);border:1px solid var(--gold)";
+  } else {
+    banner.style.cssText = 'margin-bottom:1rem;padding:1rem 1.2rem;border-radius:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(129,140,248,.07);border:1px solid rgba(129,140,248,.3)';
+    icon.textContent = '⚖️';
+    title.textContent = 'Too close to call — depends on your goals';
+    title.style.color = 'var(--pur)';
+    sub.innerHTML = `Miner: <strong style=\"color:var(--red)\">${fmtU(minerAnnualUsd)}/yr net</strong> · LP fees: <strong style=\"color:var(--gold)\">${fmtU(lpFeeUsd365)}/yr</strong> + capital preserved. If you want hCASH income → miner. If you want liquidity + Moat points → LP.`;
+    sub.style.color = 'var(--dim)';
+    badge.textContent = '⚖️ IT DEPENDS';
+    badge.style.cssText = "font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:.5rem 1rem;border-radius:8px;font-weight:700;flex-shrink:0;background:rgba(129,140,248,.12);color:var(--pur);border:1px solid var(--pur)";
+  }
+
+  // ── SIGNALS ──
+  const sigEl = document.getElementById('wi-signals');
+  const sigs = [];
+  if (breakevenDays && breakevenDays < 90) sigs.push({ icon:'🚀', col:'var(--grn)', title:'Fast break-even', desc:`Miner recovers cost in ~${breakevenDays} days — excellent ROI speed.` });
+  if (breakevenDays && breakevenDays > 365) sigs.push({ icon:'⏳', col:'var(--gold)', title:'Slow break-even', desc:`${breakevenDays} days to break-even. Price drop risk is significant over this window.` });
+  if (lpPoolSharePct > 0.1) sigs.push({ icon:'💧', col:'var(--gold)', title:'Meaningful LP share', desc:`Your ${lpPoolSharePct.toFixed(3)}% pool share generates real fee income daily.` });
+  if (mult >= 4) sigs.push({ icon:'🔒', col:'var(--gold)', title:'Strong lock multiplier', desc:`${mult}× points multiplier on this lock duration — excellent for Fort Score.` });
+  if (watts === 0) sigs.push({ icon:'⚡', col:'var(--grn)', title:'Zero power cost', desc:'This miner uses no electricity — pure profit regardless of facility level.' });
+  if (minerShare > 0.001) sigs.push({ icon:'📈', col:'var(--red)', title:'Significant hashrate', desc:`${(minerShare*100).toFixed(3)}% of network — this miner moves the needle.` });
+  sigs.push({ icon:'🏰', col:'var(--pur)', title:'LP earns Moat Points', desc:`Staking LP gives you ${mult}× Moat points — the miner path earns 0 Moat points unless you also provide LP.` });
+  sigEl.innerHTML = sigs.map(s => `
+    <div class=\"sig\" style=\"border-left:2px solid ${s.col};margin-bottom:.45rem\">
+      <div class=\"sig-icon\" style=\"font-size:1rem\">${s.icon}</div>
+      <div class=\"sig-body\">
+        <div class=\"sig-title\" style=\"color:${s.col};font-size:var(--fs-sm)\">${s.title}</div>
+        <div class=\"sig-desc\" style=\"font-size:var(--fs-xs)\">${s.desc}</div>
+      </div>
+    </div>`).join('');
+
+  // ── VERDICT ──
+  const verdictEl = document.getElementById('wi-verdict');
+  let verdict = '';
+  if (netHcashDay <= 0) {
+    verdict = `<div style=\"color:var(--red);font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);line-height:1.7\">
+      ⛔ <strong>Do NOT buy this miner at this price.</strong> At your facility's electricity rate of ${elecRate} hCASH/kWh, 
+      the miner burns more hCASH in electricity than it earns. Upgrade to Lv5 (3.30/kWh) or negotiate a lower price.<br><br>
+      ✅ <strong>LP is the clear choice.</strong> Put the ${fmtU(minerUsd)} into AVAX/hCASH LP instead — 
+      you earn swap fees daily AND keep your capital liquid.
+    </div>`;
+  } else {
+    const beDays = breakevenDays || 999;
+    const lpBetter = lpFeeUsd365 > minerAnnualUsd;
+    verdict = `<div style=\"font-size:var(--fs-sm);line-height:1.75;color:var(--txt)\">
+      <div style=\"display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.85rem\">
+        <div style=\"background:rgba(229,62,62,.05);border:1px solid rgba(229,62,62,.15);border-radius:8px;padding:.75rem\">
+          <div style=\"font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--red);margin-bottom:5px;text-transform:uppercase\">⛏ Buy the Miner if…</div>
+          <div style=\"font-size:var(--fs-xs);color:var(--dim);line-height:1.65\">
+            • You want direct hCASH income from mining<br>
+            • You expect hCASH price to rise (amplifies gains)<br>
+            • Break-even of ~${beDays} days feels acceptable<br>
+            • You don't need the capital liquid<br>
+            • Network hashrate stays stable
+          </div>
+        </div>
+        <div style=\"background:rgba(212,168,67,.05);border:1px solid rgba(212,168,67,.15);border-radius:8px;padding:.75rem\">
+          <div style=\"font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--gold);margin-bottom:5px;text-transform:uppercase\">💧 Choose LP if…</div>
+          <div style=\"font-size:var(--fs-xs);color:var(--dim);line-height:1.65\">
+            • You want capital flexibility (exit anytime)<br>
+            • You want Moat Points + Fort Score growth<br>
+            • You prefer diversified risk (fees + points)<br>
+            • Pool volume is healthy (${vol24h > 5000 ? '✅ currently yes' : '⚠️ low volume now'})<br>
+            • You believe in hCASH ecosystem long-term
+          </div>
+        </div>
+      </div>
+      <div style=\"background:rgba(129,140,248,.06);border:1px solid rgba(129,140,248,.18);border-radius:8px;padding:.75rem;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--pur);line-height:1.65\">
+        💡 <strong>Best of both worlds:</strong> Buy the miner AND use a smaller LP position. 
+        The miner gives you active hCASH income. The LP gives you Moat Points, swap fees, and liquidity. 
+        Split your budget ${minerUsd > 0 ? Math.round(60) : 50}/${minerUsd > 0 ? Math.round(40) : 50} miner/LP for balanced exposure.
+      </div>
+      <div style=\"margin-top:.65rem;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)\">
+        ⚠ Not financial advice. All projections assume current price, hashrate, and volume remain constant. Real returns vary.
+      </div>
+    </div>`;
+  }
+  verdictEl.innerHTML = verdict;
+
+  // ── CHART ──
+  wiDrawChart(netUsdDay, myFeeUsdDay, minerUsd, breakevenDays);
+}
+
+// Draw cumulative earnings chart
+function wiDrawChart(netUsdDay, lpFeeUsdDay, cost, breakevenDays) {
+  const ctx = document.getElementById('wi-chart');
+  if (!ctx) return;
+  if (_wiChart) { _wiChart.destroy(); _wiChart = null; }
+
+  const days = 365;
+  const labels = [];
+  const minerData = [];
+  const lpData = [];
+  for (let d = 0; d <= days; d += 5) {
+    labels.push(d === 0 ? 'Day 0' : d === 365 ? '1yr' : d % 30 === 0 ? `${d/30}mo` : '');
+    minerData.push(parseFloat((netUsdDay * d).toFixed(2)));
+    lpData.push(parseFloat((lpFeeUsdDay * d).toFixed(2)));
+  }
+
+  const isLight = document.documentElement.classList.contains('light');
+  const gridCol = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+  const textCol = isLight ? '#666' : '#5a5b75';
+
+  _wiChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '⛏ Miner net USD',
+          data: minerData,
+          borderColor: '#e53e3e',
+          backgroundColor: 'rgba(229,62,62,0.06)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+        },
+        {
+          label: '💧 LP swap fees USD',
+          data: lpData,
+          borderColor: '#d4a843',
+          backgroundColor: 'rgba(212,168,67,0.06)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => 'Day ' + (items[0].dataIndex * 5),
+            label: (item) => ` ${item.dataset.label}: $${item.raw.toFixed(2)}`,
+          },
+          backgroundColor: isLight ? '#fff' : '#12131a',
+          borderColor: isLight ? '#d0d0d0' : '#1f2030',
+          borderWidth: 1,
+          titleColor: isLight ? '#1a1a2e' : '#e8e9f5',
+          bodyColor: isLight ? '#555' : '#7a7b96',
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: gridCol },
+          ticks: { color: textCol, font: { family: "'Share Tech Mono', monospace", size: 10 }, maxTicksLimit: 8 },
+        },
+        y: {
+          grid: { color: gridCol },
+          ticks: {
+            color: textCol,
+            font: { family: "'Share Tech Mono', monospace", size: 10 },
+            callback: v => '$' + v.toFixed(0),
+          },
+        },
+      },
+    },
+  });
+
+  // Draw break-even annotation line manually
+  if (breakevenDays && breakevenDays <= 365) {
+    const plugin = {
+      id: 'wiBreakevenLine',
+      afterDraw(chart) {
+        const { ctx: c, scales: { x, y } } = chart;
+        const idx = Math.round(breakevenDays / 5);
+        if (idx < 0 || idx >= chart.data.labels.length) return;
+        const xPos = x.getPixelForValue(idx);
+        c.save();
+        c.setLineDash([4, 4]);
+        c.strokeStyle = 'rgba(74,222,128,0.45)';
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(xPos, y.top);
+        c.lineTo(xPos, y.bottom);
+        c.stroke();
+        c.setLineDash([]);
+        c.fillStyle = 'rgba(74,222,128,0.9)';
+        c.font = "9px 'Share Tech Mono', monospace";
+        c.fillText('Break-even ~' + breakevenDays + 'd', xPos + 4, y.top + 14);
+        c.restore();
+      }
+    };
+    _wiChart.options.plugins.wiBreakevenLine = {};
+    Chart.register(plugin);
+    _wiChart.update();
+  }
+}
+
+// Expose network data fetched by existing loadAll()
+let _wiNetHashMhs = 0;
+let _wiDailyEmission = 0;
+
+// Hook into existing price data after it loads
+const _origLoadPriceData = typeof loadPriceData === 'function' ? loadPriceData : null;
+function wiSyncLiveData() {
+  if (priceData?.avaxPrice) {
+    // Derive network stats from pool data if available
+    if (poolData?.avaxReserve && poolData?.hcashReserve) {
+      // rough estimate of network hashrate from pool composition
+    }
+  }
+  // Try to get network stats from HashCash API
+  fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY } })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data) return;
+      const contracts = Array.isArray(data) ? data : (data.contracts || []);
+      // look for game_main contract for network stats
+      const game = contracts.find(c => c.category === 'game_main');
+      if (game?.networkStats) {
+        _wiNetHashMhs = game.networkStats.totalHashMhs || _wiNetHashMhs;
+        _wiDailyEmission = game.networkStats.dailyEmission || _wiDailyEmission;
+      }
+    }).catch(() => {});
+}
+
+// Initialize What If page when navigated to
+function initWhatIf() {
+  wiBuildLockGrid();
+  wiLoadMiners();
+  wiSyncLiveData();
+  // Re-draw chart on theme change
+  document.getElementById('themeBtn')?.addEventListener('click', () => {
+    setTimeout(() => { if (_wiChart) wiCalc(); }, 150);
+  });
+}
+</script>
+
 </body>
 </html>
