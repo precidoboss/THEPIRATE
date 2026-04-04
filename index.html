@@ -1446,15 +1446,33 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
       </div>
       <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
 
-        <!-- Miner selector -->
-        <div>
+        <!-- Miner selector with search -->
+        <div style="position:relative">
           <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Select Miner (from HashCash API)</div>
-          <div style="display:flex;gap:6px">
-            <select id="wi-minerSelect" class="inp" style="flex:1" onchange="wiOnMinerSelect()">
-              <option value="">— Loading miners… —</option>
-            </select>
+          <!-- Search + refresh row -->
+          <div style="display:flex;gap:6px;margin-bottom:4px">
+            <div style="position:relative;flex:1">
+              <input id="wi-minerSearch" type="text" class="inp"
+                placeholder="🔍  Search miners…"
+                oninput="wiFilterMiners(this.value)"
+                onfocus="document.getElementById('wi-minerDropdown').style.display='block'"
+                onkeydown="wiSearchKeydown(event)"
+                autocomplete="off"
+                style="width:100%;padding-right:2rem">
+              <button onclick="wiClearSearch()" title="Clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:.85rem;padding:0;line-height:1;z-index:1">✕</button>
+            </div>
             <button class="btn btn-g btn-sm" onclick="wiRefreshMiners()" title="Reload miners from API">↺</button>
           </div>
+          <!-- Dropdown -->
+          <div id="wi-minerDropdown" style="display:none;position:absolute;z-index:400;left:0;right:40px;max-height:220px;overflow-y:auto;background:var(--card);border:1px solid var(--bor2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);top:100%">
+            <div id="wi-minerDropdownList"></div>
+          </div>
+          <!-- Selected chip -->
+          <div id="wi-selectedChip" style="display:none;margin-top:4px;background:rgba(229,62,62,.07);border:1px solid rgba(229,62,62,.22);border-radius:6px;padding:5px 10px;align-items:center;gap:8px">
+            <span id="wi-selectedChipName" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm);color:var(--red2);flex:1"></span>
+            <button onclick="wiClearMinerSelection()" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:.75rem" title="Clear">✕</button>
+          </div>
+          <!-- Miner image -->
           <div id="wi-minerImg" style="margin-top:.5rem;display:none">
             <img id="wi-minerImgEl" src="" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--bor)">
           </div>
@@ -1481,16 +1499,20 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
           <div id="wi-priceUsdDisplay" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px">≈ $— USD</div>
         </div>
 
-        <!-- Facility level -->
+        <!-- Facility level — rates fetched from API via wiFetchFacilityRates() -->
         <div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Your Facility Level (electricity rate)</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">
+            Your Facility Level (electricity rate)
+            <span id="wi-rateSourceBadge" style="margin-left:6px;font-size:var(--fs-xs);color:var(--mut)"></span>
+          </div>
           <select id="wi-facilityLevel" class="inp" onchange="wiCalc()">
-            <option value="8.24">Lv1 — 8.24 hCASH/kWh</option>
-            <option value="6.59">Lv2 — 6.59 hCASH/kWh</option>
-            <option value="5.77" selected>Lv3 — 5.77 hCASH/kWh (default)</option>
-            <option value="6.59">Lv4 — 6.59 hCASH/kWh</option>
-            <option value="3.30">Lv5 — 3.30 hCASH/kWh (best)</option>
+            <option value="8.24" data-lv="1">Lv1 — 8.24 hCASH/kWh</option>
+            <option value="6.59" data-lv="2">Lv2 — 6.59 hCASH/kWh</option>
+            <option value="5.77" data-lv="3" selected>Lv3 — 5.77 hCASH/kWh (default)</option>
+            <option value="6.59" data-lv="4">Lv4 — 6.59 hCASH/kWh</option>
+            <option value="3.30" data-lv="5">Lv5 — 3.30 hCASH/kWh (best)</option>
           </select>
+          <div id="wi-rateNote" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px"></div>
         </div>
 
         <!-- Manual hashrate override -->
@@ -4672,59 +4694,217 @@ let _wiSelectedMiner = null;
 let _wiLockDaysVal = 180;
 let _wiChart = null;
 
-// Load miners from HashCash public API
-async function wiLoadMiners() {
-  const sel = document.getElementById('wi-minerSelect');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— Loading from HashCash API… —</option>';
+// ── Facility rates fetched from API (keyed by level 1-5) ──
+let _wiFacilityRates = { 1: 8.24, 2: 6.59, 3: 5.77, 4: 6.59, 5: 3.30 }; // defaults
+let _wiFacilityRatesLoaded = false;
+
+// Fetch live electricity rates from game_main contracts
+async function wiFetchFacilityRates() {
   try {
-    const r = await fetch(`${HCASH_API}/contracts`, {
-      headers: { 'x-api-key': HCASH_API_KEY }
-    });
-    if (!r.ok) throw new Error('API error ' + r.status);
+    const r = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY } });
+    if (!r.ok) return;
     const data = await r.json();
     const contracts = Array.isArray(data) ? data : (data.contracts || []);
-    _wiMiners = contracts.filter(c =>
-      (c.category === 'miner_nft' || c.category === 'rig_assembler') &&
-      c.name && c.address
-    );
-    sel.innerHTML = '<option value="">— Select a miner —</option>' +
-      _wiMiners.map((m, i) => {
-        const s = m.minerStats || {};
-        const mhs = s.hashrateMhps || s.hashrateRaw || 0;
-        const watts = s.powerWatts || s.powerRaw || 0;
-        const label = m.name + (mhs ? ` · ${mhs}MH/s` : '') + (watts ? ` · ${watts}W` : '');
-        return `<option value="${i}">${label}</option>`;
-      }).join('');
+
+    // Look for facility/game_main contracts that include per-level electricity data
+    const gameMains = contracts.filter(c => c.category === 'game_main' || c.category === 'facility');
+    let found = false;
+    for (const g of gameMains) {
+      // API may return facilities as array or facilityLevels object
+      const levels = g.facilityLevels || g.facilities || g.levels || [];
+      const arr = Array.isArray(levels) ? levels : Object.values(levels);
+      for (const lv of arr) {
+        const lvNum = parseInt(lv.level || lv.facilityLevel || 0);
+        // electricityRate may be in hCASH/kWh directly, or as a bigint raw value
+        const rate = parseFloat(lv.electricityRate || lv.elecRateHcash || lv.rateHcash || 0);
+        if (lvNum >= 1 && lvNum <= 5 && rate > 0) {
+          _wiFacilityRates[lvNum] = rate;
+          found = true;
+        }
+      }
+      // Also check networkStats for current average
+      if (g.networkStats?.facilityRates) {
+        for (const [k, v] of Object.entries(g.networkStats.facilityRates)) {
+          const lvNum = parseInt(k);
+          const rate = parseFloat(v);
+          if (lvNum >= 1 && lvNum <= 5 && rate > 0) {
+            _wiFacilityRates[lvNum] = rate;
+            found = true;
+          }
+        }
+      }
+    }
+
+    _wiFacilityRatesLoaded = found;
+    wiFacilityRatesUpdateUI();
   } catch(e) {
-    sel.innerHTML = '<option value="">— Could not load (enter manually below) —</option>';
-    // Still allow manual input
+    console.warn('wiFetchFacilityRates:', e.message);
   }
+}
+
+function wiFacilityRatesUpdateUI() {
+  const sel = document.getElementById('wi-facilityLevel');
+  if (!sel) return;
+  const badge = document.getElementById('wi-rateSourceBadge');
+  const note  = document.getElementById('wi-rateNote');
+  // Update each option's rate label from fetched data
+  for (const opt of sel.options) {
+    const lv = parseInt(opt.dataset.lv);
+    if (!lv) continue;
+    const rate = _wiFacilityRates[lv];
+    if (rate) {
+      const tag = lv === 5 ? ' (best)' : lv === 3 ? ' (default)' : '';
+      opt.value = rate;
+      opt.textContent = `Lv${lv} — ${rate} hCASH/kWh${tag}`;
+    }
+  }
+  if (badge) badge.textContent = _wiFacilityRatesLoaded ? '● live' : '● default';
+  if (badge) badge.style.color = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
+  if (note) note.textContent = _wiFacilityRatesLoaded
+    ? 'Rates fetched live from HashCash API'
+    : 'Using default rates — API rates unavailable';
   wiCalc();
 }
 
-function wiRefreshMiners() { wiLoadMiners(); }
+// ── AVAX price: fetch from multiple sources for accuracy ──
+async function wiFetchAvaxPrice() {
+  const sources = [
+    // CoinGecko
+    async () => {
+      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=avalanche-2&vs_currencies=usd', { signal: AbortSignal.timeout(5000) });
+      const d = await r.json();
+      return Number(d['avalanche-2']?.usd || 0);
+    },
+    // DexScreener AVAX/USDC pair on Avalanche
+    async () => {
+      const r = await fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7', { signal: AbortSignal.timeout(5000) });
+      const d = await r.json();
+      return Number(d?.pairs?.[0]?.priceUsd || 0);
+    },
+  ];
+  for (const fn of sources) {
+    try {
+      const price = await fn();
+      if (price > 1) {
+        // Update global priceData so wiCalc() uses it
+        if (!priceData) priceData = { price: 0.07, avaxPrice: price, ch24: 0, liq: 0, vol24: 0 };
+        else priceData.avaxPrice = price;
+        // Update header display if present
+        const avaxEl = document.querySelector('[data-avax-price]');
+        if (avaxEl) avaxEl.textContent = '$' + price.toFixed(2);
+        wiCalc();
+        return price;
+      }
+    } catch(e) { /* try next */ }
+  }
+  return priceData?.avaxPrice || 20; // fallback
+}
 
-function wiOnMinerSelect() {
-  const sel = document.getElementById('wi-minerSelect');
-  const idx = parseInt(sel.value);
-  if (isNaN(idx) || !_wiMiners[idx]) {
-    _wiSelectedMiner = null;
-    document.getElementById('wi-minerStats').style.display = 'none';
-    document.getElementById('wi-minerImg').style.display = 'none';
-    wiCalc();
+// ── SEARCH FUNCTIONS ──
+let _wiSearchQuery = '';
+let _wiSearchIdx = -1;   // keyboard nav index
+
+function wiFilterMiners(query) {
+  _wiSearchQuery = query.trim().toLowerCase();
+  _wiSearchIdx = -1;
+  wiRenderDropdown();
+  const dd = document.getElementById('wi-minerDropdown');
+  if (dd) dd.style.display = 'block';
+}
+
+function wiRenderDropdown() {
+  const list = document.getElementById('wi-minerDropdownList');
+  if (!list) return;
+  const q = _wiSearchQuery;
+  const filtered = q
+    ? _wiMiners.filter(m => m.name?.toLowerCase().includes(q) || (m.minerStats?.hashrateFormatted || '').toLowerCase().includes(q) || (m.type || '').toLowerCase().includes(q))
+    : _wiMiners;
+
+  if (!_wiMiners.length) {
+    list.innerHTML = `<div style="padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">Loading miners…</div>`;
     return;
   }
+  if (!filtered.length) {
+    list.innerHTML = `<div style="padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">No miners match "${q}"</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map((m, i) => {
+    const s = m.minerStats || {};
+    const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+    const watts = s.powerWatts || s.powerRaw || 0;
+    const mhsStr = mhs >= 1000 ? (mhs/1000).toFixed(2)+' GH/s' : mhs ? mhs+' MH/s' : '';
+    const wStr = watts ? watts+'W' : '0W (free)';
+    const idx = _wiMiners.indexOf(m);
+    const imgHtml = m.imageUrl ? `<img src="${m.imageUrl}" style="width:28px;height:28px;border-radius:4px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'" alt="">` : `<span style="font-size:1.1rem;flex-shrink:0">⛏</span>`;
+    return `<div class="wi-dd-item" data-idx="${idx}" onclick="wiSelectMinerByIdx(${idx})"
+      style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--bor);transition:background .1s"
+      onmouseover="this.style.background='rgba(229,62,62,.08)';_wiSearchIdx=${i}"
+      onmouseout="this.style.background=''"
+      >
+      ${imgHtml}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:var(--fs-sm);font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">${mhsStr}${mhsStr && wStr ? ' · ' : ''}${wStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function wiSearchKeydown(e) {
+  const dd = document.getElementById('wi-minerDropdown');
+  const items = document.querySelectorAll('.wi-dd-item');
+  if (!dd || dd.style.display === 'none') return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _wiSearchIdx = Math.min(_wiSearchIdx + 1, items.length - 1);
+    wiHighlightItem(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _wiSearchIdx = Math.max(_wiSearchIdx - 1, 0);
+    wiHighlightItem(items);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (_wiSearchIdx >= 0 && items[_wiSearchIdx]) {
+      items[_wiSearchIdx].click();
+    }
+  } else if (e.key === 'Escape') {
+    dd.style.display = 'none';
+  }
+}
+
+function wiHighlightItem(items) {
+  items.forEach((el, i) => { el.style.background = i === _wiSearchIdx ? 'rgba(229,62,62,.12)' : ''; });
+  if (items[_wiSearchIdx]) items[_wiSearchIdx].scrollIntoView({ block: 'nearest' });
+}
+
+function wiSelectMinerByIdx(idx) {
+  if (!_wiMiners[idx]) return;
   _wiSelectedMiner = _wiMiners[idx];
+  const searchEl = document.getElementById('wi-minerSearch');
+  if (searchEl) searchEl.value = _wiSelectedMiner.name;
+  // Close dropdown
+  const dd = document.getElementById('wi-minerDropdown');
+  if (dd) dd.style.display = 'none';
+  // Show selected chip
+  const chip = document.getElementById('wi-selectedChip');
+  const chipName = document.getElementById('wi-selectedChipName');
+  if (chip && chipName) {
+    chipName.textContent = _wiSelectedMiner.name;
+    chip.style.display = 'flex';
+  }
+  // Show stats
   const s = _wiSelectedMiner.minerStats || {};
   const mhs = s.hashrateMhps || s.hashrateRaw || 0;
   const watts = s.powerWatts || s.powerRaw || 0;
   const eff = (mhs > 0 && watts > 0) ? (mhs / watts * 1000).toFixed(2) + ' KH/W' : 'Free power';
-  document.getElementById('wi-mhsDisplay').textContent = (s.hashrateFormatted || mhs + ' MH/s') || '—';
-  document.getElementById('wi-wattsDisplay').textContent = watts ? (s.powerFormatted || watts + 'W') : '0W (free)';
-  document.getElementById('wi-effDisplay').textContent = eff;
-  document.getElementById('wi-minerStats').style.display = 'block';
-  // Show image if available
+  const statsEl = document.getElementById('wi-minerStats');
+  if (statsEl) {
+    document.getElementById('wi-mhsDisplay').textContent = s.hashrateFormatted || (mhs + ' MH/s') || '—';
+    document.getElementById('wi-wattsDisplay').textContent = watts ? (s.powerFormatted || watts + 'W') : '0W (free)';
+    document.getElementById('wi-effDisplay').textContent = eff;
+    statsEl.style.display = 'block';
+  }
+  // Show image
   if (_wiSelectedMiner.imageUrl) {
     document.getElementById('wi-minerImgEl').src = _wiSelectedMiner.imageUrl;
     document.getElementById('wi-minerImg').style.display = 'block';
@@ -4733,6 +4913,73 @@ function wiOnMinerSelect() {
   }
   wiCalc();
 }
+
+function wiClearSearch() {
+  const el = document.getElementById('wi-minerSearch');
+  if (el) { el.value = ''; el.focus(); }
+  _wiSearchQuery = '';
+  wiRenderDropdown();
+  document.getElementById('wi-minerDropdown').style.display = 'block';
+}
+
+function wiClearMinerSelection() {
+  _wiSelectedMiner = null;
+  const chip = document.getElementById('wi-selectedChip');
+  const searchEl = document.getElementById('wi-minerSearch');
+  if (chip) chip.style.display = 'none';
+  if (searchEl) { searchEl.value = ''; searchEl.focus(); }
+  document.getElementById('wi-minerStats').style.display = 'none';
+  document.getElementById('wi-minerImg').style.display = 'none';
+  document.getElementById('wi-minerDropdown').style.display = 'block';
+  _wiSearchQuery = '';
+  wiRenderDropdown();
+  wiCalc();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('wi-minerDropdown');
+  const search = document.getElementById('wi-minerSearch');
+  if (!dd || !search) return;
+  if (!dd.contains(e.target) && e.target !== search) {
+    dd.style.display = 'none';
+  }
+});
+
+// Load miners from HashCash public API
+async function wiLoadMiners() {
+  const searchEl = document.getElementById('wi-minerSearch');
+  if (searchEl) searchEl.placeholder = '⏳  Loading from HashCash API…';
+  const list = document.getElementById('wi-minerDropdownList');
+  if (list) list.innerHTML = `<div style="padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut)">Loading…</div>`;
+
+  try {
+    const r = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY } });
+    if (!r.ok) throw new Error('API error ' + r.status);
+    const data = await r.json();
+    const contracts = Array.isArray(data) ? data : (data.contracts || []);
+    _wiMiners = contracts.filter(c =>
+      (c.category === 'miner_nft' || c.category === 'rig_assembler') && c.name && c.address
+    );
+    // Sort alphabetically for easy scanning
+    _wiMiners.sort((a, b) => a.name.localeCompare(b.name));
+    if (searchEl) searchEl.placeholder = `🔍  Search ${_wiMiners.length} miners…`;
+    wiRenderDropdown();
+  } catch(e) {
+    if (searchEl) searchEl.placeholder = '🔍  Search miners (API unavailable)…';
+    if (list) list.innerHTML = `<div style="padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--red)">Could not load miners from API</div>`;
+  }
+  wiCalc();
+}
+
+function wiRefreshMiners() {
+  wiLoadMiners();
+  wiFetchFacilityRates();
+  wiFetchAvaxPrice();
+}
+
+// wiOnMinerSelect kept as no-op for backward compat (dropdown replaced <select>)
+function wiOnMinerSelect() {}
 
 // Build the lock duration grid for What If page
 function wiBuildLockGrid() {
@@ -4825,9 +5072,22 @@ function wiCalc() {
   const myFeeUsdDay = vol24h * 0.003 * (lpPoolSharePct / 100);
   const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
 
-  // Lock multiplier & moat points
+  // ── MOAT POINTS CALCULATION ──
+  // Formula (from hCASH Moat contract):
+  //   pointsPerDay = lpTokens × lockMultiplier × (secondsInDay / lockPeriodSeconds)
+  // The multiplier rewards longer locks. Points accrue continuously while staked.
+  // lpPtsDay represents your daily point accrual rate at the chosen lock duration.
   const mult = lockMultiplier(_wiLockDaysVal);
-  const lpPtsDay = lpTokenEst * mult; // rough proxy for points/day
+  const lockSeconds = _wiLockDaysVal * 86400;
+  const secondsPerDay = 86400;
+  // Points per day: LP tokens × lock multiplier, scaled by lock duration fraction
+  // Longer locks give a bigger multiplier but spread points over more days.
+  // The "effective" daily rate = lpTokens × mult (the contract accrues per-second).
+  const lpPtsDay = lpTokenEst > 0
+    ? lpTokenEst * mult   // raw points/day at this multiplier tier
+    : 0;
+  // Total points over full lock period (what you'd accumulate end-to-end)
+  const lpPtsTotal = lpPtsDay * _wiLockDaysVal;
 
   // LP 30 / 365
   const lpFee30     = myFeeHcashDay * 30;
@@ -4869,8 +5129,8 @@ function wiCalc() {
   // Path B results
   document.getElementById('wi-lpFeeDay').textContent      = fmtH(myFeeHcashDay) + ' hCASH';
   document.getElementById('wi-lpValue').textContent       = fmtU(minerUsd) + ' (initial)';
-  document.getElementById('wi-lpPtsDay').textContent      = fmtP(lpPtsDay);
-  document.getElementById('wi-lpMultDisplay').textContent = mult + '×';
+  document.getElementById('wi-lpPtsDay').textContent      = fmtP(lpPtsDay) + (lpPtsTotal > 0 ? ` (${fmtP(lpPtsTotal)} over ${_wiLockDaysVal}d)` : '');
+  document.getElementById('wi-lpMultDisplay').textContent = `${mult}× (${_wiLockDaysVal}d lock)`;
   document.getElementById('wi-lpFee30').textContent       = fmtH(lpFee30) + ' hCASH';
   document.getElementById('wi-lpFeeUsd30').textContent    = fmtU(lpFeeUsd30);
   document.getElementById('wi-lpFee365').textContent      = fmtH(lpFee365) + ' hCASH';
@@ -5147,39 +5407,55 @@ function wiDrawChart(netUsdDay, lpFeeUsdDay, cost, breakevenDays) {
 let _wiNetHashMhs = 0;
 let _wiDailyEmission = 0;
 
-// Hook into existing price data after it loads
-const _origLoadPriceData = typeof loadPriceData === 'function' ? loadPriceData : null;
-function wiSyncLiveData() {
-  if (priceData?.avaxPrice) {
-    // Derive network stats from pool data if available
-    if (poolData?.avaxReserve && poolData?.hcashReserve) {
-      // rough estimate of network hashrate from pool composition
+// Sync live network stats from game_main contracts (hashrate + daily emission)
+async function wiSyncLiveData() {
+  try {
+    const r = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY } });
+    if (!r.ok) return;
+    const data = await r.json();
+    const contracts = Array.isArray(data) ? data : (data.contracts || []);
+    const game = contracts.find(c => c.category === 'game_main');
+    if (game?.networkStats) {
+      _wiNetHashMhs    = game.networkStats.totalHashMhs    || _wiNetHashMhs;
+      _wiDailyEmission = game.networkStats.dailyEmission   || _wiDailyEmission;
     }
-  }
-  // Try to get network stats from HashCash API
-  fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY } })
-    .then(r => r.ok ? r.json() : null)
-    .then(data => {
-      if (!data) return;
-      const contracts = Array.isArray(data) ? data : (data.contracts || []);
-      // look for game_main contract for network stats
-      const game = contracts.find(c => c.category === 'game_main');
-      if (game?.networkStats) {
-        _wiNetHashMhs = game.networkStats.totalHashMhs || _wiNetHashMhs;
-        _wiDailyEmission = game.networkStats.dailyEmission || _wiDailyEmission;
+    // Also try to pull facility rates from same API call (saves a request)
+    if (!_wiFacilityRatesLoaded) {
+      const gameMains = contracts.filter(c => c.category === 'game_main' || c.category === 'facility');
+      for (const g of gameMains) {
+        const levels = g.facilityLevels || g.facilities || g.levels || [];
+        const arr = Array.isArray(levels) ? levels : Object.values(levels);
+        for (const lv of arr) {
+          const lvNum = parseInt(lv.level || lv.facilityLevel || 0);
+          const rate   = parseFloat(lv.electricityRate || lv.elecRateHcash || lv.rateHcash || 0);
+          if (lvNum >= 1 && lvNum <= 5 && rate > 0) {
+            _wiFacilityRates[lvNum] = rate;
+            _wiFacilityRatesLoaded = true;
+          }
+        }
       }
-    }).catch(() => {});
+      if (_wiFacilityRatesLoaded) wiFacilityRatesUpdateUI();
+    }
+    wiCalc();
+  } catch(e) { /* silent — fallbacks remain active */ }
 }
 
 // Initialize What If page when navigated to
 function initWhatIf() {
   wiBuildLockGrid();
-  wiLoadMiners();
-  wiSyncLiveData();
+  // Parallel fetches — miners, facility rates, AVAX price, network stats
+  Promise.all([
+    wiLoadMiners(),
+    wiFetchFacilityRates(),
+    wiFetchAvaxPrice(),
+    wiSyncLiveData(),
+  ]).then(() => wiCalc());
   // Re-draw chart on theme change
   document.getElementById('themeBtn')?.addEventListener('click', () => {
     setTimeout(() => { if (_wiChart) wiCalc(); }, 150);
   });
+  // Refresh AVAX price every 2 minutes while on this page
+  setInterval(wiFetchAvaxPrice, 2 * 60 * 1000);
 }
 </script>
 
