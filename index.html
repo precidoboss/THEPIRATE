@@ -972,6 +972,13 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
         </div>
         <button class="btn liq-action-btn" id="swapExecBtn" onclick="execSwap()">🔄 Execute Swap</button>
         <div id="swapStatus" class="liq-status"></div>
+        <div class="liq-note" style="margin-top:.5rem">
+          Tries <b>Pharaoh → KyberSwap → Odos</b> automatically. If all fail, swap directly on:
+          <a href="https://phar.gg" target="_blank" style="color:var(--gold)">Pharaoh ↗</a> ·
+          <a href="https://kyberswap.com/swap/avalanche" target="_blank" style="color:#1ed760">KyberSwap ↗</a> ·
+          <a href="https://app.odos.xyz/" target="_blank" style="color:var(--pur)">Odos ↗</a> ·
+          <a href="https://lfj.gg/avalanche/trade" target="_blank" style="color:var(--pur)">LFJ ↗</a>
+        </div>
       </div>
     </div>
 
@@ -1342,9 +1349,28 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
       <a href="https://hashcash.club" target="_blank" class="btn btn-sm" style="text-decoration:none">hashcash.club ↗</a>
     </div>
   </div>
-  <div style="font-size:1.25rem;color:var(--dim);margin-bottom:1rem;line-height:1.65;background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.1);border-radius:8px;padding:.75rem">
-    HashCash miners are NFTs you place in facilities to generate hCASH. Miners with higher hashrate earn more hCASH per block. Providing hCASH/WAVAX LP and participating in the Moat strengthens the entire HashCash ecosystem.
+  <div style="font-size:1.25rem;color:var(--dim);margin-bottom:.85rem;line-height:1.65;background:rgba(229,62,62,.04);border:1px solid rgba(229,62,62,.1);border-radius:8px;padding:.75rem">
+    HashCash miners are NFTs you place in facilities to generate hCASH. Miners with higher hashrate earn more hCASH per block. Use <b style="color:var(--gold)">🔮 What If?</b> to simulate buying any listed miner and compare against LP.
   </div>
+
+  <!-- ── Filter bar ── -->
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:.85rem;background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:.55rem .75rem">
+    <input id="minerFilterSearch" type="text" class="inp" placeholder="🔍 Search name…" style="flex:1;min-width:120px;max-width:200px;font-size:var(--fs-xs)" oninput="filterMinerGrid()">
+    <select id="minerFilterSort" class="inp" style="width:auto;font-size:var(--fs-xs)" onchange="filterMinerGrid()">
+      <option value="name">Sort: Name A→Z</option>
+      <option value="hashrate">Sort: Hashrate ↓</option>
+      <option value="power">Sort: Power ↓</option>
+      <option value="efficiency">Sort: Efficiency ↓</option>
+    </select>
+    <select id="minerFilterType" class="inp" style="width:auto;font-size:var(--fs-xs)" onchange="filterMinerGrid()">
+      <option value="">All Types</option>
+      <option value="miner_nft">Miners</option>
+      <option value="rig_assembler">Rigs</option>
+    </select>
+    <button class="btn btn-g btn-sm" onclick="document.getElementById('minerFilterSearch').value='';document.getElementById('minerFilterSort').value='name';document.getElementById('minerFilterType').value='';filterMinerGrid()">✕ Clear</button>
+    <span class="mono" id="minerFilterCount" style="font-size:var(--fs-xs);color:var(--mut)"></span>
+  </div>
+
   <div class="miner-grid" id="minerGrid">
     <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)">
       <span class="spin"></span>
@@ -1352,19 +1378,10 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
     </div>
   </div>
 
-  <!-- Rigs section -->
-  <div class="sh" style="margin-top:.5rem"><div class="sh-t">🔧 Rig Assemblers</div></div>
+  <!-- Rigs section (shown when not filtered to rigs specifically) -->
+  <div class="sh" id="rigSectionHead" style="margin-top:.5rem"><div class="sh-t">🔧 Rig Assemblers</div></div>
   <div id="rigGrid" class="g2">
     <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading rig data…</div>
-  </div>
-
-  <!-- Marketplace listings -->
-  <div class="sh" style="margin-top:.5rem">
-    <div class="sh-t">🛒 Marketplace Listings</div>
-    <span class="mono" style="font-size:.76rem;color:var(--mut)" id="marketplaceHeader"></span>
-  </div>
-  <div id="marketplaceListings">
-    <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span></div>
   </div>
 
   <!-- Other contracts -->
@@ -1477,98 +1494,147 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
   </div>
 
   <!-- ── STEP 1: Inputs ── -->
-  <div class="g2" style="margin-bottom:1rem">
+  <div style="margin-bottom:1rem">
 
-    <!-- Left: Miner setup -->
-    <div class="card">
-      <div class="ch">
-        <div class="ctitle" style="color:var(--red)">⛏ Path A — Buy the Miner</div>
+    <!-- ══ MARKETPLACE LISTINGS PANEL ══ -->
+    <div class="card" style="margin-bottom:.85rem">
+      <div class="ch" style="border-left:3px solid var(--gold)">
+        <div class="ctitle" style="color:var(--gold)">🛒 Live Marketplace — Click a Miner to Simulate</div>
+        <div style="display:flex;gap:5px;align-items:center">
+          <span class="mono" style="font-size:var(--fs-xs);color:var(--mut)" id="marketplaceHeader"></span>
+          <button class="btn btn-g btn-sm" onclick="reloadWiMarket()" title="Refresh listings">↺</button>
+        </div>
       </div>
-      <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
 
-        <!-- Miner selector with search -->
-        <div style="position:relative">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Select Miner (from HashCash API)</div>
-          <!-- Search + refresh row -->
-          <div style="display:flex;gap:6px;margin-bottom:4px">
-            <div style="position:relative;flex:1">
-              <input id="wi-minerSearch" type="text" class="inp"
-                placeholder="🔍  Search miners…"
-                oninput="wiFilterMiners(this.value)"
-                onfocus="document.getElementById('wi-minerDropdown').style.display='block'"
-                onkeydown="wiSearchKeydown(event)"
-                autocomplete="off"
-                style="width:100%;padding-right:2rem">
-              <button onclick="wiClearSearch()" title="Clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:.85rem;padding:0;line-height:1;z-index:1">✕</button>
-            </div>
-            <button class="btn btn-g btn-sm" onclick="wiRefreshMiners()" title="Reload miners from API">↺</button>
-          </div>
-          <!-- Dropdown -->
-          <div id="wi-minerDropdown" style="display:none;position:absolute;z-index:400;left:0;right:40px;max-height:220px;overflow-y:auto;background:var(--card);border:1px solid var(--bor2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);top:100%">
-            <div id="wi-minerDropdownList"></div>
-          </div>
-          <!-- Selected chip -->
-          <div id="wi-selectedChip" style="display:none;margin-top:4px;background:rgba(229,62,62,.07);border:1px solid rgba(229,62,62,.22);border-radius:6px;padding:5px 10px;align-items:center;gap:8px">
-            <span id="wi-selectedChipName" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm);color:var(--red2);flex:1"></span>
-            <button onclick="wiClearMinerSelection()" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:.75rem" title="Clear">✕</button>
-          </div>
-          <!-- Miner image -->
-          <div id="wi-minerImg" style="margin-top:.5rem;display:none">
-            <img id="wi-minerImgEl" src="" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--bor)">
-          </div>
+      <!-- Filter bar -->
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:.6rem .9rem;border-bottom:1px solid var(--bor);background:var(--sur)">
+        <input id="wiMktSearch" type="text" class="inp" placeholder="🔍 Filter listings…" style="flex:1;min-width:110px;max-width:180px;font-size:var(--fs-xs)" oninput="renderWiMarket()">
+        <select id="wiMktSort" class="inp" style="width:auto;font-size:var(--fs-xs)" onchange="renderWiMarket()">
+          <option value="price_asc">Price ↑</option>
+          <option value="price_desc">Price ↓</option>
+          <option value="hash_desc">Hashrate ↓</option>
+          <option value="eff_desc">Efficiency ↓</option>
+        </select>
+        <select id="wiMktHashFilter" class="inp" style="width:auto;font-size:var(--fs-xs)" onchange="renderWiMarket()">
+          <option value="">All hashrates</option>
+          <option value="100">≥100 MH/s</option>
+          <option value="150">≥150 MH/s</option>
+          <option value="200">≥200 MH/s</option>
+          <option value="500">≥500 MH/s</option>
+        </select>
+        <span class="mono" id="wiMktCount" style="font-size:var(--fs-xs);color:var(--mut)"></span>
+      </div>
+
+      <!-- Listings grid -->
+      <div id="wiMarketListings" style="padding:.65rem;display:grid;gap:.45rem">
+        <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading marketplace…</div>
+      </div>
+
+      <!-- Cart / selected miners for facility -->
+      <div id="wiCartWrap" style="display:none;border-top:1px solid var(--bor);padding:.75rem .9rem;background:rgba(212,168,67,.04)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;flex-wrap:wrap;gap:5px">
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-base);color:var(--gold)">🛒 Selected for Facility (<span id="wiCartCount">0</span> miners)</div>
+          <button class="btn btn-g btn-sm" onclick="wiClearCart()">✕ Clear All</button>
         </div>
-
-        <!-- Miner stats read-only display -->
-        <div id="wi-minerStats" style="display:none;background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Miner Specs</div>
-          <div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr" id="wi-mhsDisplay">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Power draw</span><span class="calc-val" id="wi-wattsDisplay">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Efficiency</span><span class="calc-val cg" id="wi-effDisplay">—</span></div>
-        </div>
-
-        <!-- Price input -->
-        <div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Marketplace Price You Saw</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="wi-price" type="number" class="inp" placeholder="e.g. 2500" style="flex:1" oninput="wiPriceChanged()" min="1">
-            <select id="wi-priceCurrency" class="inp" style="width:100px" onchange="wiCalc()">
-              <option value="hcash">hCASH</option>
-              <option value="avax">AVAX</option>
-            </select>
-          </div>
-          <div id="wi-priceUsdDisplay" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px">≈ $— USD</div>
-        </div>
-
-        <!-- Facility level — rates fetched from API via wiFetchFacilityRates() -->
-        <div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">
-            Your Facility Level (electricity rate)
-            <span id="wi-rateSourceBadge" style="margin-left:6px;font-size:var(--fs-xs);color:var(--mut)"></span>
-          </div>
-          <select id="wi-facilityLevel" class="inp" onchange="wiOnFacilityChange()">
+        <div id="wiCartItems" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.6rem"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <select id="wi-facilityLevel" class="inp" style="flex:1;min-width:160px;font-size:var(--fs-xs)" onchange="wiOnFacilityChange()">
             <option value="8.87" data-lv="1">Lv1 (2×2 · 4 slots · 400W) — 8.87 hCASH/kWh</option>
             <option value="7.09" data-lv="2">Lv2 (2×3 · 6 slots · 1,000W) — 7.09 hCASH/kWh</option>
             <option value="6.21" data-lv="3" selected>Lv3 (3×3 · 9 slots · 2,000W) — 6.21 hCASH/kWh</option>
             <option value="7.09" data-lv="4">Lv4 (3×4 · 12 slots · 6,000W) — 7.09 hCASH/kWh</option>
             <option value="3.55" data-lv="5">Lv5 (4×4 · 16 slots · 15,000W) — 3.55 hCASH/kWh ⚡ best</option>
           </select>
-          <div id="wi-rateNote" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px"></div>
+          <button class="btn btn-sm" onclick="wiRunWithCart()">⚡ Run Simulation →</button>
         </div>
-
-        <!-- Facility slot table -->
-        <div id="wi-slotTableWrap">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center">
-            <span>Facility Slots</span>
+        <!-- Slot grid preview -->
+        <div id="wi-slotTableWrap" style="margin-top:.65rem">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
+            <span>FACILITY SLOTS</span>
             <span id="wi-slotSummary" style="color:var(--grn)"></span>
           </div>
-          <!-- Power bar -->
-          <div style="background:var(--bor);border-radius:4px;height:5px;overflow:hidden;margin-bottom:8px">
+          <div style="background:var(--bor);border-radius:4px;height:5px;overflow:hidden;margin-bottom:6px">
             <div id="wi-slotPowerBar" style="height:100%;background:linear-gradient(90deg,var(--grn),var(--gold));border-radius:4px;width:0%;transition:width .4s"></div>
           </div>
-          <div id="wi-slotGrid" style="display:grid;gap:5px;margin-bottom:8px"></div>
-          <!-- Add existing miner to a slot -->
-          <div id="wi-slotAddWrap" style="background:rgba(229,62,62,.04);border:1px dashed rgba(229,62,62,.2);border-radius:7px;padding:.6rem">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px">ADD ANOTHER MINER TO SLOT</div>
+          <div id="wi-slotGrid" style="display:grid;gap:5px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MANUAL BUILD — collapsible ══ -->
+    <div class="card" style="margin-bottom:.85rem">
+      <div class="ch" style="cursor:pointer;user-select:none" onclick="wiToggleManual()">
+        <div class="ctitle" style="color:var(--red)">⛏ Manual Build — Custom Miner + Price</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="mono" style="font-size:var(--fs-xs);color:var(--mut)">click to expand</span>
+          <span id="wiManualChevron" style="font-size:.8rem;color:var(--mut);transition:transform .2s">▼</span>
+        </div>
+      </div>
+      <div id="wiManualBody" style="display:none">
+        <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
+
+          <!-- Miner selector with search -->
+          <div style="position:relative">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Select Miner (from HashCash API)</div>
+            <div style="display:flex;gap:6px;margin-bottom:4px">
+              <div style="position:relative;flex:1">
+                <input id="wi-minerSearch" type="text" class="inp"
+                  placeholder="🔍  Search miners…"
+                  oninput="wiFilterMiners(this.value)"
+                  onfocus="document.getElementById('wi-minerDropdown').style.display='block'"
+                  onkeydown="wiSearchKeydown(event)"
+                  autocomplete="off"
+                  style="width:100%;padding-right:2rem">
+                <button onclick="wiClearSearch()" title="Clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:.85rem;padding:0;line-height:1;z-index:1">✕</button>
+              </div>
+              <button class="btn btn-g btn-sm" onclick="wiRefreshMiners()" title="Reload miners from API">↺</button>
+            </div>
+            <div id="wi-minerDropdown" style="display:none;position:absolute;z-index:400;left:0;right:40px;max-height:220px;overflow-y:auto;background:var(--card);border:1px solid var(--bor2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);top:100%">
+              <div id="wi-minerDropdownList"></div>
+            </div>
+            <div id="wi-selectedChip" style="display:none;margin-top:4px;background:rgba(229,62,62,.07);border:1px solid rgba(229,62,62,.22);border-radius:6px;padding:5px 10px;align-items:center;gap:8px">
+              <span id="wi-selectedChipName" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm);color:var(--red2);flex:1"></span>
+              <button onclick="wiClearMinerSelection()" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:.75rem" title="Clear">✕</button>
+            </div>
+            <div id="wi-minerImg" style="margin-top:.5rem;display:none">
+              <img id="wi-minerImgEl" src="" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--bor)">
+            </div>
+          </div>
+
+          <!-- Miner stats -->
+          <div id="wi-minerStats" style="display:none;background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Miner Specs</div>
+            <div class="calc-row"><span class="calc-lbl">Hashrate</span><span class="calc-val cr" id="wi-mhsDisplay">—</span></div>
+            <div class="calc-row"><span class="calc-lbl">Power draw</span><span class="calc-val" id="wi-wattsDisplay">—</span></div>
+            <div class="calc-row"><span class="calc-lbl">Efficiency</span><span class="calc-val cg" id="wi-effDisplay">—</span></div>
+          </div>
+
+          <!-- Price input -->
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Marketplace Price</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input id="wi-price" type="number" class="inp" placeholder="e.g. 2500" style="flex:1" oninput="wiPriceChanged()" min="1">
+              <select id="wi-priceCurrency" class="inp" style="width:100px" onchange="wiCalc()">
+                <option value="hcash">hCASH</option>
+                <option value="avax">AVAX</option>
+              </select>
+            </div>
+            <div id="wi-priceUsdDisplay" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px">≈ $— USD</div>
+          </div>
+
+          <!-- Facility level -->
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">
+              Facility Level
+              <span id="wi-rateSourceBadge" style="margin-left:6px;font-size:var(--fs-xs);color:var(--mut)"></span>
+            </div>
+            <!-- Note: wi-facilityLevel select is rendered in the cart section above; manual uses same element -->
+            <div id="wi-rateNote" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px"></div>
+          </div>
+
+          <!-- Add another miner to slot -->
+          <div style="background:rgba(229,62,62,.04);border:1px dashed rgba(229,62,62,.2);border-radius:7px;padding:.6rem">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px">ADD MINER TO SLOT</div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <div style="position:relative;flex:1;min-width:140px">
                 <input id="wi-slotMinerSearch" type="text" class="inp" placeholder="🔍 Search…"
@@ -1587,14 +1653,14 @@ main{position:relative;z-index:1;padding:1.1rem;max-width:1440px;margin:0 auto}
               <button class="btn btn-sm" onclick="wiAddSlotMiner()" style="white-space:nowrap;flex-shrink:0">+ Add</button>
             </div>
           </div>
-        </div>
 
-        <!-- Manual hashrate override -->
-        <div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Override Hashrate (MH/s) — optional</div>
-          <input id="wi-customMhs" type="number" class="inp" placeholder="Leave blank to use API value" min="0" oninput="wiCalc()">
-        </div>
+          <!-- Override hashrate -->
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Override Hashrate (MH/s) — optional</div>
+            <input id="wi-customMhs" type="number" class="inp" placeholder="Leave blank to use API value" min="0" oninput="wiCalc()">
+          </div>
 
+        </div>
       </div>
     </div>
 
@@ -1912,6 +1978,23 @@ const f2 = n => Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
 const shortA = a => a?a.slice(0,6)+'…'+a.slice(-4):'—';
 const setTxt = (id,v) => {const el=document.getElementById(id);if(el)el.textContent=v;};
 const setHtml = (id,v) => {const el=document.getElementById(id);if(el)el.innerHTML=v;};
+
+// ── safeNum: converts any number to a plain decimal string, NEVER scientific notation ──
+// ethers v6 parseEther/parseUnits reject "1e-7" — always use this before passing to ethers
+function safeNum(n, decimals = 18) {
+  const num = Number(n);
+  if (!isFinite(num) || num <= 0) return '0';
+  // toFixed with enough places to capture the full precision
+  // clamp decimals to valid range
+  const dec = Math.min(Math.max(decimals, 0), 18);
+  // Use toPrecision to find sig figs, then toFixed to format without sci notation
+  // Start with 18 decimal places and trim trailing zeros (but keep at least one decimal)
+  let s = num.toFixed(dec);
+  // Remove trailing zeros after decimal point (but not the decimal itself)
+  s = s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  if (!s || s === '' || s === '-') return '0';
+  return s;
+}
 
 function lockMultiplier(days) {
   if(days>=730)return 5.00;if(days>=540)return 4.57;if(days>=365)return 4.00;
@@ -2621,11 +2704,10 @@ async function loadLpHolders(totalLpSupply) {
 
     holders.sort((a,b)=>b.balance-a.balance);
 
-    // Get total supply
-    let supplyNum=totalLpSupply||0;
-    if(!supplyNum){
-      try{const ts=await lpC.totalSupply();supplyNum=parseFloat(ethers.formatEther(ts));}catch(e){}
-    }
+    // Get total supply — always fetch on-chain for accuracy (don't rely on passed param)
+    let supplyNum=0;
+    try{const ts=await lpC.totalSupply();supplyNum=parseFloat(ethers.formatEther(ts));}catch(e){}
+    if(!supplyNum) supplyNum=totalLpSupply||0;
     if(!supplyNum) supplyNum=holders.reduce((s,h)=>s+h.balance,0)||1;
 
     if(!holders.length){
@@ -2705,6 +2787,12 @@ async function loadMiners() {
 
     const miners  = contracts.filter(c=>c.category==='miner_nft');
     const rigs    = contracts.filter(c=>c.category==='rig_assembler');
+    // Store for filter
+    _allMinersForFilter = miners;
+    _allRigsForFilter   = rigs;
+    // Update filter count initially
+    const countEl = document.getElementById('minerFilterCount');
+    if (countEl) countEl.textContent = `${miners.length} miner${miners.length!==1?'s':''}, ${rigs.length} rig${rigs.length!==1?'s':''}`;
     const tokens  = contracts.filter(c=>c.category==='game_token'||c.category==='supported_token');
     const game    = contracts.filter(c=>c.category==='game_main');
     const extNft  = contracts.filter(c=>c.category==='external_nft');
@@ -2790,92 +2878,178 @@ async function loadMiners() {
 async function loadMarketplaceListings(marketContract, miners) {
   const mktDiv=document.getElementById('marketplaceListings');
   if(!mktDiv) return;
+
+  // Hard-code the confirmed marketplace contract address from on-chain evidence
+  const MARKETPLACE_ADDR = '0x511FC8b8e5D07a012D17f56fE8bfdE576c8Dd13d';
+  const MARKETPLACE_IMPL = '0xdAdf0ABD030e786ffe1672A49Ed3352765bbEC07'; // proxy impl
+
+  const addr = marketContract?.address || MARKETPLACE_ADDR;
   mktDiv.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading marketplace listings…</div>';
+
   try{
-    if(!marketContract?.address){
-      mktDiv.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut)">Marketplace contract not found in API.</div>';
-      return;
-    }
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
-    // Marketplace ABI — standard listing/order functions
-    const MARKET_ABI=[
-      'function getListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
-      'function getActiveListings(uint256 offset, uint256 limit) view returns (tuple(uint256 listingId, address seller, address nftContract, uint256 tokenId, uint256 price, bool active)[] listings)',
-      'function listingCount() view returns (uint256)',
-      'function totalListings() view returns (uint256)',
-      'function listings(uint256) view returns (address seller, address nftContract, uint256 tokenId, uint256 price, bool active)',
-    ];
-
-    // Try to get ABI from HashCash API
-    let marketAbi=MARKET_ABI;
-    if(marketContract.abiUrl){
-      try{
-        const abiResp=await fetch(marketContract.abiUrl,{headers:{'x-api-key':HCASH_API_KEY}}).then(r=>r.json());
-        if(abiResp?.abi) marketAbi=abiResp.abi;
-      }catch(e){}
-    }
-
-    const mktC=new ethers.Contract(ethers.getAddress(marketContract.address),marketAbi,prov);
-
-    // Get listing count
-    let count=0;
-    try{count=Number(await mktC.listingCount().catch(()=>mktC.totalListings().catch(()=>0n)));}catch(e){}
-
-    // Fetch via Snowtrace tokennfttx on market contract for recent activity
-    const [snowRes]=await Promise.allSettled([
-      fetch(`${SNOWTRACE}?module=account&action=tokennfttx&address=${marketContract.address}&sort=desc&offset=50`).then(r=>r.json()),
-    ]);
-
-    const nftTxs=(snowRes.status==='fulfilled'&&snowRes.value?.status==='1')?(snowRes.value.result||[]):[];
 
     // Build miner address→name map
     const minerByAddr={};
     miners.forEach(m=>{if(m.address)minerByAddr[m.address.toLowerCase()]=m;});
 
-    // Get active listings by calling listings() for recent tokenIds
     const listings=[];
-    // Try getActiveListings first
+
+    // ── STRATEGY 1: ThirdWeb DirectListings ABI (confirmed by on-chain method signature) ──
+    // createListing = 0x746415b5, buyFromListing = 0x704232dc
+    const TW_ABI = [
+      'function getAllValidListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
+      'function getAllListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
+      'function totalListings() view returns (uint256)',
+    ];
+    const hCASH_CURRENCY = '0xBa5444409257967E5E50b113C395A766B0678C03'; // from on-chain BuyFromListing tx
+
     try{
-      const raw=await mktC.getActiveListings(0,20).catch(()=>mktC.getListings(0,20).catch(()=>null));
-      if(raw&&raw.length){
-        for(const l of raw){
-          if(!l.active) continue;
-          const miner=minerByAddr[(l.nftContract||'').toLowerCase()];
-          listings.push({
-            listingId:Number(l.listingId||0),
-            seller:(l.seller||'').toLowerCase(),
-            nftContract:(l.nftContract||'').toLowerCase(),
-            tokenId:Number(l.tokenId||0),
-            price:parseFloat(ethers.formatEther(l.price||0n)),
-            minerName:miner?.name||null,
-            minerStats:miner?.minerStats||null,
-            minerImg:miner?.imageUrl||null,
-          });
+      const mktC = new ethers.Contract(ethers.getAddress(addr), TW_ABI, prov);
+      let total = 0;
+      try{ total = Number(await mktC.totalListings()); }catch(e){}
+
+      if(total > 0){
+        const startId = Math.max(0, total - 50); // last 50 listings
+        let raw = null;
+        try{ raw = await mktC.getAllValidListings(startId, total - 1); }catch(e){
+          try{ raw = await mktC.getAllListings(startId, total - 1); }catch(e2){}
+        }
+        if(raw && raw.length){
+          const now = Math.floor(Date.now()/1000);
+          for(const l of raw){
+            // status: 1 = CREATED (active), 2 = COMPLETED, 3 = CANCELLED
+            const status = Number(l.status);
+            const startTs = Number(l.startTimestamp);
+            const endTs = Number(l.endTimestamp);
+            if(status !== 1) continue; // only active
+            if(endTs > 0 && endTs < now) continue; // expired
+            const nftAddr = (l.assetContract||'').toLowerCase();
+            const miner = minerByAddr[nftAddr];
+            // Price: currency is hCASH (18 dec) based on on-chain tx
+            const isCurrency_hCASH = (l.currency||'').toLowerCase() === hCASH_CURRENCY.toLowerCase();
+            const priceRaw = parseFloat(ethers.formatEther(l.pricePerToken||0n));
+            listings.push({
+              listingId: Number(l.listingId||0),
+              seller: (l.listingCreator||'').toLowerCase(),
+              nftContract: nftAddr,
+              tokenId: Number(l.tokenId||0),
+              priceHcash: isCurrency_hCASH ? priceRaw : 0,
+              priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
+              currencyAddr: (l.currency||'').toLowerCase(),
+              minerName: miner?.name||null,
+              minerStats: miner?.minerStats||null,
+              minerImg: miner?.imageUrl||null,
+            });
+          }
         }
       }
-    }catch(e){console.warn('marketplace listings:',e.message);}
+    }catch(e){ console.warn('marketplace TW direct call:', e.message); }
 
-    // Fall back to recent NFT transfers into/out of the marketplace
-    if(!listings.length&&nftTxs.length){
-      for(const tx of nftTxs.slice(0,20)){
-        const miner=minerByAddr[(tx.contractAddress||'').toLowerCase()];
-        listings.push({
-          listingId:null,
-          seller:(tx.from||'').toLowerCase(),
-          nftContract:(tx.contractAddress||'').toLowerCase(),
-          tokenId:Number(tx.tokenID||tx.tokenId||0),
-          price:0, // can't get price from transfer event alone
-          minerName:miner?.name||tx.tokenName||null,
-          minerStats:miner?.minerStats||null,
-          minerImg:miner?.imageUrl||null,
-          _fromEvent:true,
-          timestamp:Number(tx.timeStamp||0),
-        });
-      }
+    // ── STRATEGY 2: Parse NewListing events via Snowtrace logs ──
+    // Topic0 for NewListing: 0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad
+    if(!listings.length){
+      try{
+        const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=50`)
+          .then(r=>r.json()).catch(()=>null);
+        const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
+
+        // Also fetch Cancelled / Bought events to filter them out
+        const cancelledIds = new Set();
+        const boughtIds = new Set();
+        // NewSale topic: 0x45d6bc4d2e1f4b8a9b9e8e8d2e2e9d5b4e2e4f2b4e2f4b2e4f2e4b2e4f2e4b2
+        // We'll filter by checking listingId status if we have the contract
+
+        const now = Math.floor(Date.now()/1000);
+        for(const log of logs.slice(0,50)){
+          try{
+            // topics: [topic0, listingCreator, listingId, assetContract]
+            const creator = log.topics[1] ? '0x'+log.topics[1].slice(26).toLowerCase() : '';
+            const listingId = log.topics[2] ? Number(BigInt(log.topics[2])) : 0;
+            const assetContract = log.topics[3] ? '0x'+log.topics[3].slice(26).toLowerCase() : '';
+
+            // Decode the listing tuple from data
+            // listing = (listingId, tokenId, quantity, pricePerToken, startTimestamp, endTimestamp,
+            //            listingCreator, assetContract, currency, tokenType, status, reserved)
+            const data = (log.data||'').replace('0x','');
+            if(data.length < 384) continue; // need at least 12 * 32 bytes
+
+            const words = [];
+            for(let i=0;i<data.length;i+=64) words.push(data.slice(i,i+64));
+
+            // ABI-encoded tuple starts after offset word (first word is offset = 0x20)
+            // words[0] = offset (0x20), words[1] = listingId, words[2]=tokenId, etc.
+            const wOff = words[0]==='0000000000000000000000000000000000000000000000000000000000000020' ? 1 : 0;
+            const w = words.slice(wOff);
+            if(w.length < 12) continue;
+
+            const tokenId      = Number(BigInt('0x'+w[1]));
+            // quantity          = w[2]
+            const pricePerToken = BigInt('0x'+w[3]);
+            const startTs      = Number(BigInt('0x'+w[4]));
+            const endTs        = Number(BigInt('0x'+w[5]));
+            // listingCreator    = w[6] (address, last 20 bytes)
+            // assetContract2    = w[7]
+            const currency     = '0x'+w[8].slice(24);
+            // tokenType         = w[9]
+            const status       = Number(BigInt('0x'+w[10]));
+            // reserved          = w[11]
+
+            if(status !== 1) continue; // not active
+            if(endTs > 0 && endTs < now) continue; // expired
+            if(startTs > now + 31536000) continue; // sanity: startTs not in far future
+
+            const miner = minerByAddr[assetContract];
+            const isCurrency_hCASH = currency.toLowerCase() === hCASH_CURRENCY.toLowerCase();
+            const priceRaw = parseFloat(ethers.formatEther(pricePerToken));
+
+            // Avoid duplicates
+            if(listings.find(x=>x.listingId===listingId)) continue;
+
+            listings.push({
+              listingId,
+              seller: creator,
+              nftContract: assetContract,
+              tokenId,
+              priceHcash: isCurrency_hCASH ? priceRaw : 0,
+              priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
+              currencyAddr: currency,
+              minerName: miner?.name||null,
+              minerStats: miner?.minerStats||null,
+              minerImg: miner?.imageUrl||null,
+            });
+          }catch(pe){ /* skip malformed log */ }
+        }
+      }catch(e){ console.warn('marketplace logs fallback:', e.message); }
+    }
+
+    // ── STRATEGY 3: Recent NFT transfer events (last resort) ──
+    if(!listings.length){
+      try{
+        const snowRes = await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&address=${addr}&sort=desc&offset=30`).then(r=>r.json()).catch(()=>null);
+        const nftTxs = (snowRes?.status==='1') ? (snowRes.result||[]) : [];
+        for(const tx of nftTxs.slice(0,20)){
+          const miner = minerByAddr[(tx.contractAddress||'').toLowerCase()];
+          listings.push({
+            listingId: null,
+            seller: (tx.from||'').toLowerCase(),
+            nftContract: (tx.contractAddress||'').toLowerCase(),
+            tokenId: Number(tx.tokenID||tx.tokenId||0),
+            priceHcash: 0, priceAvax: 0,
+            minerName: miner?.name||tx.tokenName||null,
+            minerStats: miner?.minerStats||null,
+            minerImg: miner?.imageUrl||null,
+            _fromEvent: true,
+            timestamp: Number(tx.timeStamp||0),
+          });
+        }
+      }catch(e){ console.warn('marketplace nfttx fallback:', e.message); }
     }
 
     if(!listings.length){
-      mktDiv.innerHTML=`<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem">No active listings found.<br><a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a></div>`;
+      mktDiv.innerHTML=`<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem">No active listings found.<br><span style="font-size:1rem;color:var(--dim)">Contract: ${shortA(addr)}</span><br><a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a></div>`;
+      const header=document.getElementById('marketplaceHeader');
+      if(header) header.textContent='0 listings';
       return;
     }
 
@@ -2885,32 +3059,37 @@ async function loadMarketplaceListings(marketContract, miners) {
         ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:12px;height:12px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:.80rem;text-decoration:none">@${prof.twitter}</a></div>`
         :`<span class="mono" style="font-size:.76rem;color:var(--mut)">${shortA(l.seller)}</span>`;
       const s=l.minerStats||{};
+      // Price display: prefer hCASH price (native currency for this market), fallback AVAX
+      const priceHtml = l.priceHcash > 0
+        ? `<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--gold)">${l.priceHcash.toLocaleString(undefined,{maximumFractionDigits:0})} hCASH</span>`
+        : l.priceAvax > 0
+          ? `<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--grn)">${f4(l.priceAvax)} AVAX</span>`
+          : l._fromEvent ? `<span class="mono" style="font-size:.76rem;color:var(--mut)">Recent transfer</span>` : '';
       return `<div style="display:flex;gap:10px;align-items:flex-start;padding:.6rem;background:var(--sur);border:1px solid var(--bor);border-radius:9px;margin-bottom:.4rem">
         ${l.minerImg?`<img src="${l.minerImg}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">`:
           '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem">⛏</div>'}
         <div style="flex:1;min-width:0">
-          <div style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:1.55rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:.76rem;color:var(--mut)">#${l.tokenId}</span></div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:.76rem;color:var(--mut)">#${l.tokenId}</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin:.2rem 0">
             ${s.hashrateFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--red)">${s.hashrateFormatted}</span>`:''}
             ${s.powerFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--gold)">${s.powerFormatted}</span>`:''}
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
             ${sellerHtml}
-            ${l.price>0?`<span style="font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:1.55rem;color:var(--grn)">${f4(l.price)} AVAX</span>`:
-              l._fromEvent?`<span class="mono" style="font-size:.76rem;color:var(--mut)">Recent transfer</span>`:''}
+            ${priceHtml}
           </div>
+          ${l.listingId!=null?`<div class="mono" style="font-size:.72rem;color:var(--mut);margin-top:2px">Listing #${l.listingId}</div>`:''}
         </div>
-        ${!l._fromEvent?`<a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:1.25rem;flex-shrink:0">Buy ↗</a>`:''}
+        <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:1.25rem;flex-shrink:0">Buy ↗</a>
       </div>`;
     }).join('');
 
-    // Add header with count
     const header=document.getElementById('marketplaceHeader');
-    if(header) header.textContent=`${listings.length} listing${listings.length!==1?'s':''}${count>0?' ('+count+' total)':''}`;
+    if(header) header.textContent=`${listings.length} listing${listings.length!==1?'s':''}`;
 
   }catch(e){
-    console.warn('marketplace:',e.message);
-    mktDiv.innerHTML=`<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1rem">Could not load listings: ${e.message?.slice(0,60)}</div>`;
+    console.warn('marketplace:', e.message);
+    mktDiv.innerHTML=`<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1rem">Could not load listings: ${e.message?.slice(0,80)}<br><a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a></div>`;
   }
 }
 
@@ -2934,7 +3113,7 @@ async function quoteLPFromAVAX() {
       const hcashAddr=await resolveHcashToken();
       const hcashTok=new ethers.Contract(hcashAddr,ERC20_ABI,prov);
       const hcashDec=Number(await hcashTok.decimals().catch(()=>18));
-      const avaxWei=ethers.parseEther(String(avaxAmt));
+      const avaxWei=ethers.parseEther(safeNum(avaxAmt));
       const router=new ethers.Contract(PHARAOH_ROUTER_ADDR,PHARAOH_ROUTER_ABI,prov);
       const big=ethers.parseUnits('9999999999',hcashDec);
       const q=await router.quoteAddLiquidity(WAVAX_ADDR,hcashAddr,false,avaxWei,big);
@@ -2950,7 +3129,7 @@ async function quoteLPFromAVAX() {
         const [res,t0,ts]=await Promise.all([lp.getReserves(),lp.token0(),lp.totalSupply()]);
         const isW0=t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
         const wRes=isW0?res[0]:res[1],hRes=isW0?res[1]:res[0];
-        const avWei=ethers.parseEther(String(avaxAmt));
+        const avWei=ethers.parseEther(safeNum(avaxAmt));
         const hWei=avWei*hRes/wRes;
         const hNeeded=parseFloat(ethers.formatEther(hWei));
         const lps=Number(avWei)*Number(ts)/Number(wRes)/1e18;
@@ -2979,7 +3158,7 @@ async function quoteLPFromToken() {
       const wRes=isW0?res[0]:res[1],hRes=isW0?res[1]:res[0];
       const hcashAddr=await resolveHcashToken();
       const dec=Number(await new ethers.Contract(hcashAddr,ERC20_ABI,prov).decimals().catch(()=>18));
-      const hWei=ethers.parseUnits(String(Math.floor(hcashAmt*1e6)/1e6),dec);
+      const hWei=ethers.parseUnits(safeNum(Math.floor(hcashAmt*1e6)/1e6, dec),dec);
       const aWei=hWei*wRes/hRes;
       const avaxNeeded=parseFloat(ethers.formatEther(aWei));
       const lpShare=Number(hWei)/Number(hRes);
@@ -2998,7 +3177,7 @@ async function quoteRemoveLP() {
   try{
     const hcashAddr=await resolveHcashToken();
     const router=new ethers.Contract(PHARAOH_ROUTER_ADDR,PHARAOH_ROUTER_ABI,prov);
-    const lpWei=ethers.parseEther(String(lpAmt));
+    const lpWei=ethers.parseEther(safeNum(lpAmt));
     const q=await router.quoteRemoveLiquidity(WAVAX_ADDR,hcashAddr,false,lpWei);
     const avax=parseFloat(ethers.formatEther(q[0]));
     const hcash=parseFloat(ethers.formatEther(q[1]));
@@ -3038,7 +3217,7 @@ async function hcashAddLiquidity() {
     else throw new Error('No WAVAX/hCASH pool found in Pharaoh factory');
 
     // 2. Get ratio
-    const avaxWei=ethers.parseEther(String(amtRaw));
+    const avaxWei=ethers.parseEther(safeNum(amtRaw));
     const hcashDec=Number(await hcash.decimals().catch(()=>18));
     let hcashWei;
     upd('<span class="spin"></span>2/4 — Getting pool ratio…');
@@ -3394,7 +3573,7 @@ async function loadRewards() {
   loadMinerHolders();
 }
 
-// Fetch current holders of Miner #27 and Miner #40 NFTs via Snowtrace tokennfttx
+// Fetch current holders of Miner #27 and Miner #40 NFTs via Snowtrace tokennfttx + on-chain fallback
 async function loadMinerHolders() {
   async function fetchNFTHolders(contractAddr, elId, linkElId) {
     const el=document.getElementById(elId);
@@ -3402,43 +3581,87 @@ async function loadMinerHolders() {
     el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)"><span class="spin"></span> Loading holders…</div>';
     if(!contractAddr){el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">Address pending API</div>';return;}
     try{
-      // Use Snowtrace NFT transfer API to find current holders
-      const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=200`)
-        .then(r=>r.json()).catch(()=>null);
+      const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
 
-      if(!txRes||txRes.status!=='1'||!txRes.result?.length){
-        el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">No transfer data found</div>';
-        return;
-      }
-
-      // Build current holder map — track all transfers to find current owner of each tokenId
-      const tokenOwner={};
-      const txs=txRes.result||[];
-      // Sort ascending by block to replay ownership
-      const sorted=[...txs].sort((a,b)=>Number(a.blockNumber)-Number(b.blockNumber));
-      for(const tx of sorted){
-        const tokenId=tx.tokenID||tx.tokenId;
-        tokenOwner[tokenId]=(tx.to||'').toLowerCase();
-      }
-
-      // Get unique current holders (not zero addr)
-      const holdersMap={};
-      for(const [tid,owner] of Object.entries(tokenOwner)){
-        if(!owner||owner==='0x0000000000000000000000000000000000000000') continue;
-        if(!holdersMap[owner]) holdersMap[owner]={addr:owner,tokens:[]};
-        holdersMap[owner].tokens.push(tid);
-      }
-
-      const holders=Object.values(holdersMap).sort((a,b)=>b.tokens.length-a.tokens.length);
-
-      if(!holders.length){
-        el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">No current holders found</div>';
-        return;
-      }
-
-      // Update Snowtrace link
+      // Update Snowtrace link immediately
       const linkEl=document.getElementById(linkElId);
       if(linkEl) linkEl.href=`https://snowtrace.io/token/${contractAddr}`;
+
+      // ── STRATEGY 1: Snowtrace NFT transfer API ──
+      const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=500`)
+        .then(r=>r.json()).catch(()=>null);
+
+      let holders=[];
+
+      if(txRes&&txRes.status==='1'&&txRes.result?.length){
+        // Build current holder map — replay ownership from all transfers
+        const tokenOwner={};
+        const txs=txRes.result||[];
+        const sorted=[...txs].sort((a,b)=>Number(a.blockNumber)-Number(b.blockNumber));
+        for(const tx of sorted){
+          const tokenId=tx.tokenID||tx.tokenId;
+          tokenOwner[tokenId]=(tx.to||'').toLowerCase();
+        }
+        // Build holders map
+        const holdersMap={};
+        for(const [tid,owner] of Object.entries(tokenOwner)){
+          if(!owner||owner==='0x0000000000000000000000000000000000000000') continue;
+          if(!holdersMap[owner]) holdersMap[owner]={addr:owner,tokens:[]};
+          holdersMap[owner].tokens.push(tid);
+        }
+        holders=Object.values(holdersMap).sort((a,b)=>b.tokens.length-a.tokens.length);
+      }
+
+      // ── STRATEGY 2: On-chain ownerOf enumeration (always runs to verify / supplement) ──
+      try{
+        const nftAbi=[
+          'function totalSupply() view returns (uint256)',
+          'function tokenByIndex(uint256 index) view returns (uint256)',
+          'function ownerOf(uint256 tokenId) view returns (address)',
+          'function maxSupply() view returns (uint256)',
+        ];
+        const nft=new ethers.Contract(ethers.getAddress(contractAddr),nftAbi,prov);
+        let total=0;
+        try{total=Number(await nft.totalSupply());}catch(e){}
+        if(total>0 && total<=50){
+          // Try tokenByIndex enumeration first
+          let tokenIds=[];
+          try{
+            const idxCalls=[];
+            for(let i=0;i<total;i++) idxCalls.push(nft.tokenByIndex(i).catch(()=>null));
+            const idxRes=await Promise.all(idxCalls);
+            tokenIds=idxRes.filter(x=>x!=null).map(x=>Number(x));
+          }catch(e){
+            // Fallback: assume sequential tokenIds 0..total-1 or 1..total
+            for(let i=1;i<=total;i++) tokenIds.push(i);
+          }
+          if(!tokenIds.length) for(let i=1;i<=total;i++) tokenIds.push(i);
+
+          const ownerCalls=tokenIds.map(tid=>nft.ownerOf(tid).then(o=>[tid,o.toLowerCase()]).catch(()=>null));
+          const ownerResults=await Promise.all(ownerCalls);
+
+          // Build on-chain holder map
+          const onChainMap={};
+          for(const res of ownerResults){
+            if(!res)continue;
+            const [tid,owner]=res;
+            if(!owner||owner==='0x0000000000000000000000000000000000000000') continue;
+            if(!onChainMap[owner]) onChainMap[owner]={addr:owner,tokens:[]};
+            onChainMap[owner].tokens.push(String(tid));
+          }
+          const onChainHolders=Object.values(onChainMap).sort((a,b)=>b.tokens.length-a.tokens.length);
+
+          // On-chain is authoritative — use it if we got data
+          if(onChainHolders.length>0){
+            holders=onChainHolders;
+          }
+        }
+      }catch(e2){ console.warn('ownerOf fallback:',e2.message); }
+
+      if(!holders.length){
+        el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">No holders found yet</div>';
+        return;
+      }
 
       el.innerHTML=holders.slice(0,10).map((h,i)=>{
         const prof=getKnownProfile(h.addr);
@@ -3451,12 +3674,12 @@ async function loadMinerHolders() {
           ${prof?`<img src="${prof.pic}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:'' }
           <div style="flex:1;min-width:0">
             ${nameHtml}
-            <div class="mono" style="font-size:.72rem;color:var(--mut)">${h.tokens.length} token${h.tokens.length>1?'s':''} · IDs: ${h.tokens.slice(0,3).join(', ')}${h.tokens.length>3?'…':''}</div>
+            <div class="mono" style="font-size:.72rem;color:var(--mut)">${h.tokens.length} token${h.tokens.length>1?'s':''} · IDs: ${h.tokens.slice(0,4).join(', ')}${h.tokens.length>4?'…':''}</div>
           </div>
         </div>`;
       }).join('');
     }catch(e){
-      el.innerHTML=`<div class="mono" style="font-size:.80rem;color:var(--red)">${e.message?.slice(0,60)}</div>`;
+      el.innerHTML=`<div class="mono" style="font-size:.80rem;color:var(--red)">${e.message?.slice(0,80)}</div>`;
     }
   }
 
@@ -4195,112 +4418,191 @@ async function quoteSwap() {
     try {
       const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
       const hcashAddr = await resolveHcashToken();
-      // Detect stable flag
+      // Detect stable flag — check both pairs but verify reserves before trusting stable
       const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov);
       const [pFalse,pTrue] = await Promise.allSettled([
         factory.getPair(ethers.getAddress(WAVAX_ADDR),hcashAddr,false),
         factory.getPair(ethers.getAddress(WAVAX_ADDR),hcashAddr,true),
       ]);
-      const stableFlag = pTrue.status==='fulfilled' && pTrue.value !== ethers.ZeroAddress;
+      // Only use stable=true if the stable pair exists AND has liquidity
+      let stableFlag = false;
+      if(pTrue.status==='fulfilled' && pTrue.value && pTrue.value !== ethers.ZeroAddress && pTrue.value !== '0x0000000000000000000000000000000000000000'){
+        try{
+          const stablePairC = new ethers.Contract(pTrue.value, ['function getReserves() view returns (uint256,uint256,uint256)'], prov);
+          const res = await stablePairC.getReserves();
+          stableFlag = (Number(res[0]) > 0 && Number(res[1]) > 0);
+        }catch(e){ stableFlag = false; }
+      }
+      // Default: use the volatile pool (stable=false) — this is where hCASH/WAVAX liquidity lives
+      if(!stableFlag && pFalse.status==='fulfilled' && pFalse.value && pFalse.value !== ethers.ZeroAddress){
+        stableFlag = false; // explicit volatile
+      }
       const router = new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR), PHARAOH_ROUTER_ABI, prov);
       const hcashTok = new ethers.Contract(hcashAddr,ERC20_ABI,prov);
       const dec = Number(await hcashTok.decimals().catch(()=>18));
       let amtIn, fromAddr, toAddr, outDec;
       if(swapDir===0){
-        amtIn = ethers.parseEther(String(amt));
+        amtIn = ethers.parseEther(safeNum(amt));
         fromAddr = WAVAX_ADDR; toAddr = hcashAddr; outDec = dec;
       } else {
-        amtIn = ethers.parseUnits(String(amt),dec);
+        amtIn = ethers.parseUnits(safeNum(amt, dec), dec);
         fromAddr = hcashAddr; toAddr = WAVAX_ADDR; outDec = 18;
       }
       const routes = [{from:fromAddr,to:toAddr,stable:stableFlag}];
       let outAmt = 0;
+      let quoteSource = 'Pharaoh';
       try {
         const amounts = await router.getAmountsOut(amtIn,routes);
         outAmt = parseFloat(ethers.formatUnits(amounts[amounts.length-1],outDec));
       } catch(qe) {
-        // Fallback: use reserve ratio estimate
-        const lp = new ethers.Contract(ethers.getAddress(HCASH_LP_ADDR),LP_ABI,prov);
-        const [res,t0] = await Promise.all([lp.getReserves(),lp.token0()]);
-        const isW0 = t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
-        const wavaxRes = Number(isW0?res[0]:res[1])/1e18;
-        const hcashRes = Number(isW0?res[1]:res[0])/Math.pow(10,dec);
-        if(swapDir===0) outAmt = amt * (hcashRes/wavaxRes) * 0.997;
-        else outAmt = amt * (wavaxRes/hcashRes) * 0.997;
+        // Fallback 1: reserve ratio estimate
+        try {
+          const lp = new ethers.Contract(ethers.getAddress(HCASH_LP_ADDR),LP_ABI,prov);
+          const [res,t0] = await Promise.all([lp.getReserves(),lp.token0()]);
+          const isW0 = t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
+          const wavaxRes = Number(isW0?res[0]:res[1])/1e18;
+          const hcashRes = Number(isW0?res[1]:res[0])/Math.pow(10,dec);
+          if(swapDir===0) outAmt = amt * (hcashRes/wavaxRes) * 0.997;
+          else outAmt = amt * (wavaxRes/hcashRes) * 0.997;
+          quoteSource = 'reserve est.';
+        } catch(re2) {
+          // Fallback 2: KyberSwap quote API
+          try {
+            const kyberFrom = swapDir===0 ? WAVAX_ADDR : hcashAddr;
+            const kyberTo   = swapDir===0 ? hcashAddr : WAVAX_ADDR;
+            const kyberUrl  = `https://aggregator-api.kyberswap.com/avalanche/api/v1/routes?tokenIn=${kyberFrom}&tokenOut=${kyberTo}&amountIn=${amtIn.toString()}&saveGas=0&gasInclude=1`;
+            const kRes = await fetch(kyberUrl,{headers:{'x-client-id':'hcash-moat'},signal:AbortSignal.timeout(5000)}).then(r=>r.json());
+            if(kRes?.code===0&&kRes?.data?.routeSummary?.amountOut){
+              outAmt = parseFloat(ethers.formatUnits(BigInt(kRes.data.routeSummary.amountOut),outDec));
+              quoteSource = 'KyberSwap';
+            }
+          } catch(ke) {}
+        }
       }
       const slip = _slippage/100;
       const minOut = outAmt*(1-slip);
       const outLabel = swapDir===0?'hCASH':'AVAX';
-      el.innerHTML=`<span style="color:var(--grn)">≈ ${outAmt.toFixed(6)} ${outLabel}</span> <span style="color:var(--mut)">(min ${minOut.toFixed(6)} at ${_slippage}% slip · ${stableFlag?'stable':'volatile'} pool)</span>`;
+      el.innerHTML=outAmt>0
+        ? `<span style="color:var(--grn)">≈ ${outAmt.toFixed(6)} ${outLabel}</span> <span style="color:var(--mut)">(min ${minOut.toFixed(6)} at ${_slippage}% slip · ${quoteSource})</span>`
+        : `<span style="color:var(--mut)">Could not get quote — proceed to execute and router will check live.</span>`;
     } catch(e){el.innerHTML=`<span style="color:var(--mut)">Quote error: ${e.message?.slice(0,80)}</span>`;}
   },400);
 }
 
+// ── Aggregator swap: tries Pharaoh router, then KyberSwap, then Odos ──
 async function execSwap() {
   if(!walletSigner){notif('Connect wallet first','warn');return;}
   const amt=parseFloat(document.getElementById('swapFromAmt')?.value)||0;
-  if(!amt){notif('Enter amount first','warn');return;}
+  if(!amt||amt<=0){notif('Enter amount first','warn');return;}
   const statusEl=document.getElementById('swapStatus');
   const upd=s=>{if(statusEl)statusEl.innerHTML=s;};
-  try{
-    const hcashAddr=ethers.getAddress(await resolveHcashToken());
-    const WAVAX=ethers.getAddress(WAVAX_ADDR);
-    const ROUTER=ethers.getAddress(PHARAOH_ROUTER_ADDR);
-    const router=new ethers.Contract(ROUTER,PHARAOH_ROUTER_ABI,walletSigner);
-    const wavaxC=new ethers.Contract(WAVAX,WAVAX_ABI,walletSigner);
-    const deadline=BigInt(Math.floor(Date.now()/1000)+1200);
-    const slip=_slippage/100;
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
 
-    // Detect stable flag once
+  const hcashAddr=ethers.getAddress(await resolveHcashToken());
+  const WAVAX=ethers.getAddress(WAVAX_ADDR);
+  const ROUTER=ethers.getAddress(PHARAOH_ROUTER_ADDR);
+  const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+  const hcashTok=new ethers.Contract(hcashAddr,ERC20_ABI,walletSigner);
+  const dec=Number(await hcashTok.decimals().catch(()=>18));
+  const slip=_slippage/100;
+  const deadline=BigInt(Math.floor(Date.now()/1000)+1200);
+  const CHAIN_ID=43114;
+
+  // Token addresses for aggregator APIs
+  const AVAX_NATIVE='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'; // native AVAX for aggregators
+  const fromToken = swapDir===0 ? AVAX_NATIVE : hcashAddr;
+  const toToken   = swapDir===0 ? hcashAddr   : AVAX_NATIVE;
+  const amtInWei  = swapDir===0 ? ethers.parseEther(safeNum(amt)) : ethers.parseUnits(safeNum(amt,dec),dec);
+  const amtInStr  = amtInWei.toString();
+
+  // ── Helper: build fallback UI with direct DEX links ──
+  const showFallbackLinks = (reason='') => {
+    const h = hcashAddr;
+    upd(`<div style="background:rgba(229,62,62,.06);border:1px solid rgba(229,62,62,.2);border-radius:8px;padding:.75rem;margin-top:.3rem">
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.25rem;color:var(--red);margin-bottom:.4rem">⚠ In-app swap unavailable${reason?' — '+reason:''}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--dim);margin-bottom:.55rem">Swap directly on any of these aggregators:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+        <a href="https://phar.gg/swap?inputCurrency=${swapDir===0?'AVAX':h}&outputCurrency=${swapDir===0?h:'AVAX'}" target="_blank"
+          style="display:inline-flex;align-items:center;gap:5px;padding:.4rem .75rem;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.25);border-radius:7px;color:var(--gold);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm)">
+          <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg" style="width:14px;height:14px;border-radius:3px;object-fit:cover"> Pharaoh ↗
+        </a>
+        <a href="https://kyberswap.com/swap/avalanche/${swapDir===0?'avax':h}-to-${swapDir===0?h:'avax'}" target="_blank"
+          style="display:inline-flex;align-items:center;gap:5px;padding:.4rem .75rem;background:rgba(30,215,96,.1);border:1px solid rgba(30,215,96,.25);border-radius:7px;color:#1ed760;text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm)">
+          🔷 KyberSwap ↗
+        </a>
+        <a href="https://app.odos.xyz/" target="_blank"
+          style="display:inline-flex;align-items:center;gap:5px;padding:.4rem .75rem;background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.25);border-radius:7px;color:var(--pur);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm)">
+          ⚡ Odos ↗
+        </a>
+        <a href="https://lfj.gg/avalanche/trade?inputCurrency=${swapDir===0?'AVAX':h}&outputCurrency=${swapDir===0?h:'AVAX'}" target="_blank"
+          style="display:inline-flex;align-items:center;gap:5px;padding:.4rem .75rem;background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.2);border-radius:7px;color:var(--pur);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm)">
+          🏔 LFJ ↗
+        </a>
+        <a href="https://hashcash.club" target="_blank"
+          style="display:inline-flex;align-items:center;gap:5px;padding:.4rem .75rem;background:rgba(229,62,62,.08);border:1px solid rgba(229,62,62,.2);border-radius:7px;color:var(--red);text-decoration:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-sm)">
+          ⛏ hashcash.club ↗
+        </a>
+      </div>
+    </div>`);
+  };
+
+  // ══════════════════════════════════
+  //  PATH 1 — Pharaoh router (direct)
+  // ══════════════════════════════════
+  upd('<span class="spin"></span>Trying Pharaoh router…');
+  try {
+    // Detect volatile pair (stable flag check with reserve verification)
     const factory=new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov);
     const [pF,pT]=await Promise.allSettled([factory.getPair(WAVAX,hcashAddr,false),factory.getPair(WAVAX,hcashAddr,true)]);
-    const stableFlag=pT.status==='fulfilled'&&pT.value!==ethers.ZeroAddress&&pT.value!=='0x0000000000000000000000000000000000000000';
+    let stableFlag=false;
+    if(pT.status==='fulfilled'&&pT.value&&pT.value!==ethers.ZeroAddress&&pT.value!=='0x0000000000000000000000000000000000000000'){
+      try{
+        const pc=new ethers.Contract(pT.value,['function getReserves() view returns (uint256,uint256,uint256)'],prov);
+        const res=await pc.getReserves();
+        stableFlag=(Number(res[0])>0&&Number(res[1])>0);
+      }catch(e){ stableFlag=false; }
+    }
+
+    const router=new ethers.Contract(ROUTER,PHARAOH_ROUTER_ABI,walletSigner);
+    const routes=[{from:swapDir===0?WAVAX:hcashAddr, to:swapDir===0?hcashAddr:WAVAX, stable:stableFlag}];
+
+    // Get minOut from router or fallback to reserve estimate
+    let minOut=0n;
+    try{
+      const amounts=await router.getAmountsOut(amtInWei,routes);
+      const rawOut=amounts[amounts.length-1];
+      minOut=rawOut*(BigInt(Math.floor((1-slip)*10000)))/10000n;
+    }catch(qe){
+      // Reserve fallback
+      try{
+        const lp=new ethers.Contract(ethers.getAddress(HCASH_LP_ADDR),LP_ABI,prov);
+        const [res,t0]=await Promise.all([lp.getReserves(),lp.token0()]);
+        const isW0=t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
+        const wR=Number(isW0?res[0]:res[1])/1e18;
+        const hR=Number(isW0?res[1]:res[0])/1e18;
+        const outEst=swapDir===0?amt*(hR/wR)*0.997:amt*(wR/hR)*0.997;
+        const outStr=safeNum(outEst*(1-slip), swapDir===0?dec:18);
+        minOut=swapDir===0?ethers.parseUnits(outStr,dec):ethers.parseEther(outStr);
+      }catch(re){ minOut=0n; }
+    }
 
     if(swapDir===0){
-      // AVAX → hCASH — use native swapExactAVAXForTokens (payable, no wrapping needed)
-      const amtIn=ethers.parseEther(String(amt));
-      const routes=[{from:WAVAX,to:hcashAddr,stable:stableFlag}];
-      upd('<span class="spin"></span>Getting quote…');
-      let minOut=0n;
-      try{
-        const amounts=await router.getAmountsOut(amtIn,routes);
-        minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
-      }catch(qe){
-        console.warn('getAmountsOut failed:',qe.message?.slice(0,60));
-        minOut=0n;
-      }
-      upd('<span class="spin"></span>Swapping AVAX → hCASH… confirm in wallet');
-      const tx=await router.swapExactAVAXForTokens(minOut,routes,walletAddress,deadline,{value:amtIn,gasLimit:500000n});
-      upd(`<span class="spin"></span>Waiting… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
+      // AVAX → hCASH
+      upd('<span class="spin"></span>Swapping AVAX → hCASH via Pharaoh… confirm in wallet');
+      const tx=await router.swapExactAVAXForTokens(minOut,routes,walletAddress,deadline,{value:amtInWei,gasLimit:600000n});
+      upd(`<span class="spin"></span>Pending… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! hCASH received.','success',5000);
       upd(`<span style="color:var(--grn)">✓ Swap done! <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">↗</a></span>`);
-    }else{
-      // hCASH → AVAX (WAVAX): swap then unwrap
-      const hcashTok=new ethers.Contract(hcashAddr,ERC20_ABI,walletSigner);
-      const dec=Number(await hcashTok.decimals().catch(()=>18));
-      const amtIn=ethers.parseUnits(String(amt),dec);
-      const routes=[{from:hcashAddr,to:WAVAX,stable:stableFlag}];
-      upd('<span class="spin"></span>Getting quote…');
-      let minOut=0n;
-      try{
-        const amounts=await router.getAmountsOut(amtIn,routes);
-        minOut=amounts[amounts.length-1]*(BigInt(Math.floor((1-slip)*10000)))/10000n;
-      }catch(qe){
-        console.warn('getAmountsOut failed:',qe.message?.slice(0,60));
-        minOut=0n;
-      }
-      // Approve hCASH
+    } else {
+      // hCASH → AVAX
       const allow=await hcashTok.allowance(walletAddress,ROUTER);
-      if(allow<amtIn){
-        upd('<span class="spin"></span>1/3 — Approving hCASH…');
+      if(allow<amtInWei){
+        upd('<span class="spin"></span>1/2 — Approving hCASH for Pharaoh…');
         await(await hcashTok.approve(ROUTER,ethers.MaxUint256)).wait();
       }
-      upd('<span class="spin"></span>2/3 — Swapping hCASH → AVAX… confirm in wallet');
-      // Use swapExactTokensForAVAX — router handles unwrapping natively
-      const tx=await router.swapExactTokensForAVAX(amtIn,minOut,routes,walletAddress,deadline,{gasLimit:500000n});
-      upd(`<span class="spin"></span>Waiting… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
+      upd('<span class="spin"></span>2/2 — Swapping hCASH → AVAX via Pharaoh… confirm in wallet');
+      const tx=await router.swapExactTokensForAVAX(amtInWei,minOut,routes,walletAddress,deadline,{gasLimit:600000n});
+      upd(`<span class="spin"></span>Pending… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! AVAX received.','success',5000);
       upd(`<span style="color:var(--grn)">✓ Swap done! <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">↗</a></span>`);
@@ -4308,12 +4610,151 @@ async function execSwap() {
     document.getElementById('swapFromAmt').value='';
     setTxt('swapQuoteRow','');
     updateLpBalances();
-  }catch(e){
-    const isReject=e.message?.includes('user rejected')||e.code===4001;
-    const msg=isReject?'Rejected in wallet':(e.reason||e.shortMessage||e.message?.slice(0,150));
-    upd(`<span style="color:${isReject?'var(--gold)':'var(--red)'}">✗ ${msg}</span>`);
-    if(!isReject) notif(String(msg),'error');
+    return; // ✅ success — exit
+  } catch(pharaohErr) {
+    if(pharaohErr.message?.includes('user rejected')||pharaohErr.code===4001){
+      upd(`<span style="color:var(--gold)">✗ Rejected in wallet</span>`); return;
+    }
+    console.warn('[Swap] Pharaoh failed:', pharaohErr.message?.slice(0,120));
+    // fall through to KyberSwap
   }
+
+  // ══════════════════════════════════
+  //  PATH 2 — KyberSwap Aggregator API
+  // ══════════════════════════════════
+  upd('<span class="spin"></span>Pharaoh route failed — trying KyberSwap aggregator…');
+  try {
+    // KyberSwap route API: GET /avalanche/api/v1/routes
+    const kyberFrom = swapDir===0 ? WAVAX : hcashAddr;  // KyberSwap uses WAVAX not native for quote
+    const kyberTo   = swapDir===0 ? hcashAddr : WAVAX;
+    const kyberRouteUrl = `https://aggregator-api.kyberswap.com/avalanche/api/v1/routes?tokenIn=${kyberFrom}&tokenOut=${kyberTo}&amountIn=${amtInStr}&saveGas=0&gasInclude=1`;
+    const routeRes=await fetch(kyberRouteUrl,{headers:{'x-client-id':'hcash-moat'},signal:AbortSignal.timeout(8000)}).then(r=>r.json());
+
+    if(routeRes?.code!==0||!routeRes?.data?.routeSummary) throw new Error('No KyberSwap route');
+
+    const routeSummary=routeRes.data.routeSummary;
+    const outAmt=routeSummary.amountOut;
+    const minOutKyber=BigInt(outAmt)*(BigInt(Math.floor((1-slip)*10000)))/10000n;
+
+    // Build swap transaction
+    const buildUrl=`https://aggregator-api.kyberswap.com/avalanche/api/v1/route/build`;
+    const buildBody={
+      routeSummary,
+      slippageTolerance: Math.round(slip*10000), // bps
+      sender: walletAddress,
+      recipient: walletAddress,
+      deadline: Number(deadline),
+      source: 'hcash-moat',
+    };
+    const buildRes=await fetch(buildUrl,{method:'POST',headers:{'Content-Type':'application/json','x-client-id':'hcash-moat'},body:JSON.stringify(buildBody),signal:AbortSignal.timeout(8000)}).then(r=>r.json());
+
+    if(buildRes?.code!==0||!buildRes?.data?.data) throw new Error('KyberSwap build failed');
+
+    const txData=buildRes.data;
+
+    // If hCASH → AVAX, approve KyberSwap router first
+    if(swapDir===1){
+      const kyberRouter=txData.routerAddress;
+      const allow=await hcashTok.allowance(walletAddress,kyberRouter);
+      if(allow<amtInWei){
+        upd('<span class="spin"></span>1/2 — Approving hCASH for KyberSwap…');
+        await(await hcashTok.approve(kyberRouter,ethers.MaxUint256)).wait();
+      }
+    }
+
+    upd(`<span class="spin"></span>Swapping via KyberSwap (${swapDir===0?'AVAX→hCASH':'hCASH→AVAX'})… confirm in wallet`);
+    const txParams={
+      to: txData.routerAddress,
+      data: txData.data,
+      value: swapDir===0 ? amtInWei : 0n,
+      gasLimit: BigInt(txData.gas||600000),
+    };
+    const tx=await walletSigner.sendTransaction(txParams);
+    upd(`<span class="spin"></span>Pending… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
+    await tx.wait();
+    notif('✅ KyberSwap swap complete!','success',5000);
+    upd(`<span style="color:var(--grn)">✓ Swap done via KyberSwap! <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">↗</a></span>`);
+    document.getElementById('swapFromAmt').value='';
+    setTxt('swapQuoteRow','');
+    updateLpBalances();
+    return; // ✅ success
+  } catch(kyberErr) {
+    if(kyberErr.message?.includes('user rejected')||kyberErr.code===4001){
+      upd(`<span style="color:var(--gold)">✗ Rejected in wallet</span>`); return;
+    }
+    console.warn('[Swap] KyberSwap failed:', kyberErr.message?.slice(0,120));
+    // fall through to Odos
+  }
+
+  // ══════════════════════════════════
+  //  PATH 3 — Odos Aggregator API
+  // ══════════════════════════════════
+  upd('<span class="spin"></span>Trying Odos aggregator…');
+  try {
+    const odosFrom = swapDir===0 ? AVAX_NATIVE : hcashAddr;
+    const odosTo   = swapDir===0 ? hcashAddr   : AVAX_NATIVE;
+
+    // Step 1: get quote
+    const quoteBody={
+      chainId: CHAIN_ID,
+      inputTokens:[{tokenAddress:odosFrom, amount:amtInStr}],
+      outputTokens:[{tokenAddress:odosTo, proportion:1}],
+      slippageLimitPercent: _slippage,
+      userAddr: walletAddress,
+      referralCode: 0,
+      disableRFQs: false,
+      compact: true,
+    };
+    const odosQuote=await fetch('https://api.odos.xyz/sor/quote/v2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(quoteBody),signal:AbortSignal.timeout(8000)}).then(r=>r.json());
+
+    if(!odosQuote?.pathId) throw new Error('Odos quote failed: '+(odosQuote?.description||'no pathId'));
+
+    // Step 2: assemble transaction
+    const assembleBody={userAddr:walletAddress, pathId:odosQuote.pathId, simulate:false};
+    const odosAssemble=await fetch('https://api.odos.xyz/sor/assemble',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(assembleBody),signal:AbortSignal.timeout(8000)}).then(r=>r.json());
+
+    if(!odosAssemble?.transaction) throw new Error('Odos assemble failed');
+
+    const odosTx=odosAssemble.transaction;
+
+    // If hCASH → AVAX, approve Odos router
+    if(swapDir===1){
+      const odosRouter=odosTx.to;
+      const allow=await hcashTok.allowance(walletAddress,odosRouter);
+      if(allow<amtInWei){
+        upd('<span class="spin"></span>1/2 — Approving hCASH for Odos…');
+        await(await hcashTok.approve(odosRouter,ethers.MaxUint256)).wait();
+      }
+    }
+
+    upd(`<span class="spin"></span>Swapping via Odos (${swapDir===0?'AVAX→hCASH':'hCASH→AVAX'})… confirm in wallet`);
+    const tx=await walletSigner.sendTransaction({
+      to: odosTx.to,
+      data: odosTx.data,
+      value: BigInt(odosTx.value||'0'),
+      gasLimit: BigInt(odosTx.gas||600000),
+    });
+    upd(`<span class="spin"></span>Pending… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
+    await tx.wait();
+    notif('✅ Odos swap complete!','success',5000);
+    upd(`<span style="color:var(--grn)">✓ Swap done via Odos! <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">↗</a></span>`);
+    document.getElementById('swapFromAmt').value='';
+    setTxt('swapQuoteRow','');
+    updateLpBalances();
+    return; // ✅ success
+  } catch(odosErr) {
+    if(odosErr.message?.includes('user rejected')||odosErr.code===4001){
+      upd(`<span style="color:var(--gold)">✗ Rejected in wallet</span>`); return;
+    }
+    console.warn('[Swap] Odos failed:', odosErr.message?.slice(0,120));
+    // fall through to manual links
+  }
+
+  // ══════════════════════════════════
+  //  PATH 4 — All aggregators failed: show manual DEX links
+  // ══════════════════════════════════
+  showFallbackLinks('all in-app routes failed');
+  notif('All swap routes failed — use a DEX directly','warn',8000);
 }
 
 
@@ -4562,8 +5003,395 @@ async function showMinerDetail(id) {
 
 <script>
 // ══════════════════════════════════════════════════════
-//  WHAT IF? SCENARIO PLANNER
+//  MINERS TAB FILTER
 // ══════════════════════════════════════════════════════
+let _allMinersForFilter = [];
+let _allRigsForFilter   = [];
+
+function filterMinerGrid() {
+  const q    = (document.getElementById('minerFilterSearch')?.value||'').toLowerCase().trim();
+  const sort = document.getElementById('minerFilterSort')?.value || 'name';
+  const type = document.getElementById('minerFilterType')?.value || '';
+  const grid = document.getElementById('minerGrid');
+  const rigH = document.getElementById('rigSectionHead');
+  const rigG = document.getElementById('rigGrid');
+  if (!grid) return;
+
+  let miners = [..._allMinersForFilter];
+  let rigs   = [..._allRigsForFilter];
+
+  // Type filter
+  if (type === 'miner_nft') { rigs = []; }
+  else if (type === 'rig_assembler') { miners = []; }
+
+  // Text search
+  if (q) {
+    miners = miners.filter(m => (m.name||'').toLowerCase().includes(q) || (m.symbol||'').toLowerCase().includes(q) || (m.minerStats?.hashrateFormatted||'').toLowerCase().includes(q));
+    rigs   = rigs.filter(r => (r.name||'').toLowerCase().includes(q));
+  }
+
+  // Sort
+  const sortFn = (a, b) => {
+    const sa = a.minerStats||{}, sb = b.minerStats||{};
+    if (sort === 'hashrate') return (sb.hashrateMhps||sb.hashrateRaw||0) - (sa.hashrateMhps||sa.hashrateRaw||0);
+    if (sort === 'power')    return (sb.powerWatts||sb.powerRaw||0) - (sa.powerWatts||sa.powerRaw||0);
+    if (sort === 'efficiency'){
+      const ea = (sa.hashrateMhps||0) > 0 && (sa.powerWatts||0) > 0 ? (sa.hashrateMhps||0)/(sa.powerWatts||1) : 0;
+      const eb = (sb.hashrateMhps||0) > 0 && (sb.powerWatts||0) > 0 ? (sb.hashrateMhps||0)/(sb.powerWatts||1) : 0;
+      return eb - ea;
+    }
+    return (a.name||'').localeCompare(b.name||'');
+  };
+  miners.sort(sortFn);
+
+  // Update count
+  const countEl = document.getElementById('minerFilterCount');
+  if (countEl) countEl.textContent = `${miners.length} miner${miners.length!==1?'s':''}, ${rigs.length} rig${rigs.length!==1?'s':''}`;
+
+  // Re-render grid using same card template as loadMiners
+  if (!miners.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--mut)" class="mono">No miners match your filter.</div>';
+  } else {
+    grid.innerHTML = miners.map(m => {
+      const s = m.minerStats||{};
+      const img = m.imageUrl||'';
+      const mid = m.id||m.name||'';
+      const eff = s.hashrateMhps && s.powerWatts ? `${(s.hashrateMhps/s.powerWatts*100).toFixed(1)} MH/W` : '';
+      return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
+        ${img?`<img class="miner-img" src="${img}" alt="${m.name||'Miner'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">` :''}
+        <div class="miner-img-fb" style="${img?'display:none':''}">⛏</div>
+        <div class="miner-info">
+          <div class="miner-name">${m.name||m.id||'Miner'}</div>
+          ${s.hashrateFormatted?`<div class="miner-stat"><span class="miner-stat-k">Hashrate</span><span class="miner-stat-v" style="color:var(--red)">${s.hashrateFormatted}</span></div>`:''}
+          ${s.powerFormatted?`<div class="miner-stat"><span class="miner-stat-k">Power</span><span class="miner-stat-v" style="color:var(--gold)">${s.powerFormatted}</span></div>`:''}
+          ${eff?`<div class="miner-stat"><span class="miner-stat-k">Efficiency</span><span class="miner-stat-v" style="color:var(--grn)">${eff}</span></div>`:''}
+          ${m.symbol?`<div class="miner-stat"><span class="miner-stat-k">Symbol</span><span class="miner-stat-v">${m.symbol}</span></div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Show/hide rigs section
+  if (rigH) rigH.style.display = (type === 'miner_nft') ? 'none' : '';
+  if (rigG && type !== 'miner_nft') {
+    // keep existing rig HTML if no rig filter
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  WHAT IF — MARKETPLACE PANEL
+// ══════════════════════════════════════════════════════
+let _wiMarketListings = [];   // raw listings loaded from loadMarketplaceListings
+
+// Called when What If tab opens or user clicks refresh
+async function reloadWiMarket() {
+  const el = document.getElementById('wiMarketListings');
+  if (el) el.innerHTML = '<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading marketplace…</div>';
+  // Re-use loadMarketplaceListings but store results for wi panel
+  // We need miners already loaded — ensure they are
+  if (!_wiMiners.length) await wiLoadMiners();
+  // Build mock marketContract pointing to known address
+  const mockMkt = { address: '0x511FC8b8e5D07a012D17f56fE8bfdE576c8Dd13d' };
+  await loadMarketplaceListingsForWi(mockMkt, _wiMiners);
+}
+
+// Separate loader that stores results in _wiMarketListings
+async function loadMarketplaceListingsForWi(marketContract, miners) {
+  const el = document.getElementById('wiMarketListings');
+  const MARKETPLACE_ADDR = '0x511FC8b8e5D07a012D17f56fE8bfdE576c8Dd13d';
+  const hCASH_CURRENCY   = '0xBa5444409257967E5E50b113C395A766B0678C03';
+  const addr = marketContract?.address || MARKETPLACE_ADDR;
+
+  const minerByAddr = {};
+  miners.forEach(m => { if(m.address) minerByAddr[m.address.toLowerCase()] = m; });
+  // Also check _wiMiners
+  _wiMiners.forEach(m => { if(m.address) minerByAddr[m.address.toLowerCase()] = m; });
+
+  const listings = [];
+
+  try {
+    const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+    const TW_ABI = [
+      'function getAllValidListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
+      'function getAllListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
+      'function totalListings() view returns (uint256)',
+    ];
+    try {
+      const mktC = new ethers.Contract(ethers.getAddress(addr), TW_ABI, prov);
+      let total = 0;
+      try { total = Number(await mktC.totalListings()); } catch(e) {}
+      if (total > 0) {
+        const startId = Math.max(0, total - 50);
+        let raw = null;
+        try { raw = await mktC.getAllValidListings(startId, total - 1); } catch(e) {
+          try { raw = await mktC.getAllListings(startId, total - 1); } catch(e2) {}
+        }
+        if (raw && raw.length) {
+          const now = Math.floor(Date.now()/1000);
+          for (const l of raw) {
+            if (Number(l.status) !== 1) continue;
+            const endTs = Number(l.endTimestamp);
+            if (endTs > 0 && endTs < now) continue;
+            const nftAddr = (l.assetContract||'').toLowerCase();
+            const miner = minerByAddr[nftAddr];
+            const isCurrency_hCASH = (l.currency||'').toLowerCase() === hCASH_CURRENCY.toLowerCase();
+            const priceRaw = parseFloat(ethers.formatEther(l.pricePerToken||0n));
+            listings.push({
+              listingId: Number(l.listingId||0),
+              seller: (l.listingCreator||'').toLowerCase(),
+              nftContract: nftAddr,
+              tokenId: Number(l.tokenId||0),
+              priceHcash: isCurrency_hCASH ? priceRaw : 0,
+              priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
+              currencyAddr: (l.currency||'').toLowerCase(),
+              minerName: miner?.name || null,
+              minerStats: miner?.minerStats || null,
+              minerImg: miner?.imageUrl || null,
+              _miner: miner || null,
+            });
+          }
+        }
+      }
+    } catch(e) { console.warn('wiMarket TW call:', e.message); }
+
+    // Fallback: Snowtrace event logs
+    if (!listings.length) {
+      const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=50`)
+        .then(r=>r.json()).catch(()=>null);
+      const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
+      const now = Math.floor(Date.now()/1000);
+      for (const log of logs.slice(0, 40)) {
+        try {
+          const creator = log.topics[1] ? '0x'+log.topics[1].slice(26).toLowerCase() : '';
+          const listingId = log.topics[2] ? Number(BigInt(log.topics[2])) : 0;
+          const assetContract = log.topics[3] ? '0x'+log.topics[3].slice(26).toLowerCase() : '';
+          const data = (log.data||'').replace('0x','');
+          if (data.length < 384) continue;
+          const words = [];
+          for (let i=0;i<data.length;i+=64) words.push(data.slice(i,i+64));
+          const wOff = words[0]==='0000000000000000000000000000000000000000000000000000000000000020' ? 1 : 0;
+          const w = words.slice(wOff);
+          if (w.length < 12) continue;
+          const tokenId = Number(BigInt('0x'+w[1]));
+          const pricePerToken = BigInt('0x'+w[3]);
+          const startTs = Number(BigInt('0x'+w[4]));
+          const endTs   = Number(BigInt('0x'+w[5]));
+          const currency = '0x'+w[8].slice(24);
+          const status  = Number(BigInt('0x'+w[10]));
+          if (status !== 1) continue;
+          if (endTs > 0 && endTs < now) continue;
+          if (listings.find(x=>x.listingId===listingId)) continue;
+          const miner = minerByAddr[assetContract];
+          const isCurrency_hCASH = currency.toLowerCase() === hCASH_CURRENCY.toLowerCase();
+          const priceRaw = parseFloat(ethers.formatEther(pricePerToken));
+          listings.push({
+            listingId, seller: creator, nftContract: assetContract, tokenId,
+            priceHcash: isCurrency_hCASH ? priceRaw : 0,
+            priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
+            currencyAddr: currency,
+            minerName: miner?.name || null, minerStats: miner?.minerStats || null,
+            minerImg: miner?.imageUrl || null, _miner: miner || null,
+          });
+        } catch(pe) {}
+      }
+    }
+  } catch(e) { console.warn('loadMarketplaceListingsForWi:', e.message); }
+
+  _wiMarketListings = listings;
+  renderWiMarket();
+
+  // Update header count
+  const hdr = document.getElementById('marketplaceHeader');
+  if (hdr) hdr.textContent = `${listings.length} listing${listings.length!==1?'s':''}`;
+}
+
+function renderWiMarket() {
+  const el = document.getElementById('wiMarketListings');
+  if (!el) return;
+  const q        = (document.getElementById('wiMktSearch')?.value||'').toLowerCase().trim();
+  const sort     = document.getElementById('wiMktSort')?.value || 'price_asc';
+  const minHash  = parseInt(document.getElementById('wiMktHashFilter')?.value||'0') || 0;
+
+  let listings = [..._wiMarketListings];
+
+  // Text filter
+  if (q) listings = listings.filter(l => (l.minerName||'').toLowerCase().includes(q) || String(l.tokenId).includes(q) || shortA(l.seller).includes(q));
+  // Hash filter
+  if (minHash > 0) listings = listings.filter(l => {
+    const mhs = l.minerStats?.hashrateMhps || l.minerStats?.hashrateRaw || 0;
+    return mhs >= minHash;
+  });
+  // Sort
+  listings.sort((a,b) => {
+    const pa = a.priceHcash || a.priceAvax || 0;
+    const pb = b.priceHcash || b.priceAvax || 0;
+    if (sort === 'price_asc')  return pa - pb;
+    if (sort === 'price_desc') return pb - pa;
+    if (sort === 'hash_desc')  return (b.minerStats?.hashrateMhps||0) - (a.minerStats?.hashrateMhps||0);
+    if (sort === 'eff_desc') {
+      const ea = (a.minerStats?.hashrateMhps||0) > 0 && (a.minerStats?.powerWatts||0) > 0 ? (a.minerStats.hashrateMhps)/(a.minerStats.powerWatts) : 0;
+      const eb = (b.minerStats?.hashrateMhps||0) > 0 && (b.minerStats?.powerWatts||0) > 0 ? (b.minerStats.hashrateMhps)/(b.minerStats.powerWatts) : 0;
+      return eb - ea;
+    }
+    return 0;
+  });
+
+  const countEl = document.getElementById('wiMktCount');
+  if (countEl) countEl.textContent = `${listings.length} listing${listings.length!==1?'s':''}`;
+
+  if (!listings.length) {
+    el.innerHTML = `<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem">
+      ${_wiMarketListings.length ? 'No listings match your filters.' : 'No active listings found.'}<br>
+      <a href="https://hashcash.club" target="_blank" style="color:var(--red)">Browse hashcash.club ↗</a>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = listings.map(l => {
+    const s = l.minerStats || {};
+    const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+    const watts = s.powerWatts || s.powerRaw || 0;
+    const eff = mhs && watts ? (mhs/watts*100).toFixed(1)+' MH/W' : '';
+    const priceNum = l.priceHcash || l.priceAvax || 0;
+    const priceLbl = l.priceHcash > 0 ? `${priceNum.toLocaleString(undefined,{maximumFractionDigits:0})} hCASH` : l.priceAvax > 0 ? `${f4(l.priceAvax)} AVAX` : '— price';
+    const priceUsd = l.priceHcash > 0 ? (l.priceHcash * (priceData?.price||0)) : (l.priceAvax * (priceData?.avaxPrice||0));
+    const prof = getKnownProfile(l.seller);
+    const inCart = _wiCart.some(c => c.listingId === l.listingId && c.tokenId === l.tokenId);
+    return `<div onclick="wiToggleCartListing(${JSON.stringify(l).replace(/"/g,'&quot;')})" style="cursor:pointer;display:flex;gap:9px;align-items:center;padding:.55rem .65rem;background:${inCart?'rgba(212,168,67,.08)':'var(--sur)'};border:1.5px solid ${inCart?'var(--gold)':'var(--bor)'};border-radius:9px;transition:all .15s" onmouseover="if(!this.dataset.inCart)this.style.borderColor='rgba(229,62,62,.35)'" onmouseout="if(!this.dataset.inCart)this.style.borderColor='var(--bor)'" data-in-cart="${inCart}">
+      ${l.minerImg?`<img src="${l.minerImg}" style="width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">` : '<div style="width:38px;height:38px;border-radius:7px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">⛏</div>'}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-base);color:var(--txt)">${l.minerName||'Miner NFT'}</span>
+          <span class="mono" style="font-size:var(--fs-xs);color:var(--mut)">#${l.tokenId}</span>
+          ${inCart?`<span style="font-size:var(--fs-xs);background:rgba(212,168,67,.15);color:var(--gold);border:1px solid rgba(212,168,67,.3);border-radius:4px;padding:1px 6px">✓ ADDED</span>`:''}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
+          ${mhs?`<span class="mono" style="font-size:var(--fs-xs);color:var(--red)">${mhs>=1000?(mhs/1000).toFixed(1)+'GH/s':mhs+'MH/s'}</span>`:''}
+          ${watts?`<span class="mono" style="font-size:var(--fs-xs);color:var(--dim)">${watts}W</span>`:''}
+          ${eff?`<span class="mono" style="font-size:var(--fs-xs);color:var(--grn)">${eff}</span>`:''}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-base);color:${l.priceHcash>0?'var(--gold)':'var(--grn)'}">${priceLbl}</div>
+        ${priceUsd>0?`<div class="mono" style="font-size:var(--fs-xs);color:var(--mut)">≈$${priceUsd.toFixed(0)}</div>`:''}
+        <div style="font-size:var(--fs-xs);color:${inCart?'var(--gold)':'rgba(229,62,62,.6)'};font-family:'Share Tech Mono',monospace">${inCart?'click to remove':'+ add to sim'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Cart system for What If marketplace ──
+let _wiCart = [];  // array of listing objects selected by user
+
+function wiToggleCartListing(listing) {
+  if (typeof listing === 'string') { try { listing = JSON.parse(listing); } catch(e) { return; } }
+  const idx = _wiCart.findIndex(c => c.listingId === listing.listingId && c.tokenId === listing.tokenId);
+  if (idx >= 0) {
+    _wiCart.splice(idx, 1);
+  } else {
+    // Check facility capacity
+    const fac = wiGetFacility();
+    const totalSlots = fac.slots || 9;
+    if (_wiCart.length >= totalSlots) {
+      notif(`Facility only has ${totalSlots} slots — remove one first`, 'warn'); return;
+    }
+    _wiCart.push(listing);
+  }
+  renderWiMarket();
+  renderWiCart();
+}
+
+function wiClearCart() {
+  _wiCart = [];
+  _wiSlots = [];
+  renderWiMarket();
+  renderWiCart();
+  wiCalc();
+}
+
+function renderWiCart() {
+  const wrap = document.getElementById('wiCartWrap');
+  const itemsEl = document.getElementById('wiCartItems');
+  const countEl = document.getElementById('wiCartCount');
+  if (!wrap) return;
+
+  if (!_wiCart.length) {
+    wrap.style.display = 'none';
+    _wiSlots = [];
+    wiRenderSlotTable();
+    wiCalc();
+    return;
+  }
+
+  wrap.style.display = 'block';
+  if (countEl) countEl.textContent = _wiCart.length;
+
+  // Render cart chips
+  if (itemsEl) {
+    itemsEl.innerHTML = _wiCart.map((l, i) => {
+      const priceLbl = l.priceHcash > 0 ? `${l.priceHcash.toLocaleString(undefined,{maximumFractionDigits:0})} hC` : l.priceAvax > 0 ? `${f4(l.priceAvax)} AVAX` : '';
+      return `<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:6px;padding:3px 8px;font-size:var(--fs-xs)">
+        ${l.minerImg?`<img src="${l.minerImg}" style="width:16px;height:16px;border-radius:3px;object-fit:cover">`:'' }
+        <span style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold)">${l.minerName||'Miner'} #${l.tokenId}</span>
+        ${priceLbl?`<span class="mono" style="color:var(--mut)">${priceLbl}</span>`:''}
+        <button onclick="event.stopPropagation();wiRemoveCartByIdx(${i})" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:.75rem;padding:0;line-height:1">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Sync _wiSlots from cart
+  _wiSlots = _wiCart.map(l => {
+    const s = l.minerStats || l._miner?.minerStats || {};
+    const watts = s.powerWatts || s.powerRaw || 0;
+    const miner = l._miner || { name: l.minerName||'Miner', minerStats: s, imageUrl: l.minerImg||'' };
+    return { miner, source: 'buy', price: l.priceHcash || l.priceAvax || 0, watts };
+  });
+  wiRenderSlotTable();
+
+  // Also set primary miner (first in cart) for wiCalc compatibility
+  if (_wiCart.length > 0 && _wiCart[0]._miner) {
+    _wiSelectedMiner = _wiCart[0]._miner;
+    // Set price inputs for the primary miner
+    const priceInp = document.getElementById('wi-price');
+    const currSel  = document.getElementById('wi-priceCurrency');
+    if (priceInp && _wiCart[0].priceHcash > 0) {
+      priceInp.value = _wiCart[0].priceHcash;
+      if (currSel) currSel.value = 'hcash';
+    } else if (priceInp && _wiCart[0].priceAvax > 0) {
+      priceInp.value = _wiCart[0].priceAvax;
+      if (currSel) currSel.value = 'avax';
+    }
+  }
+
+  wiCalc();
+}
+
+function wiRemoveCartByIdx(i) {
+  _wiCart.splice(i, 1);
+  renderWiMarket();
+  renderWiCart();
+}
+
+function wiRunWithCart() {
+  if (!_wiCart.length) { notif('Select at least one miner from the marketplace', 'warn'); return; }
+  renderWiCart(); // syncs _wiSlots
+  wiCalc();
+  // Scroll to results
+  const res = document.getElementById('wi-resultsSection');
+  if (res) res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Manual build toggle ──
+function wiToggleManual() {
+  const body = document.getElementById('wiManualBody');
+  const chev = document.getElementById('wiManualChevron');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) { chev.textContent = open ? '▼' : '▲'; chev.style.transform = ''; }
+}
+
+
 let _wiMiners = [];          // populated from HashCash API
 let _wiSelectedMiner = null;
 let _wiLockDaysVal = 180;
@@ -5822,6 +6650,8 @@ function initWhatIf() {
   wiSyncLiveData();
   // Ensure live prices + pool data are fetched, then run calc
   wiEnsureLiveData();
+  // Load marketplace listings into the What If panel
+  reloadWiMarket();
   // Re-draw chart on theme change
   document.getElementById('themeBtn')?.addEventListener('click', () => {
     setTimeout(() => { if (_wiChart) wiCalc(); }, 150);
