@@ -6,176 +6,151 @@
 <meta name="theme-color" content="#0a0a0f">
 <title>hCASH Moat — Liquidity Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-/* ══════════════════════════════════════════════════════════════════
-   hCASH MOAT — FULL REDESIGN v4
-   Design language: Industrial Mining Terminal × Premium DeFi App
-   Typography: One unified scale. No more chaos.
-══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   hCASH MOAT INTEL — ULTRA REDESIGN v5
+   Theme: Industrial Mining Terminal · Red × White × Black
+   Fonts: Bebas Neue (display) · Space Mono (data) · Outfit (body)
+   Aesthetic: Hardcore miner terminal — glowing red veins in obsidian
+═══════════════════════════════════════════════════════════════════ */
 
-/* ── GOOGLE FONTS: add Inter for body ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Rajdhani:wght@600;700&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-/* ══════════════════════════════════
+/* ══════════════════════
    DESIGN TOKENS
-══════════════════════════════════ */
+══════════════════════ */
 :root {
-  /* Backgrounds */
-  --bg:    #07080d;
-  --sur:   #0d0e16;
-  --card:  #111320;
-  --card2: #161825;
-  --bor:   #1e2035;
-  --bor2:  #2a2c45;
-  --bor3:  #353760;
+  /* Core palette — BLACK × RED × WHITE */
+  --bg:      #050507;
+  --bg2:     #080a0e;
+  --sur:     #0c0d12;
+  --card:    #0f1018;
+  --card2:   #13141f;
+  --bor:     #1c1e2c;
+  --bor2:    #272940;
+  --bor3:    #343660;
 
-  /* Brand */
-  --red:   #f03e3e;
-  --red2:  #ff5555;
-  --red3:  #ff2222;
-  --red-g: rgba(240,62,62,0.12);
-  --gold:  #f0b429;
-  --gold2: #ffd166;
-  --gold-g:rgba(240,180,41,0.12);
-  --grn:   #34d399;
-  --grn2:  #6ee7b7;
-  --grn-g: rgba(52,211,153,0.1);
-  --pur:   #818cf8;
-  --pur2:  #a5b4fc;
-  --cyn:   #22d3ee;
+  /* RED — primary brand */
+  --red:     #e8000e;
+  --red2:    #ff1a26;
+  --red3:    #c0000b;
+  --red-dim: rgba(232,0,14,0.12);
+  --red-glow:rgba(232,0,14,0.25);
 
-  /* Text */
-  --txt:   #eef0f8;
-  --txt2:  #bbbdd8;
-  --dim:   #8587a8;
-  --mut:   #4e5070;
-  --white: #ffffff;
+  /* WHITE — contrast text */
+  --white:   #ffffff;
+  --txt:     #f2f3f8;
+  --txt2:    #b8bbd0;
+  --dim:     #707292;
+  --mut:     #3a3c52;
 
-  /* Glows */
-  --glow-red:  0 0 20px rgba(240,62,62,0.25), 0 0 40px rgba(240,62,62,0.1);
-  --glow-gold: 0 0 20px rgba(240,180,41,0.2), 0 0 40px rgba(240,180,41,0.08);
-  --glow-grn:  0 0 20px rgba(52,211,153,0.2), 0 0 40px rgba(52,211,153,0.08);
+  /* Accents */
+  --gold:    #f0a500;
+  --gold2:   #ffcc44;
+  --gold-dim:rgba(240,165,0,0.12);
+  --grn:     #22e87a;
+  --grn2:    #5effaa;
+  --grn-dim: rgba(34,232,122,0.1);
+  --cyn:     #00d4ff;
 
-  /* ── UNIFIED TYPOGRAPHY SCALE ──
-     One scale, used consistently everywhere.
-     No more .85rem here, 1.35rem there, .76rem somewhere else. */
-  --t-xs:   0.6875rem;  /* 11px — labels, badges, captions */
-  --t-sm:   0.75rem;    /* 12px — secondary text, mono data */
-  --t-base: 0.875rem;   /* 14px — body, table cells, inputs */
-  --t-md:   1rem;       /* 16px — card titles, subheadings */
-  --t-lg:   1.125rem;   /* 18px — section headings */
-  --t-xl:   1.375rem;   /* 22px — stat values */
-  --t-2xl:  1.75rem;    /* 28px — hero numbers */
-  --t-3xl:  2.25rem;    /* 36px — large display */
+  /* Glow effects */
+  --glow-red:  0 0 24px rgba(232,0,14,0.4), 0 0 60px rgba(232,0,14,0.12);
+  --glow-gold: 0 0 20px rgba(240,165,0,0.35), 0 0 50px rgba(240,165,0,0.1);
+  --glow-grn:  0 0 20px rgba(34,232,122,0.3), 0 0 50px rgba(34,232,122,0.08);
 
-  /* Legacy aliases — keeps old code working */
-  --fs-xs:   var(--t-xs);
-  --fs-sm:   var(--t-sm);
-  --fs-base: var(--t-base);
-  --fs-md:   var(--t-base);
-  --fs-lg:   var(--t-md);
-  --fs-xl:   var(--t-xl);
-  --fs-2xl:  var(--t-2xl);
-  --fs-3xl:  var(--t-3xl);
+  /* Typography — UNIFIED SCALE */
+  --t-xs:   0.6875rem;   /* 11px — badges, labels */
+  --t-sm:   0.75rem;     /* 12px — secondary mono */
+  --t-base: 0.875rem;    /* 14px — body */
+  --t-md:   1rem;        /* 16px — card titles */
+  --t-lg:   1.125rem;    /* 18px — section heads */
+  --t-xl:   1.375rem;    /* 22px — stat values */
+  --t-2xl:  1.75rem;     /* 28px — hero numbers */
+  --t-3xl:  2.25rem;     /* 36px — display */
+
+  /* Legacy aliases */
+  --fs-xs: var(--t-xs); --fs-sm: var(--t-sm); --fs-base: var(--t-base);
+  --fs-md: var(--t-base); --fs-lg: var(--t-md); --fs-xl: var(--t-xl);
+  --fs-2xl: var(--t-2xl); --fs-3xl: var(--t-3xl);
 
   /* Spacing */
-  --r-sm:  8px;
-  --r-md:  12px;
-  --r-lg:  16px;
-  --r-xl:  20px;
-  --sp-1:  0.5rem;
-  --sp-2:  0.75rem;
-  --sp-3:  1rem;
-  --sp-4:  1.25rem;
-  --sp-5:  1.5rem;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px;
+  --sp-1: 0.5rem; --sp-2: 0.75rem; --sp-3: 1rem;
+  --sp-4: 1.25rem; --sp-5: 1.5rem;
 
   /* Motion */
-  --ease:  cubic-bezier(0.16, 1, 0.3, 1);
-  --fast:  150ms;
-  --mid:   250ms;
-  --slow:  400ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 140ms; --mid: 240ms; --slow: 380ms;
 
-  --header-bg: rgba(7,8,13,0.92);
-  --grid-line: rgba(240,62,62,0.025);
+  --header-bg: rgba(5,5,7,0.94);
+  --grid-line: rgba(232,0,14,0.03);
 }
 
-/* ── LIGHT MODE ── */
+/* LIGHT MODE */
 html.light {
-  --bg:    #f0f2f8;
-  --sur:   #e4e8f4;
-  --card:  #ffffff;
-  --card2: #f5f7fd;
-  --bor:   #d0d4e8;
-  --bor2:  #b8bcd8;
-  --bor3:  #9a9ec0;
-  --red:   #c0392b;
-  --red2:  #e53935;
-  --red3:  #b71c1c;
-  --red-g: rgba(192,57,43,0.08);
-  --gold:  #b8860b;
-  --gold2: #d4a843;
-  --gold-g:rgba(184,134,11,0.08);
-  --grn:   #15803d;
-  --grn2:  #22c55e;
-  --grn-g: rgba(21,128,61,0.08);
-  --pur:   #5b21b6;
-  --pur2:  #7c3aed;
-  --cyn:   #0369a1;
-  --txt:   #0f1120;
-  --txt2:  #3a3d5c;
-  --dim:   #555778;
-  --mut:   #9a9bb8;
-  --glow-red:  none;
-  --glow-gold: none;
-  --glow-grn:  none;
-  --header-bg: rgba(240,242,248,0.94);
+  --bg: #f0f1f5; --bg2: #e8eaf0; --sur: #ffffff;
+  --card: #ffffff; --card2: #f5f6fb;
+  --bor: #dde0f0; --bor2: #c5c8de; --bor3: #adb0cc;
+  --red: #cc0008; --red2: #e8000e; --red3: #a80006;
+  --red-dim: rgba(204,0,8,0.06); --red-glow: rgba(204,0,8,0.15);
+  --txt: #0d0e14; --txt2: #2e3050; --dim: #5a5d78; --mut: #9a9cb8;
+  --gold: #c07800; --gold2: #d4a000; --gold-dim: rgba(192,120,0,0.06);
+  --grn: #0aa855; --grn2: #12d46a; --grn-dim: rgba(10,168,85,0.06);
+  --glow-red: none; --glow-gold: none; --glow-grn: none;
+  --header-bg: rgba(240,241,245,0.95);
+  --grid-line: rgba(204,0,8,0.025);
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    RESET & BASE
-══════════════════════════════════ */
+══════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--txt);
-  /* Inter for body — clean, readable, modern */
-  font-family: 'Inter', 'Barlow Condensed', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: var(--t-base);
   font-weight: 400;
-  line-height: 1.55;
+  line-height: 1.6;
   overflow-x: hidden;
   min-height: 100dvh;
 }
 
-/* ── Background layers ── */
+/* ── Animated grid background ── */
 body::before {
   content: '';
   position: fixed; inset: 0;
   background-image:
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none; z-index: 0;
-}
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(240,62,62,0.04), transparent 70%);
+  background-size: 56px 56px;
+  animation: gridDrift 30s ease-in-out infinite alternate;
   pointer-events: none; z-index: 0;
 }
 
-/* ── Canvas background ── */
+/* ── Deep red radial vignette ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(232,0,14,0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 15% 100%, rgba(232,0,14,0.03) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(232,0,14,0.03) 0%, transparent 55%);
+  pointer-events: none; z-index: 0;
+  animation: vignettePulse 8s ease-in-out infinite alternate;
+}
+
 #miningCanvas {
   position: fixed; inset: 0; z-index: 0;
   pointer-events: none;
-  opacity: 1; transition: opacity .6s;
+  opacity: 0.85; transition: opacity .6s;
 }
 #miningCanvas.hidden { opacity: 0; }
-html.light #miningCanvas { opacity: .35; }
+html.light #miningCanvas { opacity: .25; }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
@@ -183,169 +158,208 @@ html.light #miningCanvas { opacity: .35; }
 ::-webkit-scrollbar-thumb { background: var(--bor2); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--red); }
 
-/* ══════════════════════════════════
-   KEYFRAMES & ANIMATION LIBRARY
-══════════════════════════════════ */
-@keyframes pulse      { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.25;transform:scale(.65)} }
-@keyframes tka        { to{transform:translateX(-50%)} }
-@keyframes fadeUp     { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
-@keyframes fadeIn     { from{opacity:0} to{opacity:1} }
-@keyframes slideIn    { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:none} }
-@keyframes ntfIn      { from{opacity:0;transform:translateX(20px) scale(.95)} to{opacity:1;transform:none scale(1)} }
-@keyframes shimmer    { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-@keyframes spinR      { to{transform:rotate(360deg)} }
-@keyframes rippleOut  { 0%{transform:scale(0);opacity:.4} 100%{transform:scale(4);opacity:0} }
-@keyframes glowPulse  { 0%,100%{box-shadow:var(--glow-red)} 50%{box-shadow:0 0 8px rgba(240,62,62,0.1)} }
-@keyframes borderFlow {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* ══════════════════════
+   KEYFRAMES LIBRARY
+══════════════════════ */
+@keyframes gridDrift    { from{background-position:0 0} to{background-position:28px 28px} }
+@keyframes vignettePulse{ 0%{opacity:.7} 100%{opacity:1} }
+@keyframes pulse        { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.2;transform:scale(.5)} }
+@keyframes tka          { to{transform:translateX(-50%)} }
+@keyframes fadeUp       { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+@keyframes fadeIn       { from{opacity:0} to{opacity:1} }
+@keyframes slideIn      { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:none} }
+@keyframes ntfIn        { from{opacity:0;transform:translateX(24px) scale(.94)} to{opacity:1;transform:none} }
+@keyframes shimmer      { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes spinR        { to{transform:rotate(360deg)} }
+@keyframes rippleOut    { 0%{transform:scale(0);opacity:.5} 100%{transform:scale(4.5);opacity:0} }
+@keyframes countUp      { from{transform:translateY(10px);opacity:0} to{transform:none;opacity:1} }
+@keyframes scanline     { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
+@keyframes borderFlow   { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes floatUp      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes redGlowPulse { 0%,100%{box-shadow:0 0 16px rgba(232,0,14,.2)} 50%{box-shadow:0 0 36px rgba(232,0,14,.5),0 0 60px rgba(232,0,14,.15)} }
+@keyframes charBlink    { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+@keyframes scanBand     {
+  0%   { transform: translateY(-100%); opacity: 0.04; }
+  50%  { opacity: 0.04; }
+  100% { transform: translateY(100vh); opacity: 0; }
 }
-@keyframes countUp   { from{transform:translateY(8px);opacity:0} to{transform:none;opacity:1} }
-@keyframes scanline  {
-  0%   { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
+@keyframes textFlicker  { 0%,96%,100%{opacity:1} 97%{opacity:.6} 98%{opacity:.9} 99%{opacity:.5} }
 
 /* ── View entrance ── */
-.view.on { animation: fadeUp .3s var(--ease); }
+.view.on { animation: fadeUp .35s var(--ease); }
 
-/* ── Button ripple container ── */
+/* ── Scanline overlay on cards ── */
+.card::after, .sc::after, .miner-card::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, rgba(255,255,255,.012) 0%, transparent 100%);
+  pointer-events: none;
+  animation: scanBand 6s linear infinite;
+}
+
+/* ── Button ripple ── */
 .btn { position: relative; overflow: hidden; }
 .btn .ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.25);
-  pointer-events: none;
-  animation: rippleOut 0.6s ease-out forwards;
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.22); pointer-events: none;
+  animation: rippleOut 0.65s ease-out forwards;
   transform-origin: center;
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    FONT HELPERS
-══════════════════════════════════ */
-.mono  { font-family: 'Share Tech Mono', monospace; }
-.raj   { font-family: 'Rajdhani', sans-serif; font-weight: 700; }
-.inter { font-family: 'Inter', sans-serif; }
-.cr{color:var(--red)}.cg{color:var(--gold)}.cgn{color:var(--grn)}.cd{color:var(--dim)}.cw{color:var(--white)}
+══════════════════════ */
+.mono  { font-family: 'Space Mono', monospace; }
+.raj   { font-family: 'Bebas Neue', sans-serif; letter-spacing: .05em; }
+.inter { font-family: 'Outfit', sans-serif; }
+.cr { color: var(--red) } .cg { color: var(--gold) } .cgn { color: var(--grn) }
+.cd { color: var(--dim) } .cw { color: var(--white) }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    LIVE DOT
-══════════════════════════════════ */
+══════════════════════ */
 .live {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Mono', monospace;
   font-size: var(--t-xs); letter-spacing: .12em; text-transform: uppercase; color: var(--grn);
 }
 .ld {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--grn); box-shadow: 0 0 6px var(--grn);
+  background: var(--grn); box-shadow: 0 0 8px var(--grn);
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    TICKER BAR
-══════════════════════════════════ */
+══════════════════════ */
 .tkbar {
-  height: 30px; overflow: hidden;
+  height: 32px; overflow: hidden;
   display: flex; align-items: center;
-  background: rgba(240,62,62,0.04);
-  border-bottom: 1px solid rgba(240,62,62,0.12);
+  background: rgba(232,0,14,0.05);
+  border-bottom: 1px solid rgba(232,0,14,0.15);
   position: relative; z-index: 20;
 }
 .tkin {
-  display: inline-flex; gap: 56px; white-space: nowrap;
-  font-family: 'Share Tech Mono', monospace;
+  display: inline-flex; gap: 60px; white-space: nowrap;
+  font-family: 'Space Mono', monospace;
   font-size: var(--t-xs); color: var(--dim);
-  animation: tka 55s linear infinite;
+  animation: tka 50s linear infinite;
 }
-.tks { color: var(--red); margin: 0 3px; opacity: .6; }
+.tks { color: var(--red); margin: 0 4px; opacity: .7; }
+html.light .tkbar { background: rgba(204,0,8,0.04); border-bottom-color: rgba(204,0,8,0.12); }
 
-/* ══════════════════════════════════
-   HEADER
-══════════════════════════════════ */
+/* ══════════════════════
+   HEADER — Full rework
+══════════════════════ */
 header {
   position: sticky; top: 0; z-index: 200;
-  height: 62px;
-  background: var(--header-bg) !important;
-  backdrop-filter: blur(32px) saturate(1.8) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(1.8) !important;
-  border-bottom: 1px solid var(--bor);
+  background: var(--header-bg);
+  backdrop-filter: blur(40px) saturate(2);
+  -webkit-backdrop-filter: blur(40px) saturate(2);
+  border-bottom: 1px solid rgba(232,0,14,0.18);
+  box-shadow: 0 1px 0 rgba(232,0,14,0.06), 0 4px 32px rgba(0,0,0,0.5);
   padding: 0 1.25rem;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  /* Allow wrapping on mobile so tabs get own row */
 }
-html.light header { box-shadow: 0 1px 0 var(--bor), 0 4px 24px rgba(0,0,0,.06); }
+/* Red accent line at top of header */
+header::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--red) 30%, var(--red2) 70%, transparent 100%);
+  animation: borderFlow 4s ease-in-out infinite;
+  background-size: 200% 100%;
+}
+html.light header { box-shadow: 0 1px 0 var(--bor), 0 4px 24px rgba(0,0,0,.07); }
 
-/* ── Logo ── */
+/* ── LOGO ── */
 .logo {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-md); letter-spacing: .03em;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.45rem; letter-spacing: .08em;
   color: var(--txt); text-decoration: none; flex-shrink: 0;
+  padding: 10px 0;
 }
 .logo-img {
   width: 36px; height: 36px; border-radius: var(--r-sm);
   object-fit: cover;
-  border: 1px solid rgba(240,62,62,0.35);
-  box-shadow: 0 0 12px rgba(240,62,62,0.18);
+  border: 1px solid rgba(232,0,14,0.4);
+  box-shadow: 0 0 14px rgba(232,0,14,0.22);
   transition: box-shadow var(--mid) var(--ease);
+  animation: redGlowPulse 3s ease-in-out infinite;
 }
 .logo:hover .logo-img { box-shadow: var(--glow-red); }
 .logo em { color: var(--red); font-style: normal; }
 .logo-sub {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: var(--t-xs); letter-spacing: .14em; color: var(--mut);
-  text-transform: uppercase; display: block; margin-top: 1px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; letter-spacing: .16em; color: var(--mut);
+  text-transform: uppercase; display: block; margin-top: 2px;
+  animation: textFlicker 7s ease-in-out infinite;
 }
 
-/* ── Nav tabs ── */
+/* ══════════════════════
+   NAV TABS — MOBILE FIRST
+   Full-width pill tab bar below header on mobile
+══════════════════════ */
 .navtabs {
+  /* On mobile: separate row, full width, pill style */
   display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none;
-  flex: 1; justify-content: center;
+  flex: 1; justify-content: flex-start;
+  padding: 0 2px;
+  -webkit-overflow-scrolling: touch;
+  /* Mask edges to hint scrollability */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
 }
 .navtabs::-webkit-scrollbar { display: none; }
+
 .tab {
-  padding: 6px 13px; border-radius: var(--r-sm);
+  padding: 8px 14px; border-radius: 99px;
   cursor: pointer; color: var(--dim);
-  transition: color var(--fast), background var(--fast), border-color var(--fast);
+  transition: color var(--fast), background var(--fast), box-shadow var(--fast), transform var(--fast);
   border: 1px solid transparent;
-  font-family: 'Inter', sans-serif; font-weight: 500;
+  font-family: 'Outfit', sans-serif; font-weight: 600;
   font-size: var(--t-xs);
   white-space: nowrap; user-select: none; flex-shrink: 0;
-  letter-spacing: .025em; text-transform: uppercase;
+  letter-spacing: .04em; text-transform: uppercase;
   position: relative;
 }
-.tab:hover { color: var(--txt); background: rgba(255,255,255,.04); }
-.tab.on {
+.tab:hover {
   color: var(--txt);
-  background: rgba(240,62,62,0.1);
-  border-color: rgba(240,62,62,0.22);
+  background: rgba(232,0,14,0.07);
+  border-color: rgba(232,0,14,0.15);
+  transform: translateY(-1px);
 }
-.tab.on::after {
-  content: '';
-  position: absolute; bottom: -1px; left: 20%; right: 20%; height: 2px;
-  background: var(--red); border-radius: 2px 2px 0 0;
+.tab.on {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(232,0,14,0.85), rgba(200,0,8,0.75));
+  border-color: rgba(232,0,14,0.5);
+  box-shadow: 0 0 18px rgba(232,0,14,0.35), 0 2px 8px rgba(0,0,0,0.4);
+  text-shadow: 0 0 12px rgba(255,100,100,0.6);
 }
+/* Remove the old ::after underline bar on active tab */
+.tab.on::after { display: none; }
 
 /* ── Header right ── */
 .hdr-r { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
 #uiControls { display: flex; align-items: center; gap: 5px; }
 .ctrl-btn {
   background: transparent;
-  border: 1px solid var(--bor);
-  border-radius: var(--r-sm);
+  border: 1px solid var(--bor2);
+  border-radius: 99px;
   color: var(--dim);
-  font-family: 'Inter', sans-serif; font-weight: 500;
+  font-family: 'Outfit', sans-serif; font-weight: 600;
   font-size: var(--t-xs);
-  padding: 5px 10px;
+  padding: 5px 12px;
   cursor: pointer;
   transition: all var(--fast) var(--ease);
   display: inline-flex; align-items: center; gap: 5px;
   white-space: nowrap; user-select: none;
+  letter-spacing: .03em;
 }
-.ctrl-btn:hover { border-color: var(--bor2); color: var(--txt); background: rgba(255,255,255,.03); }
-.ctrl-btn.active { background: rgba(240,62,62,.1); border-color: rgba(240,62,62,.3); color: var(--red2); }
+.ctrl-btn:hover { border-color: var(--bor3); color: var(--txt); background: rgba(255,255,255,.04); }
+.ctrl-btn.active { background: rgba(232,0,14,.1); border-color: rgba(232,0,14,.35); color: var(--red2); }
 #themeBtn .icon-dark  { display: inline; }
 #themeBtn .icon-light { display: none; }
 html.light #themeBtn .icon-dark  { display: none; }
@@ -354,93 +368,99 @@ html.light #themeBtn .icon-light { display: inline; }
 /* Connect wallet badge */
 #connectedBadge {
   display: none; align-items: center; gap: 6px;
-  background: rgba(52,211,153,.06);
-  border: 1px solid rgba(52,211,153,.2);
-  border-radius: var(--r-lg);
+  background: rgba(34,232,122,.06);
+  border: 1px solid rgba(34,232,122,.22);
+  border-radius: 99px;
   padding: 5px 12px;
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    MAIN LAYOUT
-══════════════════════════════════ */
+══════════════════════ */
 main {
   position: relative; z-index: 1;
-  padding: 1.25rem 1rem;
+  padding: 1.5rem 1rem 3rem;
   max-width: 1440px; margin: 0 auto;
 }
-@media(min-width: 768px) { main { padding: 1.5rem 1.5rem; } }
-@media(min-width: 1200px) { main { padding: 1.75rem 2rem; } }
+@media(min-width: 768px)  { main { padding: 1.75rem 1.5rem 3rem; } }
+@media(min-width: 1200px) { main { padding: 2rem 2.25rem 3rem; } }
 
 .view { display: none; }
 .view.on { display: block; }
 
 /* ── Grids ── */
-.g2  { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-.gsb { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.g2  { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+.gsb { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
 @media(min-width: 720px)  { .g2  { grid-template-columns: 1fr 1fr; } }
 @media(min-width: 1024px) { .gsb { grid-template-columns: 1fr 360px; } }
 
 /* ── Section header ── */
 .sh {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 1.25rem; gap: 10px;
+  margin-bottom: 1.5rem; gap: 10px;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid rgba(232,0,14,0.1);
 }
 .sh-t {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-lg); text-transform: uppercase; letter-spacing: .08em;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: var(--t-3xl); letter-spacing: .08em;
   color: var(--txt);
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
+  line-height: 1;
 }
 .sh-t::before {
   content: '';
-  width: 3px; height: 18px;
-  background: linear-gradient(180deg, var(--red), var(--red2));
+  width: 4px; height: 28px;
+  background: linear-gradient(180deg, var(--red2) 0%, var(--red3) 100%);
   border-radius: 2px;
   display: inline-block; flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(232,0,14,0.5);
+  animation: redGlowPulse 3s ease-in-out infinite;
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    CARD SYSTEM
-══════════════════════════════════ */
+══════════════════════ */
 .card {
-  background: rgba(17,19,32,0.7) !important;
-  backdrop-filter: blur(20px) saturate(1.6);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  border: 1px solid var(--bor) !important;
+  background: var(--card);
+  border: 1px solid var(--bor);
   border-radius: var(--r-lg);
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   position: relative;
-  transition: border-color var(--mid) var(--ease), box-shadow var(--mid) var(--ease);
+  transition: border-color var(--mid) var(--ease), box-shadow var(--mid) var(--ease), transform var(--mid) var(--ease);
 }
 .card::before {
   content: '';
-  position: absolute; inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(255,255,255,.025) 0%, transparent 60%);
-  pointer-events: none;
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232,0,14,.35), transparent);
+  opacity: 0;
+  transition: opacity var(--mid);
 }
 .card:hover {
-  border-color: var(--bor2) !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.04) inset;
+  border-color: rgba(232,0,14,.22);
+  box-shadow: 0 6px 32px rgba(0,0,0,.45), 0 0 0 1px rgba(232,0,14,.05) inset;
+  transform: translateY(-2px);
 }
+.card:hover::before { opacity: 1; }
 html.light .card {
-  background: rgba(255,255,255,0.8) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.04);
+  background: var(--card);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.04);
+  border-color: var(--bor);
 }
 
 /* Card header */
 .ch {
-  padding: .875rem 1.25rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--bor);
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  background: rgba(255,255,255,.015);
+  background: rgba(232,0,14,0.025);
 }
 html.light .ch { background: rgba(0,0,0,.015); }
 
 .ctitle {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-md); text-transform: uppercase; letter-spacing: .06em;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem; letter-spacing: .1em; text-transform: uppercase;
   display: flex; align-items: center; gap: 8px; color: var(--txt2);
 }
 
@@ -448,59 +468,65 @@ html.light .ch { background: rgba(0,0,0,.015); }
 .cbody { padding: 1.25rem; }
 
 /* ── Stat cards (.sc) ── */
-.sg { display: grid; grid-template-columns: repeat(2,1fr); gap: .75rem; margin-bottom: 1.25rem; }
+.sg {
+  display: grid; grid-template-columns: repeat(2,1fr); gap: .875rem; margin-bottom: 1.5rem;
+}
 @media(min-width: 460px) { .sg { grid-template-columns: repeat(3,1fr); } }
 @media(min-width: 900px) { .sg { grid-template-columns: repeat(6,1fr); } }
 
 .sc {
-  background: rgba(17,19,32,0.6) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--bor) !important;
+  background: var(--card);
+  border: 1px solid var(--bor);
   border-radius: var(--r-md);
-  padding: 1rem 1.1rem;
+  padding: 1.1rem 1rem;
   position: relative; overflow: hidden;
-  transition: transform var(--mid) var(--ease), border-color var(--mid) var(--ease), box-shadow var(--mid) var(--ease);
+  transition: transform var(--mid) var(--ease), border-color var(--mid), box-shadow var(--mid);
   cursor: default;
 }
-.sc::after {
+/* Animated bottom glow bar on stat cards */
+.sc::before {
   content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(240,62,62,0.5), transparent);
+  position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
   opacity: 0; transition: opacity var(--mid);
 }
-.sc:hover { transform: translateY(-2px); border-color: rgba(240,62,62,.2) !important; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
-.sc:hover::after { opacity: 1; }
-html.light .sc { background: rgba(255,255,255,.85) !important; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.sc:hover {
+  transform: translateY(-3px);
+  border-color: rgba(232,0,14,.25);
+  box-shadow: 0 8px 28px rgba(0,0,0,.3), 0 0 24px rgba(232,0,14,.08);
+}
+.sc:hover::before { opacity: 1; }
+html.light .sc { background: var(--sur); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
 
 .sl {
-  font-family: 'Inter', sans-serif; font-weight: 500;
-  font-size: var(--t-xs); color: var(--mut);
-  text-transform: uppercase; letter-spacing: .1em; margin-bottom: .45rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; color: var(--mut);
+  text-transform: uppercase; letter-spacing: .14em; margin-bottom: .5rem;
 }
 .sv {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-xl); line-height: 1.1; color: var(--txt);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: var(--t-2xl); line-height: 1; color: var(--txt);
+  letter-spacing: .03em;
   animation: countUp .4s var(--ease);
 }
 .ss {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: var(--t-xs); color: var(--mut); margin-top: 4px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; color: var(--mut); margin-top: 5px;
 }
 
-/* ══════════════════════════════════
-   BUTTONS — Full redesign
-══════════════════════════════════ */
+/* ══════════════════════
+   BUTTONS
+══════════════════════ */
 .btn {
-  padding: .55rem 1.1rem;
-  background: linear-gradient(135deg, var(--red), var(--red2));
+  padding: .55rem 1.15rem;
+  background: linear-gradient(135deg, var(--red), var(--red3));
   border: none;
-  border-radius: var(--r-sm);
+  border-radius: 99px;
   color: #fff;
-  font-family: 'Inter', sans-serif; font-weight: 600;
-  font-size: var(--t-sm); letter-spacing: .04em;
+  font-family: 'Outfit', sans-serif; font-weight: 700;
+  font-size: var(--t-xs); letter-spacing: .06em;
   cursor: pointer;
-  transition: transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease), filter var(--fast);
+  transition: transform var(--fast) var(--ease), box-shadow var(--fast), filter var(--fast);
   text-transform: uppercase;
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
   position: relative; overflow: hidden;
@@ -508,227 +534,218 @@ html.light .sc { background: rgba(255,255,255,.85) !important; box-shadow: 0 1px
 }
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(240,62,62,0.35), 0 2px 8px rgba(240,62,62,0.2);
-  filter: brightness(1.08);
+  box-shadow: var(--glow-red);
+  filter: brightness(1.1);
 }
-.btn:active { transform: translateY(0) scale(.98); box-shadow: none; filter: brightness(.95); }
-.btn:disabled { opacity: .38; cursor: not-allowed; transform: none; box-shadow: none; filter: none; }
+.btn:active { transform: translateY(0) scale(.97); box-shadow: none; filter: brightness(.9); }
+.btn:disabled { opacity: .32; cursor: not-allowed; transform: none; box-shadow: none; filter: none; }
 
 .btn-g {
   background: transparent;
   border: 1px solid var(--bor2);
-  color: var(--dim);
-  box-shadow: none;
+  color: var(--dim); box-shadow: none;
 }
 .btn-g:hover {
-  border-color: rgba(240,62,62,.4); color: var(--txt);
-  background: rgba(240,62,62,.06);
+  border-color: rgba(232,0,14,.4); color: var(--txt);
+  background: rgba(232,0,14,.06);
   box-shadow: none; filter: none;
 }
-.btn-sm { padding: 5px 12px; font-size: var(--t-xs); border-radius: var(--r-sm); }
+.btn-sm { padding: 5px 13px; font-size: var(--t-xs); }
 
 .btn-gold {
   background: linear-gradient(135deg, var(--gold), var(--gold2));
-  color: #0a0a0f;
+  color: #0a0908;
 }
-.btn-gold:hover { box-shadow: 0 6px 20px rgba(240,180,41,0.35); filter: brightness(1.06); }
+.btn-gold:hover { box-shadow: var(--glow-gold); }
 
 .btn-green {
   background: linear-gradient(135deg, var(--grn), var(--grn2));
-  color: #0a0a0f;
+  color: #050a0a;
 }
-.btn-green:hover { box-shadow: 0 6px 20px rgba(52,211,153,0.35); }
+.btn-green:hover { box-shadow: var(--glow-grn); }
 
-/* ── Connect wallet button ── */
 #connectBtn {
-  background: linear-gradient(135deg, rgba(240,62,62,.15), rgba(240,62,62,.08));
-  border: 1px solid rgba(240,62,62,.3);
+  background: linear-gradient(135deg, rgba(232,0,14,.18), rgba(200,0,8,.1));
+  border: 1px solid rgba(232,0,14,.35);
   color: var(--red2);
+  border-radius: 99px;
 }
 #connectBtn:hover {
-  background: linear-gradient(135deg, rgba(240,62,62,.25), rgba(240,62,62,.12));
-  border-color: rgba(240,62,62,.5);
-  box-shadow: 0 0 20px rgba(240,62,62,.15);
+  background: linear-gradient(135deg, rgba(232,0,14,.28), rgba(200,0,8,.16));
+  border-color: rgba(232,0,14,.6);
+  box-shadow: 0 0 24px rgba(232,0,14,.2);
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    INPUTS & SELECTS
-══════════════════════════════════ */
+══════════════════════ */
 .inp {
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.035);
   border: 1px solid var(--bor);
-  border-radius: var(--r-sm);
-  padding: .6rem .9rem;
+  border-radius: var(--r-md);
+  padding: .65rem 1rem;
   color: var(--txt);
-  font-family: 'Inter', sans-serif; font-weight: 400;
+  font-family: 'Outfit', sans-serif; font-weight: 400;
   font-size: var(--t-base);
   outline: none; width: 100%;
   transition: border-color var(--fast), background var(--fast), box-shadow var(--fast);
 }
 .inp:focus {
-  border-color: rgba(240,62,62,.5);
-  background: rgba(240,62,62,.03);
-  box-shadow: 0 0 0 3px rgba(240,62,62,.08);
+  border-color: rgba(232,0,14,.5);
+  background: rgba(232,0,14,.03);
+  box-shadow: 0 0 0 3px rgba(232,0,14,.08);
 }
 .inp::placeholder { color: var(--mut); }
 html.light .inp { background: rgba(0,0,0,.03); }
-html.light .inp:focus { background: rgba(192,57,43,.03); }
+html.light .inp:focus { background: rgba(204,0,8,.025); }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    TABLES
-══════════════════════════════════ */
+══════════════════════ */
 .tbl { width: 100%; border-collapse: collapse; }
 .tbl th {
-  font-family: 'Inter', sans-serif; font-weight: 600;
-  font-size: var(--t-xs); text-transform: uppercase; letter-spacing: .08em;
-  color: var(--mut); padding: .7rem 1rem; text-align: left;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--mut); padding: .8rem 1rem; text-align: left;
   border-bottom: 1px solid var(--bor);
-  background: rgba(255,255,255,.015);
+  background: rgba(232,0,14,.02);
 }
 .tbl td {
-  padding: .7rem 1rem;
+  padding: .8rem 1rem;
   font-size: var(--t-base);
-  border-bottom: 1px solid rgba(30,32,53,.5);
+  border-bottom: 1px solid rgba(28,30,44,.6);
   vertical-align: middle;
   color: var(--txt2);
-  transition: background var(--fast);
+  transition: background var(--fast), color var(--fast);
+  font-family: 'Outfit', sans-serif;
 }
 .tbl tr:last-child td { border-bottom: none; }
-.tbl tbody tr:hover td { background: rgba(240,62,62,.03); color: var(--txt); }
+.tbl tbody tr { transition: background var(--fast); }
+.tbl tbody tr:hover td { background: rgba(232,0,14,.04); color: var(--txt); }
 .tw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .tw::-webkit-scrollbar { height: 2px; }
 
 /* ── Spinner ── */
 .spin {
-  display: inline-block; width: 13px; height: 13px;
-  border: 2px solid rgba(240,62,62,.15);
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(232,0,14,.15);
   border-top-color: var(--red);
   border-radius: 50%;
-  animation: spinR .65s linear infinite;
-  vertical-align: middle; margin-right: 4px;
-  flex-shrink: 0;
+  animation: spinR .7s linear infinite;
+  vertical-align: middle; margin-right: 5px; flex-shrink: 0;
 }
 
 /* ── Bar chart ── */
-.bw  { display: flex; align-items: center; gap: 8px; }
-.bt  { flex: 1; background: var(--bor); border-radius: 99px; height: 6px; overflow: hidden; }
-.bf  { height: 100%; background: linear-gradient(90deg, var(--red), var(--red2)); border-radius: 99px; transition: width .8s var(--ease); }
-.bv  { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: var(--t-base); min-width: 80px; text-align: right; color: var(--txt); }
+.bw  { display: flex; align-items: center; gap: 9px; }
+.bt  { flex: 1; background: var(--bor); border-radius: 99px; height: 5px; overflow: hidden; }
+.bf  { height: 100%; background: linear-gradient(90deg, var(--red3), var(--red2)); border-radius: 99px; transition: width .8s var(--ease); }
+.bv  { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-md); min-width: 80px; text-align: right; color: var(--txt); letter-spacing: .03em; }
 
 /* ── Calc rows ── */
 .calc-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: .45rem 0;
-  border-bottom: 1px solid rgba(30,32,53,.4);
+  padding: .55rem 0;
+  border-bottom: 1px solid rgba(28,30,44,.5);
   gap: 8px;
 }
 .calc-row:last-child { border-bottom: none; }
-.calc-lbl {
-  font-family: 'Inter', sans-serif; font-weight: 500;
-  font-size: var(--t-sm); color: var(--dim);
-}
-.calc-val {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-base); color: var(--txt); text-align: right;
-}
+.calc-lbl { font-family: 'Outfit', sans-serif; font-weight: 500; font-size: var(--t-sm); color: var(--dim); }
+.calc-val  { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-md); color: var(--txt); text-align: right; letter-spacing: .03em; }
 
 /* ── Pool bars ── */
-.pool-bar-wrap { background: var(--bor); border-radius: 99px; height: 8px; overflow: hidden; margin: .5rem 0; }
-.pool-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,var(--red),var(--red2)); transition: width .8s var(--ease); }
+.pool-bar-wrap { background: var(--bor); border-radius: 99px; height: 7px; overflow: hidden; margin: .5rem 0; }
+.pool-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--red3), var(--red2)); transition: width .8s var(--ease); }
 
-/* ══════════════════════════════════
-   NOTIFICATION TOASTS
-══════════════════════════════════ */
+/* ══════════════════════
+   NOTIFICATIONS
+══════════════════════ */
 #notif {
   position: fixed; top: 72px; right: 16px; z-index: 9999;
   display: flex; flex-direction: column; gap: 8px; pointer-events: none;
 }
 .ntf {
-  background: rgba(17,19,32,.95);
-  backdrop-filter: blur(20px);
+  background: rgba(15,16,24,.96);
+  backdrop-filter: blur(24px);
   border: 1px solid var(--bor2);
   border-radius: var(--r-md);
-  padding: .75rem 1rem;
-  font-family: 'Inter', sans-serif; font-weight: 500;
-  font-size: var(--t-sm);
-  color: var(--txt); pointer-events: auto;
+  padding: .8rem 1.1rem;
+  font-family: 'Outfit', sans-serif; font-weight: 500;
+  font-size: var(--t-sm); color: var(--txt); pointer-events: auto;
   animation: ntfIn .25s var(--ease);
-  max-width: 300px; line-height: 1.5;
-  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  max-width: 300px; line-height: 1.55;
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
 }
-.ntf.success { border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.08); color: var(--grn2); }
-.ntf.error   { border-color: rgba(240,62,62,.4);  background: rgba(240,62,62,.08);  color: var(--red2); }
-.ntf.warn    { border-color: rgba(240,180,41,.4); background: rgba(240,180,41,.08); color: var(--gold2); }
+.ntf.success { border-color: rgba(34,232,122,.4); background: rgba(34,232,122,.07); color: var(--grn2); }
+.ntf.error   { border-color: rgba(232,0,14,.4); background: rgba(232,0,14,.07); color: var(--red2); }
+.ntf.warn    { border-color: rgba(240,165,0,.4); background: rgba(240,165,0,.07); color: var(--gold2); }
 
-/* ══════════════════════════════════
-   NAV TABS (inner / liquidity)
-══════════════════════════════════ */
+/* ══════════════════════
+   INNER NAV TABS (ptabs / liq-tabs)
+══════════════════════ */
 .ptabs, .liq-tabs {
-  display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none;
-  background: rgba(255,255,255,.025);
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  background: rgba(5,5,7,0.6);
   border: 1px solid var(--bor);
-  border-radius: var(--r-md);
-  padding: 3px;
-  margin-bottom: 1rem;
+  border-radius: 99px;
+  padding: 4px;
+  margin-bottom: 1.25rem;
   -webkit-overflow-scrolling: touch;
 }
 .ptabs::-webkit-scrollbar, .liq-tabs::-webkit-scrollbar { display: none; }
 
 .ptab, .liq-tab {
-  flex: 1; min-width: fit-content;
-  padding: 7px 13px; border-radius: var(--r-sm);
+  flex-shrink: 0;
+  padding: 7px 16px; border-radius: 99px;
   background: transparent; border: none;
   color: var(--dim);
-  font-family: 'Inter', sans-serif; font-weight: 500;
+  font-family: 'Outfit', sans-serif; font-weight: 600;
   font-size: var(--t-xs);
   cursor: pointer;
-  transition: color var(--fast), background var(--fast);
+  transition: color var(--fast), background var(--fast), box-shadow var(--fast);
   white-space: nowrap;
   display: flex; align-items: center; gap: 5px; justify-content: center;
-  user-select: none;
-  letter-spacing: .03em;
+  user-select: none; letter-spacing: .04em; text-transform: uppercase;
 }
-.ptab:hover, .liq-tab:hover { color: var(--txt); }
+.ptab:hover, .liq-tab:hover { color: var(--txt); background: rgba(255,255,255,.04); }
 .ptab.on, .liq-tab.active {
-  background: rgba(240,62,62,.12);
-  color: var(--txt);
-  box-shadow: 0 1px 0 rgba(240,62,62,.3) inset;
+  background: linear-gradient(135deg, rgba(232,0,14,.8), rgba(190,0,8,.7));
+  color: #fff;
+  box-shadow: 0 0 16px rgba(232,0,14,.3);
 }
-.liq-tab-gold.active { background: rgba(240,180,41,.1); color: var(--gold); }
-.liq-tab-green.active { background: rgba(52,211,153,.1); color: var(--grn); }
+.liq-tab-gold.active { background: rgba(240,165,0,.15); color: var(--gold); box-shadow: 0 0 12px rgba(240,165,0,.2); }
+.liq-tab-green.active { background: rgba(34,232,122,.12); color: var(--grn); box-shadow: 0 0 12px rgba(34,232,122,.2); }
 .pane { display: none; } .pane.on { display: block; }
 .liq-pane { display: none; } .liq-pane.active { display: block; }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    LIQUIDITY PANE
-══════════════════════════════════ */
+══════════════════════ */
 .liq-pane-inner {
-  background: rgba(17,19,32,.5);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--card);
   border: 1px solid var(--bor);
   border-radius: var(--r-lg);
-  padding: 1.25rem;
+  padding: 1.5rem;
   margin-bottom: 0;
 }
-html.light .liq-pane-inner { background: rgba(255,255,255,.6); }
+html.light .liq-pane-inner { background: var(--sur); }
 
 .liq-step-label {
-  font-size: var(--t-sm); color: var(--dim); line-height: 1.65;
-  margin-bottom: 1rem; padding-bottom: .75rem;
+  font-size: var(--t-sm); color: var(--dim); line-height: 1.7;
+  margin-bottom: 1.1rem; padding-bottom: .8rem;
   border-bottom: 1px solid var(--bor);
+  font-family: 'Space Mono', monospace;
 }
 .liq-token-row {
   display: flex; align-items: center; gap: 12px;
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.025);
   border: 1px solid var(--bor);
   border-radius: var(--r-md);
-  padding: .85rem 1rem; margin-bottom: .6rem;
+  padding: .9rem 1rem; margin-bottom: .65rem;
   transition: border-color var(--fast), background var(--fast);
 }
 .liq-token-row:focus-within {
-  border-color: rgba(240,62,62,.4);
-  background: rgba(240,62,62,.02);
+  border-color: rgba(232,0,14,.4);
+  background: rgba(232,0,14,.02);
 }
 html.light .liq-token-row { background: rgba(0,0,0,.03); }
 
@@ -739,129 +756,110 @@ html.light .liq-token-row { background: rgba(0,0,0,.03); }
   border: 1px solid var(--bor); overflow: hidden;
 }
 .liq-token-info { flex: 1; min-width: 0; }
-.liq-token-name {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-md); color: var(--txt);
-}
-.liq-token-bal {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: var(--t-xs); color: var(--mut); margin-top: 2px;
-}
+.liq-token-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; color: var(--txt); letter-spacing: .05em; }
+.liq-token-bal  { font-family: 'Space Mono', monospace; font-size: var(--t-xs); color: var(--mut); margin-top: 2px; }
 .liq-token-input-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .liq-input {
   background: transparent; border: none; outline: none;
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-2xl); color: var(--txt);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: var(--t-2xl); letter-spacing: .03em; color: var(--txt);
   text-align: right; width: 130px; padding: 0;
 }
 @media(max-width: 380px) { .liq-input { width: 90px; font-size: var(--t-xl); } }
 .liq-max-btn {
   padding: 4px 10px;
-  background: rgba(240,62,62,.08); border: 1px solid rgba(240,62,62,.2);
-  border-radius: var(--r-sm); color: var(--red);
-  font-family: 'Inter', sans-serif; font-weight: 600;
+  background: rgba(232,0,14,.08); border: 1px solid rgba(232,0,14,.22);
+  border-radius: 99px; color: var(--red);
+  font-family: 'Outfit', sans-serif; font-weight: 700;
   font-size: var(--t-xs); cursor: pointer;
   transition: all var(--fast); white-space: nowrap;
+  letter-spacing: .06em; text-transform: uppercase;
 }
-.liq-max-btn:hover { background: rgba(240,62,62,.18); border-color: rgba(240,62,62,.4); }
+.liq-max-btn:hover { background: rgba(232,0,14,.18); border-color: rgba(232,0,14,.4); }
 
 .liq-plus-divider { text-align: center; color: var(--mut); font-size: 1.5rem; margin: .1rem 0; line-height: 1; }
-.liq-preview {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: var(--t-sm); color: var(--gold);
-  min-height: 1.4em; padding: .3rem 0; margin: .2rem 0;
-}
+.liq-preview { font-family: 'Space Mono', monospace; font-size: var(--t-sm); color: var(--gold); min-height: 1.4em; padding: .3rem 0; margin: .2rem 0; }
 .liq-slip-row { display: flex; align-items: center; gap: 5px; margin: .65rem 0; flex-wrap: wrap; }
 .slip-btn {
-  padding: 4px 10px;
+  padding: 4px 11px;
   background: transparent; border: 1px solid var(--bor);
-  border-radius: var(--r-sm); color: var(--dim);
-  font-family: 'Inter', sans-serif; font-weight: 600;
-  font-size: var(--t-xs); cursor: pointer;
-  transition: all var(--fast);
+  border-radius: 99px; color: var(--dim);
+  font-family: 'Outfit', sans-serif; font-weight: 700;
+  font-size: var(--t-xs); cursor: pointer; transition: all var(--fast);
+  letter-spacing: .04em;
 }
-.slip-btn:hover { border-color: var(--bor2); color: var(--txt); }
-.slip-btn.active { background: rgba(240,62,62,.1); border-color: rgba(240,62,62,.3); color: var(--red2); }
-.liq-action-btn { width: 100%; padding: .8rem; margin-top: .65rem; font-size: var(--t-base); border-radius: var(--r-md); }
-.liq-status {
-  font-family: 'Share Tech Mono', monospace; font-size: var(--t-xs);
-  color: var(--mut); text-align: center; margin-top: .5rem; min-height: 1.2em; line-height: 1.6;
-}
-.liq-note {
-  font-size: var(--t-xs); color: var(--mut); line-height: 1.65;
-  margin-top: .75rem; padding-top: .65rem; border-top: 1px solid var(--bor);
-}
-.liq-info-strip {
-  display: flex; gap: 1rem; flex-wrap: wrap;
-  background: rgba(255,255,255,.025); border: 1px solid var(--bor);
-  border-radius: var(--r-sm); padding: .6rem .9rem;
-}
+.slip-btn:hover { border-color: var(--bor3); color: var(--txt); }
+.slip-btn.active { background: rgba(232,0,14,.1); border-color: rgba(232,0,14,.35); color: var(--red2); }
+.liq-action-btn { width: 100%; padding: .85rem; margin-top: .65rem; font-size: var(--t-base); border-radius: var(--r-md); }
+.liq-status { font-family: 'Space Mono', monospace; font-size: var(--t-xs); color: var(--mut); text-align: center; margin-top: .5rem; min-height: 1.2em; line-height: 1.65; }
+.liq-note { font-size: var(--t-xs); color: var(--mut); line-height: 1.65; margin-top: .75rem; padding-top: .65rem; border-top: 1px solid var(--bor); font-family: 'Space Mono', monospace; }
+.liq-info-strip { display: flex; gap: 1rem; flex-wrap: wrap; background: rgba(255,255,255,.02); border: 1px solid var(--bor); border-radius: var(--r-sm); padding: .65rem .95rem; }
 .liq-swap-dir-row { display: flex; gap: 7px; margin-bottom: .65rem; }
 .liq-dir-btn {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: .7rem; background: rgba(255,255,255,.03);
+  padding: .75rem; background: rgba(255,255,255,.025);
   border: 1px solid var(--bor); border-radius: var(--r-md);
   cursor: pointer; transition: all var(--fast);
-  font-family: 'Inter', sans-serif; font-weight: 500;
+  font-family: 'Outfit', sans-serif; font-weight: 600;
   font-size: var(--t-xs); color: var(--dim);
 }
-.liq-dir-btn.active { background: rgba(240,62,62,.08); border-color: rgba(240,62,62,.35); color: var(--txt); }
+.liq-dir-btn.active { background: rgba(232,0,14,.08); border-color: rgba(232,0,14,.35); color: var(--txt); }
 .liq-dir-btn:hover:not(.active) { border-color: var(--bor2); color: var(--txt); background: rgba(255,255,255,.04); }
 .liq-dir-arrow { color: var(--mut); font-size: 1.1rem; }
 .liq-dex-link {
   display: flex; align-items: center; gap: 10px;
   flex: 1; min-width: 130px;
-  background: rgba(255,255,255,.03); border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: .65rem .9rem;
+  background: rgba(255,255,255,.025); border: 1px solid var(--bor);
+  border-radius: var(--r-md); padding: .7rem 1rem;
   transition: border-color var(--mid), transform var(--fast);
   color: var(--txt); text-decoration: none;
 }
-.liq-dex-link:hover { border-color: rgba(240,62,62,.25); transform: translateY(-1px); }
+.liq-dex-link:hover { border-color: rgba(232,0,14,.25); transform: translateY(-2px); }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    RANK BADGES
-══════════════════════════════════ */
+══════════════════════ */
 .rk {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; border-radius: 6px;
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-sm); background: var(--sur);
+  width: 26px; height: 26px; border-radius: var(--r-sm);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: var(--t-md); background: var(--sur); letter-spacing: .03em;
 }
-.r1 { background: rgba(240,180,41,.15); color: var(--gold); }
-.r2 { background: rgba(192,192,192,.1); color: #bbb; }
+.r1 { background: rgba(240,165,0,.15); color: var(--gold); box-shadow: 0 0 10px rgba(240,165,0,.18); }
+.r2 { background: rgba(200,200,200,.1); color: #ccc; }
 .r3 { background: rgba(180,100,50,.1); color: #cd7f32; }
 .rn { color: var(--mut); }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    SIGNAL CARDS
-══════════════════════════════════ */
+══════════════════════ */
 .sig {
-  display: flex; gap: 12px;
-  background: rgba(17,19,32,.5);
+  display: flex; gap: 14px;
+  background: var(--card);
   border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: .9rem;
-  margin-bottom: .65rem;
-  transition: border-color var(--mid), transform var(--mid);
+  border-left: 3px solid var(--red);
+  border-radius: var(--r-md); padding: 1rem 1.1rem;
+  margin-bottom: .75rem;
+  transition: border-color var(--mid), transform var(--mid), box-shadow var(--mid);
 }
-.sig:hover { border-color: var(--bor2); transform: translateX(2px); }
-.sig-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
-.sig-title { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: var(--t-md); margin-bottom: 4px; }
-.sig-desc { font-family: 'Inter', sans-serif; font-size: var(--t-xs); color: var(--dim); line-height: 1.6; }
+.sig:hover { border-color: rgba(232,0,14,.4); transform: translateX(3px); box-shadow: 0 4px 20px rgba(0,0,0,.25); }
+.sig-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; animation: floatUp 4s ease-in-out infinite; }
+.sig-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: .06em; margin-bottom: 5px; }
+.sig-desc { font-family: 'Outfit', sans-serif; font-size: var(--t-xs); color: var(--dim); line-height: 1.65; }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    MINER CARDS
-══════════════════════════════════ */
+══════════════════════ */
 .miner-grid {
-  display: grid; grid-template-columns: repeat(2,1fr); gap: .75rem; margin-bottom: 1rem;
+  display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; margin-bottom: 1.25rem;
 }
 @media(min-width: 600px)  { .miner-grid { grid-template-columns: repeat(3,1fr); } }
 @media(min-width: 900px)  { .miner-grid { grid-template-columns: repeat(4,1fr); } }
 @media(min-width: 1200px) { .miner-grid { grid-template-columns: repeat(5,1fr); } }
 
 .miner-card {
-  background: rgba(17,19,32,.7) !important;
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--bor) !important;
+  background: var(--card);
+  border: 1px solid var(--bor);
   border-radius: var(--r-md); overflow: hidden; cursor: pointer;
   transition: transform var(--mid) var(--ease), border-color var(--mid), box-shadow var(--mid);
   position: relative;
@@ -869,199 +867,225 @@ html.light .liq-token-row { background: rgba(0,0,0,.03); }
 .miner-card::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 60%, rgba(240,62,62,.06));
+  background: linear-gradient(180deg, transparent 55%, rgba(232,0,14,.1));
   pointer-events: none; opacity: 0;
   transition: opacity var(--mid);
 }
 .miner-card:hover {
-  border-color: rgba(240,62,62,.3) !important;
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(240,62,62,.1);
+  border-color: rgba(232,0,14,.35);
+  transform: translateY(-5px);
+  box-shadow: 0 14px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(232,0,14,.12), 0 0 30px rgba(232,0,14,.06);
 }
 .miner-card:hover::before { opacity: 1; }
-html.light .miner-card { background: rgba(255,255,255,.9) !important; }
+html.light .miner-card { background: var(--sur); }
 
 .miner-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
 .miner-img-fb {
   width: 100%; aspect-ratio: 1;
-  background: linear-gradient(135deg, rgba(240,62,62,.06), rgba(240,180,41,.04));
+  background: linear-gradient(135deg, rgba(232,0,14,.07), rgba(240,165,0,.04));
   display: flex; align-items: center; justify-content: center; font-size: 3rem;
 }
-.miner-info { padding: .75rem; }
-.miner-name {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: var(--t-base); margin-bottom: .4rem; color: var(--txt);
-}
+.miner-info { padding: .85rem; }
+.miner-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: .05em; margin-bottom: .45rem; color: var(--txt); }
 .miner-stat { display: flex; justify-content: space-between; align-items: center; padding: .2rem 0; }
-.miner-stat-k { font-family: 'Inter', sans-serif; font-weight: 500; font-size: var(--t-xs); color: var(--mut); }
-.miner-stat-v { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: var(--t-sm); color: var(--txt2); }
+.miner-stat-k { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--mut); text-transform: uppercase; letter-spacing: .1em; }
+.miner-stat-v { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-sm); color: var(--txt2); letter-spacing: .03em; }
 
-/* ══════════════════════════════════
-   DURATION GRID (lock/calc)
-══════════════════════════════════ */
-.dur-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: .4rem; margin-bottom: .75rem; }
+/* ══════════════════════
+   DURATION GRID
+══════════════════════ */
+.dur-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: .45rem; margin-bottom: .85rem; }
 .dur-btn {
-  background: rgba(255,255,255,.025);
+  background: rgba(255,255,255,.02);
   border: 1px solid var(--bor);
-  border-radius: var(--r-sm); padding: .5rem .4rem;
+  border-radius: var(--r-md); padding: .55rem .4rem;
   cursor: pointer; text-align: center;
-  transition: all var(--fast) var(--ease);
-  user-select: none;
+  transition: all var(--fast) var(--ease); user-select: none;
 }
-.dur-btn:hover { border-color: var(--bor2); background: rgba(255,255,255,.04); }
+.dur-btn:hover { border-color: var(--bor2); background: rgba(255,255,255,.04); transform: translateY(-1px); }
 .dur-btn.active {
-  background: rgba(240,180,41,.1); border-color: rgba(240,180,41,.4);
-  box-shadow: 0 0 12px rgba(240,180,41,.12);
+  background: rgba(240,165,0,.1); border-color: rgba(240,165,0,.4);
+  box-shadow: 0 0 14px rgba(240,165,0,.14);
 }
-.dur-days { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: var(--t-sm); color: var(--txt2); }
-.dur-mult { font-family: 'Share Tech Mono', monospace; font-size: var(--t-xs); color: var(--gold); margin-top: 2px; }
+.dur-days { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-md); color: var(--txt2); letter-spacing: .04em; }
+.dur-mult { font-family: 'Space Mono', monospace; font-size: var(--t-xs); color: var(--gold); margin-top: 2px; }
 .dur-btn.active .dur-days { color: var(--gold); }
 
 /* ── Lock row ── */
 .lock-row {
   background: rgba(255,255,255,.02);
   border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: .9rem;
-  margin-bottom: .65rem;
+  border-radius: var(--r-md); padding: .95rem;
+  margin-bottom: .7rem;
   transition: border-color var(--mid);
 }
 .lock-row:hover { border-color: var(--bor2); }
-.lock-prog { background: var(--bor); border-radius: 99px; height: 5px; overflow: hidden; margin: .4rem 0; }
+.lock-prog { background: var(--bor); border-radius: 99px; height: 4px; overflow: hidden; margin: .4rem 0; }
 .lock-prog-fill { height: 100%; border-radius: 99px; transition: width .8s var(--ease); }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    ACTIVITY FEED
-══════════════════════════════════ */
+══════════════════════ */
 .evf { max-height: 540px; overflow-y: auto; }
 .ei {
-  display: flex; gap: 10px; padding: .65rem .75rem;
-  border-bottom: 1px solid rgba(30,32,53,.4);
+  display: flex; gap: 10px; padding: .75rem .9rem;
+  border-bottom: 1px solid rgba(28,30,44,.5);
   transition: background var(--fast);
 }
 .ei:last-child { border-bottom: none; }
-.ei:hover { background: rgba(255,255,255,.02); }
+.ei:hover { background: rgba(232,0,14,.03); }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    EXPLORER HERO
-══════════════════════════════════ */
+══════════════════════ */
 .explorer-hero {
-  display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
-  background: linear-gradient(135deg,rgba(240,62,62,.06),rgba(240,180,41,.03),transparent 80%);
-  border: 1px solid rgba(240,62,62,.15);
-  border-radius: var(--r-xl); padding: 1.4rem; margin-bottom: 1.25rem;
+  display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(232,0,14,.06), rgba(240,165,0,.03), transparent 80%);
+  border: 1px solid rgba(232,0,14,.15);
+  border-radius: var(--r-xl); padding: 1.5rem; margin-bottom: 1.5rem;
+  position: relative; overflow: hidden;
+}
+.explorer-hero::before {
+  content: '⛏';
+  position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
+  font-size: 5rem; opacity: .04; pointer-events: none;
+  animation: floatUp 5s ease-in-out infinite;
 }
 
-/* ══════════════════════════════════
-   BANNER (hero sections)
-══════════════════════════════════ */
+/* ══════════════════════
+   BANNER
+══════════════════════ */
 .banner {
-  background: linear-gradient(135deg, rgba(240,62,62,.07), rgba(17,19,32,.8));
-  border: 1px solid rgba(240,62,62,.15);
+  background: linear-gradient(135deg, rgba(232,0,14,.07), rgba(15,16,24,.8));
+  border: 1px solid rgba(232,0,14,.15);
   border-radius: var(--r-xl);
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
+  padding: 1.4rem 1.5rem;
+  margin-bottom: 1.5rem;
   position: relative; overflow: hidden;
 }
 .banner::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(240,62,62,.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(232,0,14,.5), transparent);
+  animation: borderFlow 4s ease-in-out infinite;
+  background-size: 200% 100%;
 }
+html.light .banner { background: linear-gradient(135deg, rgba(204,0,8,.05), rgba(255,255,255,.85)); }
 
-/* ══════════════════════════════════
-   WI STYLES (What If page)
-══════════════════════════════════ */
+/* ══════════════════════
+   WHAT IF PAGE
+══════════════════════ */
 #wi-slotTableWrap {
-  background: rgba(17,19,32,.4);
-  backdrop-filter: blur(14px);
+  background: rgba(15,16,24,.5);
   border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: .9rem;
+  border-radius: var(--r-md); padding: 1rem;
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
+   WALLET CONNECT BUTTON
+══════════════════════ */
+.wc-btn {
+  display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, rgba(232,0,14,.06), rgba(15,16,24,.7));
+  border: 1px solid rgba(232,0,14,.18);
+  border-radius: var(--r-xl); padding: 1.2rem 1.4rem;
+  cursor: pointer; transition: all var(--mid) var(--ease);
+  margin-bottom: .85rem;
+}
+.wc-btn:hover {
+  border-color: rgba(232,0,14,.4);
+  background: linear-gradient(135deg, rgba(232,0,14,.1), rgba(15,16,24,.75));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(232,0,14,.12);
+}
+
+/* ── PEN GRID ── */
+.pen-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .5rem; margin-bottom: 1rem; }
+@media(min-width: 600px) { .pen-grid { grid-template-columns: repeat(5,1fr); } }
+.pen-row { background: var(--card); border: 1px solid var(--bor); border-radius: var(--r-sm); padding: .65rem .8rem; display: flex; flex-direction: column; gap: 3px; }
+
+/* ── LP AMOUNT ROW ── */
+.lp-amt-row { display: flex; gap: 6px; align-items: center; }
+.lp-hero {
+  background: linear-gradient(135deg, rgba(232,0,14,0.07), rgba(240,165,0,0.03), transparent 70%);
+  border: 1px solid rgba(232,0,14,0.18); border-radius: var(--r-lg);
+  padding: 1.35rem; margin-bottom: 1.1rem; position: relative; overflow: hidden;
+}
+.lp-hero::before { content: '💧'; position: absolute; right: 1.2rem; top: .9rem; font-size: 4.5rem; opacity: .05; pointer-events: none; }
+
+/* ══════════════════════
    RESPONSIVE
-══════════════════════════════════ */
+══════════════════════ */
 @media(max-width: 640px) {
   :root {
-    --t-xs:   0.625rem;
-    --t-sm:   0.6875rem;
-    --t-base: 0.8125rem;
-    --t-md:   0.9375rem;
-    --t-lg:   1.0625rem;
-    --t-xl:   1.25rem;
-    --t-2xl:  1.5rem;
-    --t-3xl:  2rem;
-    /* keep legacy aliases in sync */
+    --t-xs: 0.625rem; --t-sm: 0.6875rem; --t-base: 0.8125rem;
+    --t-md: 0.9375rem; --t-lg: 1.0625rem; --t-xl: 1.25rem;
+    --t-2xl: 1.5rem; --t-3xl: 2rem;
     --fs-xs: var(--t-xs); --fs-sm: var(--t-sm); --fs-base: var(--t-base);
     --fs-md: var(--t-base); --fs-lg: var(--t-md); --fs-xl: var(--t-xl);
     --fs-2xl: var(--t-2xl); --fs-3xl: var(--t-3xl);
   }
-  header { height: auto; min-height: 52px; flex-wrap: wrap; padding: .5rem .75rem; gap: 4px; }
-  .logo { font-size: .95rem; }
-  .navtabs { order: 3; width: 100%; padding-bottom: 4px; gap: 1px; }
-  .tab { padding: 5px 9px; }
-  main { padding: .75rem; }
-  .sg { grid-template-columns: repeat(2,1fr); gap: .5rem; }
-  .sc { padding: .75rem; }
+  /* On mobile: nav tabs sit below the logo+controls row */
+  header {
+    flex-wrap: wrap;
+    height: auto; min-height: 56px;
+    padding: 0 .75rem;
+    row-gap: 0;
+  }
+  .logo { padding: 10px 0; font-size: 1.2rem; }
+  .hdr-r { padding: 8px 0; }
+
+  /* Tabs: full-width row, clearly visible pill row */
+  .navtabs {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 6px 0 8px;
+    gap: 4px;
+    border-top: 1px solid rgba(232,0,14,0.1);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 6px, black calc(100% - 6px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, black 6px, black calc(100% - 6px), transparent 100%);
+  }
+  .tab {
+    padding: 7px 12px;
+    font-size: 0.6rem;
+    letter-spacing: .06em;
+  }
+  main { padding: .9rem .75rem 2.5rem; }
+  .sg { grid-template-columns: repeat(2,1fr); gap: .6rem; }
+  .sc { padding: .85rem .8rem; }
   .g2 { grid-template-columns: 1fr; }
-  .cbody { padding: .9rem; }
-  .ch { padding: .7rem .9rem; }
-  .miner-grid { grid-template-columns: repeat(2,1fr); gap: .5rem; }
-  .tbl th, .tbl td { padding: .5rem .65rem; }
-  .dur-grid { grid-template-columns: repeat(4,1fr); gap: .3rem; }
+  .cbody { padding: 1rem; }
+  .ch { padding: .75rem 1rem; }
+  .sh { margin-bottom: 1rem; }
+  .sh-t { font-size: var(--t-2xl); }
+  .miner-grid { grid-template-columns: repeat(2,1fr); gap: .65rem; }
+  .tbl th, .tbl td { padding: .6rem .75rem; }
+  .dur-grid { gap: .35rem; }
   #uiControls { gap: 3px; }
-  .ctrl-btn { padding: 4px 8px; }
-  .hdr-r { flex-shrink: 0; }
+  .ctrl-btn { padding: 4px 9px; font-size: 0.6rem; }
+  .hdr-r { flex-shrink: 0; gap: 4px; }
+  .liq-tabs { border-radius: var(--r-md); }
 }
 @media(max-width: 380px) {
   .sg { grid-template-columns: repeat(2,1fr); }
-  .tab { padding: 4px 7px; }
+  .tab { padding: 6px 9px; font-size: 0.575rem; }
+  .logo { font-size: 1.05rem; }
 }
 
-/* ══════════════════════════════════
+/* ══════════════════════
    LIGHT MODE OVERRIDES
-══════════════════════════════════ */
-html.light .card    { box-shadow: 0 1px 8px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04); }
+══════════════════════ */
+html.light .card    { box-shadow: 0 1px 8px rgba(0,0,0,.07), 0 4px 18px rgba(0,0,0,.04); }
 html.light .sc      { box-shadow: 0 1px 4px rgba(0,0,0,.05); }
-html.light .miner-card { box-shadow: 0 2px 12px rgba(0,0,0,.06); }
-html.light .tkbar   { background: rgba(192,57,43,.04); border-bottom-color: rgba(192,57,43,.12); }
-html.light .tab.on  { background: rgba(192,57,43,.08); }
-html.light .ntf     { box-shadow: 0 4px 16px rgba(0,0,0,.1); background: rgba(255,255,255,.95); }
-html.light .sig     { background: rgba(255,255,255,.7); }
+html.light .miner-card { box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+html.light .tkbar   { background: rgba(204,0,8,.04); border-bottom-color: rgba(204,0,8,.12); }
+html.light .tab.on  { background: linear-gradient(135deg, rgba(204,0,8,.8), rgba(180,0,6,.7)); }
+html.light .ntf     { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: rgba(255,255,255,.97); }
+html.light .sig     { background: rgba(255,255,255,.8); }
 html.light .liq-pane-inner { box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-html.light .banner  { background: linear-gradient(135deg,rgba(192,57,43,.06),rgba(255,255,255,.8)); }
-
-/* ══════════════════════════════════
-   WALLET CONNECT BUTTON (full)
-══════════════════════════════════ */
-.wc-btn {
-  display: flex; align-items: center; gap: 14px;
-  background: linear-gradient(135deg,rgba(240,62,62,.06),rgba(17,19,32,.6));
-  border: 1px solid rgba(240,62,62,.18);
-  border-radius: var(--r-xl); padding: 1.1rem 1.25rem;
-  cursor: pointer; transition: all var(--mid) var(--ease);
-  margin-bottom: .75rem;
-}
-.wc-btn:hover {
-  border-color: rgba(240,62,62,.35);
-  background: linear-gradient(135deg,rgba(240,62,62,.1),rgba(17,19,32,.7));
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(240,62,62,.1);
-}
-
-/* ── PEN GRID ── */
-.pen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem;margin-bottom:1rem}
-@media(min-width:600px){.pen-grid{grid-template-columns:repeat(5,1fr)}}
-.pen-row{background:var(--card);border:1px solid var(--bor);border-radius:var(--r-sm);padding:.6rem .75rem;display:flex;flex-direction:column;gap:3px}
-
-/* ── LP AMOUNT ROW ── */
-.lp-amt-row{display:flex;gap:6px;align-items:center;}
-.lp-hero{
-  background:linear-gradient(135deg,rgba(240,62,62,0.08),rgba(240,180,41,0.04),transparent 70%);
-  border:1px solid rgba(240,62,62,0.18);border-radius:var(--r-lg);
-  padding:1.25rem;margin-bottom:1rem;position:relative;overflow:hidden;
-}
-.lp-hero::before{content:'💧';position:absolute;right:1.2rem;top:.9rem;font-size:4.5rem;opacity:.06;}
+html.light .banner  { border-color: rgba(204,0,8,.12); }
+html.light body::after { display: none; }
 </style>
 </head>
 <body>
@@ -2409,8 +2433,11 @@ const PHARAOH_ROUTER_ABI = [
   'function addLiquidity(address tokenA, address tokenB, bool stable, uint256 amountADesired, uint256 amountBDesired, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity)',
   'function removeLiquidity(address tokenA, address tokenB, bool stable, uint256 liquidity, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) returns (uint256 amountA, uint256 amountB)',
   'function getAmountsOut(uint256 amountIn, tuple(address from, address to, bool stable)[] routes) view returns (uint256[] amounts)',
+  // Native AVAX swap — two naming conventions; both included for compatibility
   'function swapExactAVAXForTokens(uint256 amountOutMin, tuple(address from, address to, bool stable)[] routes, address to, uint256 deadline) payable returns (uint256[] amounts)',
+  'function swapExactNativeForTokens(uint256 amountOutMin, tuple(address from, address to, bool stable)[] routes, address to, uint256 deadline) payable returns (uint256[] amounts)',
   'function swapExactTokensForAVAX(uint256 amountIn, uint256 amountOutMin, tuple(address from, address to, bool stable)[] routes, address to, uint256 deadline) returns (uint256[] amounts)',
+  'function swapExactTokensForNative(uint256 amountIn, uint256 amountOutMin, tuple(address from, address to, bool stable)[] routes, address to, uint256 deadline) returns (uint256[] amounts)',
   'function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, tuple(address from, address to, bool stable)[] routes, address to, uint256 deadline) returns (uint256[] amounts)',
 ];
 const PHARAOH_FACTORY_ABI = [
@@ -2453,10 +2480,81 @@ function safeNum(n, decimals = 18) {
   return s;
 }
 
+// ============================================================
+// MOATS.APP — Verified Point Calculator
+// Confirmed against $LIL moat live data
+// ============================================================
+const MOAT_LOCK_MULTIPLIERS = {
+  stake:    1.00,
+  lock1d:   2.04,
+  lock7d:   2.11,
+  lock30d:  2.31,
+  lock90d:  2.73,
+  lock180d: 3.23,
+  lock365d: 4.00,
+  lock416d: 4.26,
+  lock730d: 5.00,
+  burn:    10.00,
+};
+const MOAT_SCALE_FACTOR = 1_000_000_000;
+const LIL_TOTAL_SUPPLY  = 1_350_000_000; // hCASH / $LIL total supply
+
+/**
+ * Get the lock strategy key from days (or 'stake'/'burn')
+ */
+function lockStrategyKey(days) {
+  if (days === 'burn')  return 'burn';
+  if (days === 'stake' || days === 0) return 'stake';
+  if (days >= 730) return 'lock730d';
+  if (days >= 416) return 'lock416d';
+  if (days >= 365) return 'lock365d';
+  if (days >= 180) return 'lock180d';
+  if (days >= 90)  return 'lock90d';
+  if (days >= 30)  return 'lock30d';
+  if (days >= 7)   return 'lock7d';
+  if (days >= 1)   return 'lock1d';
+  return 'stake';
+}
+
+/**
+ * lockMultiplier — returns the raw multiplier for a given lock duration
+ */
 function lockMultiplier(days) {
-  if(days>=730)return 5.00;if(days>=540)return 4.57;if(days>=365)return 4.00;
-  if(days>=180)return 3.23;if(days>=90)return 2.73;if(days>=30)return 2.31;
-  if(days>=7)return 2.11;if(days>=1)return 2.04;return 1;
+  return MOAT_LOCK_MULTIPLIERS[lockStrategyKey(days)] || 1.00;
+}
+
+/**
+ * calcMoatPoints — verified formula from moats.app
+ * @param {number} balance      - Token / LP amount
+ * @param {number|string} daysOrStrategy - days or strategy key
+ * @param {number} totalSupply  - Token total supply (default: LIL_TOTAL_SUPPLY)
+ * @param {number} nftBoostPct  - NFT boost as decimal (0.05 = 5%)
+ * @returns {number} Moat Points
+ */
+function calcMoatPoints(balance, daysOrStrategy, totalSupply, nftBoostPct = 0) {
+  totalSupply = totalSupply || LIL_TOTAL_SUPPLY;
+  const strategy = typeof daysOrStrategy === 'string'
+    ? daysOrStrategy
+    : lockStrategyKey(daysOrStrategy);
+  const multiplier = MOAT_LOCK_MULTIPLIERS[strategy] || 1.00;
+  const K     = MOAT_SCALE_FACTOR / totalSupply;
+  const inner = balance * multiplier * K;
+  const pts   = Math.sqrt(inner) * (1 + nftBoostPct);
+  return pts;
+}
+
+/**
+ * calcMoatYield — pool share and yield estimates
+ */
+function calcMoatYield(myPoints, globalPoints, pool14d) {
+  const share = myPoints / (globalPoints + myPoints);
+  return {
+    sharePercent: share * 100,
+    dailyYield:   (pool14d / 14) * share,
+    epochYield:   pool14d * share,
+    pulseYield:   (pool14d * share) / (14 / 3),
+    annualYield:  (pool14d / 14) * share * 365,
+  };
 }
 function eelPenalty(pctDone) {
   if(pctDone>=100)return 0;if(pctDone>=90)return 10;if(pctDone>=80)return 20;
@@ -3336,10 +3434,7 @@ async function loadMarketplaceListings(marketContract, miners) {
   const mktDiv=document.getElementById('marketplaceListings');
   if(!mktDiv) return;
 
-  // Hard-code the confirmed marketplace contract address from on-chain evidence
   const MARKETPLACE_ADDR = '0x511FC8b8e5D07a012D17f56fE8bfdE576c8Dd13d';
-  const MARKETPLACE_IMPL = '0xdAdf0ABD030e786ffe1672A49Ed3352765bbEC07'; // proxy impl
-
   const addr = marketContract?.address || MARKETPLACE_ADDR;
   mktDiv.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading marketplace listings…</div>';
 
@@ -3352,14 +3447,32 @@ async function loadMarketplaceListings(marketContract, miners) {
 
     const listings=[];
 
-    // ── STRATEGY 1: ThirdWeb DirectListings ABI (confirmed by on-chain method signature) ──
-    // createListing = 0x746415b5, buyFromListing = 0x704232dc
+    // Known currency addresses
+    const hCASH_CURRENCY = '0xBa5444409257967E5E50b113C395A766B0678C03';
+    const USDC_NATIVE    = '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E'; // native USDC on Avalanche
+    const USDC_BRIDGED   = '0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664'; // bridged USDC.e
+    const WAVAX_LOWER    = WAVAX_ADDR.toLowerCase();
+
+    function parseCurrencyPrice(rawPriceWei, currencyAddr) {
+      const ca = (currencyAddr||'').toLowerCase();
+      const raw = parseFloat(ethers.formatEther(rawPriceWei||0n));
+      if (ca === hCASH_CURRENCY.toLowerCase()) return { priceHcash: raw, priceAvax: 0, priceUsdc: 0, currencyLabel: 'hCASH' };
+      if (ca === USDC_NATIVE.toLowerCase() || ca === USDC_BRIDGED.toLowerCase()) {
+        // USDC has 6 decimals — reparse
+        const usdcRaw = parseFloat(ethers.formatUnits(rawPriceWei||0n, 6));
+        return { priceHcash: 0, priceAvax: 0, priceUsdc: usdcRaw, currencyLabel: 'USDC' };
+      }
+      if (ca === WAVAX_LOWER) return { priceHcash: 0, priceAvax: raw, priceUsdc: 0, currencyLabel: 'AVAX' };
+      // Unknown currency — show as generic token amount
+      return { priceHcash: 0, priceAvax: raw, priceUsdc: 0, currencyLabel: 'token' };
+    }
+
+    // ── STRATEGY 1: ThirdWeb DirectListings — fetch ALL listings ──
     const TW_ABI = [
       'function getAllValidListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
       'function getAllListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
       'function totalListings() view returns (uint256)',
     ];
-    const hCASH_CURRENCY = '0xBa5444409257967E5E50b113C395A766B0678C03'; // from on-chain BuyFromListing tx
 
     try{
       const mktC = new ethers.Contract(ethers.getAddress(addr), TW_ABI, prov);
@@ -3367,32 +3480,33 @@ async function loadMarketplaceListings(marketContract, miners) {
       try{ total = Number(await mktC.totalListings()); }catch(e){}
 
       if(total > 0){
-        const startId = Math.max(0, total - 50); // last 50 listings
-        let raw = null;
-        try{ raw = await mktC.getAllValidListings(startId, total - 1); }catch(e){
-          try{ raw = await mktC.getAllListings(startId, total - 1); }catch(e2){}
-        }
-        if(raw && raw.length){
-          const now = Math.floor(Date.now()/1000);
+        // Fetch ALL listings in batches of 200 to avoid RPC limits
+        const BATCH = 200;
+        const now = Math.floor(Date.now()/1000);
+        for (let start = 0; start < total; start += BATCH) {
+          const end = Math.min(start + BATCH - 1, total - 1);
+          let raw = null;
+          try{ raw = await mktC.getAllValidListings(start, end); }catch(e){
+            try{ raw = await mktC.getAllListings(start, end); }catch(e2){}
+          }
+          if(!raw || !raw.length) continue;
           for(const l of raw){
-            // status: 1 = CREATED (active), 2 = COMPLETED, 3 = CANCELLED
             const status = Number(l.status);
-            const startTs = Number(l.startTimestamp);
             const endTs = Number(l.endTimestamp);
-            if(status !== 1) continue; // only active
-            if(endTs > 0 && endTs < now) continue; // expired
+            if(status !== 1) continue;
+            if(endTs > 0 && endTs < now) continue;
             const nftAddr = (l.assetContract||'').toLowerCase();
             const miner = minerByAddr[nftAddr];
-            // Price: currency is hCASH (18 dec) based on on-chain tx
-            const isCurrency_hCASH = (l.currency||'').toLowerCase() === hCASH_CURRENCY.toLowerCase();
-            const priceRaw = parseFloat(ethers.formatEther(l.pricePerToken||0n));
+            const cp = parseCurrencyPrice(l.pricePerToken||0n, l.currency);
             listings.push({
               listingId: Number(l.listingId||0),
               seller: (l.listingCreator||'').toLowerCase(),
               nftContract: nftAddr,
               tokenId: Number(l.tokenId||0),
-              priceHcash: isCurrency_hCASH ? priceRaw : 0,
-              priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
+              priceHcash: cp.priceHcash,
+              priceAvax:  cp.priceAvax,
+              priceUsdc:  cp.priceUsdc,
+              currencyLabel: cp.currencyLabel,
               currencyAddr: (l.currency||'').toLowerCase(),
               minerName: miner?.name||null,
               minerStats: miner?.minerStats||null,
@@ -3404,103 +3518,46 @@ async function loadMarketplaceListings(marketContract, miners) {
     }catch(e){ console.warn('marketplace TW direct call:', e.message); }
 
     // ── STRATEGY 2: Parse NewListing events via Snowtrace logs ──
-    // Topic0 for NewListing: 0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad
     if(!listings.length){
       try{
-        const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=50`)
+        const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
           .then(r=>r.json()).catch(()=>null);
         const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
-
-        // Also fetch Cancelled / Bought events to filter them out
-        const cancelledIds = new Set();
-        const boughtIds = new Set();
-        // NewSale topic: 0x45d6bc4d2e1f4b8a9b9e8e8d2e2e9d5b4e2e4f2b4e2f4b2e4f2e4b2e4f2e4b2
-        // We'll filter by checking listingId status if we have the contract
-
         const now = Math.floor(Date.now()/1000);
-        for(const log of logs.slice(0,50)){
+        for(const log of logs){
           try{
-            // topics: [topic0, listingCreator, listingId, assetContract]
             const creator = log.topics[1] ? '0x'+log.topics[1].slice(26).toLowerCase() : '';
             const listingId = log.topics[2] ? Number(BigInt(log.topics[2])) : 0;
             const assetContract = log.topics[3] ? '0x'+log.topics[3].slice(26).toLowerCase() : '';
-
-            // Decode the listing tuple from data
-            // listing = (listingId, tokenId, quantity, pricePerToken, startTimestamp, endTimestamp,
-            //            listingCreator, assetContract, currency, tokenType, status, reserved)
             const data = (log.data||'').replace('0x','');
-            if(data.length < 384) continue; // need at least 12 * 32 bytes
-
+            if(data.length < 384) continue;
             const words = [];
             for(let i=0;i<data.length;i+=64) words.push(data.slice(i,i+64));
-
-            // ABI-encoded tuple starts after offset word (first word is offset = 0x20)
-            // words[0] = offset (0x20), words[1] = listingId, words[2]=tokenId, etc.
             const wOff = words[0]==='0000000000000000000000000000000000000000000000000000000000000020' ? 1 : 0;
             const w = words.slice(wOff);
             if(w.length < 12) continue;
-
             const tokenId      = Number(BigInt('0x'+w[1]));
-            // quantity          = w[2]
             const pricePerToken = BigInt('0x'+w[3]);
             const startTs      = Number(BigInt('0x'+w[4]));
             const endTs        = Number(BigInt('0x'+w[5]));
-            // listingCreator    = w[6] (address, last 20 bytes)
-            // assetContract2    = w[7]
             const currency     = '0x'+w[8].slice(24);
-            // tokenType         = w[9]
             const status       = Number(BigInt('0x'+w[10]));
-            // reserved          = w[11]
-
-            if(status !== 1) continue; // not active
-            if(endTs > 0 && endTs < now) continue; // expired
-            if(startTs > now + 31536000) continue; // sanity: startTs not in far future
-
-            const miner = minerByAddr[assetContract];
-            const isCurrency_hCASH = currency.toLowerCase() === hCASH_CURRENCY.toLowerCase();
-            const priceRaw = parseFloat(ethers.formatEther(pricePerToken));
-
-            // Avoid duplicates
+            if(status !== 1) continue;
+            if(endTs > 0 && endTs < now) continue;
+            if(startTs > now + 31536000) continue;
             if(listings.find(x=>x.listingId===listingId)) continue;
-
+            const miner = minerByAddr[assetContract];
+            const cp = parseCurrencyPrice(pricePerToken, currency);
             listings.push({
-              listingId,
-              seller: creator,
-              nftContract: assetContract,
-              tokenId,
-              priceHcash: isCurrency_hCASH ? priceRaw : 0,
-              priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
-              currencyAddr: currency,
-              minerName: miner?.name||null,
-              minerStats: miner?.minerStats||null,
+              listingId, seller: creator, nftContract: assetContract, tokenId,
+              priceHcash: cp.priceHcash, priceAvax: cp.priceAvax, priceUsdc: cp.priceUsdc,
+              currencyLabel: cp.currencyLabel, currencyAddr: currency,
+              minerName: miner?.name||null, minerStats: miner?.minerStats||null,
               minerImg: miner?.imageUrl||null,
             });
           }catch(pe){ /* skip malformed log */ }
         }
       }catch(e){ console.warn('marketplace logs fallback:', e.message); }
-    }
-
-    // ── STRATEGY 3: Recent NFT transfer events (last resort) ──
-    if(!listings.length){
-      try{
-        const snowRes = await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&address=${addr}&sort=desc&offset=30`).then(r=>r.json()).catch(()=>null);
-        const nftTxs = (snowRes?.status==='1') ? (snowRes.result||[]) : [];
-        for(const tx of nftTxs.slice(0,20)){
-          const miner = minerByAddr[(tx.contractAddress||'').toLowerCase()];
-          listings.push({
-            listingId: null,
-            seller: (tx.from||'').toLowerCase(),
-            nftContract: (tx.contractAddress||'').toLowerCase(),
-            tokenId: Number(tx.tokenID||tx.tokenId||0),
-            priceHcash: 0, priceAvax: 0,
-            minerName: miner?.name||tx.tokenName||null,
-            minerStats: miner?.minerStats||null,
-            minerImg: miner?.imageUrl||null,
-            _fromEvent: true,
-            timestamp: Number(tx.timeStamp||0),
-          });
-        }
-      }catch(e){ console.warn('marketplace nfttx fallback:', e.message); }
     }
 
     if(!listings.length){
@@ -3513,20 +3570,22 @@ async function loadMarketplaceListings(marketContract, miners) {
     mktDiv.innerHTML=listings.map(l=>{
       const prof=getKnownProfile(l.seller);
       const sellerHtml=prof
-        ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:12px;height:12px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:.80rem;text-decoration:none">@${prof.twitter}</a></div>`
-        :`<span class="mono" style="font-size:.76rem;color:var(--mut)">${shortA(l.seller)}</span>`;
+        ?`<div style="display:inline-flex;align-items:center;gap:4px"><img src="${prof.pic}" style="width:12px;height:12px;border-radius:50%;object-fit:cover"><a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);font-size:var(--t-xs);text-decoration:none">@${prof.twitter}</a></div>`
+        :`<span class="mono" style="font-size:var(--t-xs);color:var(--mut)">${shortA(l.seller)}</span>`;
       const s=l.minerStats||{};
-      // Price display: prefer hCASH price (native currency for this market), fallback AVAX
+      // Price display: show all supported currencies
       const priceHtml = l.priceHcash > 0
         ? `<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--gold)">${l.priceHcash.toLocaleString(undefined,{maximumFractionDigits:0})} hCASH</span>`
-        : l.priceAvax > 0
-          ? `<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--grn)">${f4(l.priceAvax)} AVAX</span>`
-          : l._fromEvent ? `<span class="mono" style="font-size:.76rem;color:var(--mut)">Recent transfer</span>` : '';
+        : l.priceUsdc > 0
+          ? `<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--grn)">$${l.priceUsdc.toLocaleString(undefined,{maximumFractionDigits:2})} USDC</span>`
+          : l.priceAvax > 0
+            ? `<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--cyn)">${f4(l.priceAvax)} AVAX</span>`
+            : '';
       return `<div style="display:flex;gap:10px;align-items:flex-start;padding:.6rem;background:var(--sur);border:1px solid var(--bor);border-radius:9px;margin-bottom:.4rem">
         ${l.minerImg?`<img src="${l.minerImg}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">`:
           '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem">⛏</div>'}
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:.76rem;color:var(--mut)">#${l.tokenId}</span></div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:var(--t-xs);color:var(--mut)">#${l.tokenId}</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin:.2rem 0">
             ${s.hashrateFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--red)">${s.hashrateFormatted}</span>`:''}
             ${s.powerFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--gold)">${s.powerFormatted}</span>`:''}
@@ -3535,7 +3594,7 @@ async function loadMarketplaceListings(marketContract, miners) {
             ${sellerHtml}
             ${priceHtml}
           </div>
-          ${l.listingId!=null?`<div class="mono" style="font-size:.72rem;color:var(--mut);margin-top:2px">Listing #${l.listingId}</div>`:''}
+          ${l.listingId!=null?`<div class="mono" style="font-size:var(--t-xs);color:var(--mut);margin-top:2px">Listing #${l.listingId}</div>`:''}
         </div>
         <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;font-size:1.25rem;flex-shrink:0">Buy ↗</a>
       </div>`;
@@ -4280,7 +4339,8 @@ function calcStakePoints() {
   const el=document.getElementById('hcashStakePreview');
   if(!el)return;
   if(!amt){el.textContent='';return;}
-  el.innerHTML=`Staking ${amt.toFixed(6)} LP → <span style="color:var(--red)">1× points</span> · Flexible · 0.5% unstake fee`;
+  const pts = calcMoatPoints(amt, 'stake', poolData?.lpSupply || LIL_TOTAL_SUPPLY);
+  el.innerHTML=`Staking ${amt.toFixed(6)} LP → <span style="color:var(--red)">1× · ~${pts.toFixed(2)} pts</span> · Flexible · 0.5% unstake fee`;
 }
 function calcLockPoints() {
   const amt=parseFloat(document.getElementById('hcashLockAmt')?.value)||0;
@@ -4289,7 +4349,8 @@ function calcLockPoints() {
   if(!el)return;
   if(!amt){el.textContent='';return;}
   const m=lockMultiplier(days);
-  el.innerHTML=`${amt.toFixed(6)} LP × <span style="color:var(--gold)">${m}×</span> for ${days}d · ${m>1?`<span style="color:var(--gold)">${m}× boost active</span>`:''}`;
+  const pts = calcMoatPoints(amt, days, poolData?.lpSupply || LIL_TOTAL_SUPPLY);
+  el.innerHTML=`${amt.toFixed(6)} LP × <span style="color:var(--gold)">${m}×</span> for ${days}d → <span style="color:var(--gold)">~${pts.toFixed(2)} Moat Points</span>`;
 }
 
 // ══════════════════════════════════════════════════════
@@ -5043,9 +5104,19 @@ async function execSwap() {
     }
 
     if(swapDir===0){
-      // AVAX → hCASH
+      // AVAX → hCASH: try both naming conventions
       upd('<span class="spin"></span>Swapping AVAX → hCASH via Pharaoh… confirm in wallet');
-      const tx=await router.swapExactAVAXForTokens(minOut,routes,walletAddress,deadline,{value:amtInWei,gasLimit:600000n});
+      let tx;
+      try {
+        tx = await router.swapExactAVAXForTokens(minOut, routes, walletAddress, deadline, {value: amtInWei, gasLimit: 600000n});
+      } catch(nameErr1) {
+        // Try alternative method name used in newer Pharaoh router versions
+        try {
+          tx = await router.swapExactNativeForTokens(minOut, routes, walletAddress, deadline, {value: amtInWei, gasLimit: 600000n});
+        } catch(nameErr2) {
+          throw nameErr1; // re-throw original for upstream catch
+        }
+      }
       upd(`<span class="spin"></span>Pending… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! hCASH received.','success',5000);
@@ -5058,7 +5129,16 @@ async function execSwap() {
         await(await hcashTok.approve(ROUTER,ethers.MaxUint256)).wait();
       }
       upd('<span class="spin"></span>2/2 — Swapping hCASH → AVAX via Pharaoh… confirm in wallet');
-      const tx=await router.swapExactTokensForAVAX(amtInWei,minOut,routes,walletAddress,deadline,{gasLimit:600000n});
+      let tx;
+      try {
+        tx = await router.swapExactTokensForAVAX(amtInWei, minOut, routes, walletAddress, deadline, {gasLimit: 600000n});
+      } catch(nameErr1) {
+        try {
+          tx = await router.swapExactTokensForNative(amtInWei, minOut, routes, walletAddress, deadline, {gasLimit: 600000n});
+        } catch(nameErr2) {
+          throw nameErr1;
+        }
+      }
       upd(`<span class="spin"></span>Pending… <a href="https://snowtrace.io/tx/${tx.hash}" target="_blank" style="color:var(--red)">View ↗</a>`);
       await tx.wait();
       notif('✅ Swap complete! AVAX received.','success',5000);
@@ -5597,12 +5677,26 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
   const el = document.getElementById('wiMarketListings');
   const MARKETPLACE_ADDR = '0x511FC8b8e5D07a012D17f56fE8bfdE576c8Dd13d';
   const hCASH_CURRENCY   = '0xBa5444409257967E5E50b113C395A766B0678C03';
+  const USDC_NATIVE      = '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E';
+  const USDC_BRIDGED     = '0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664';
+  const WAVAX_LOWER      = WAVAX_ADDR.toLowerCase();
   const addr = marketContract?.address || MARKETPLACE_ADDR;
 
   const minerByAddr = {};
   miners.forEach(m => { if(m.address) minerByAddr[m.address.toLowerCase()] = m; });
-  // Also check _wiMiners
   _wiMiners.forEach(m => { if(m.address) minerByAddr[m.address.toLowerCase()] = m; });
+
+  function parseCurrencyPriceWi(rawWei, currencyAddr) {
+    const ca = (currencyAddr||'').toLowerCase();
+    const raw = parseFloat(ethers.formatEther(rawWei||0n));
+    if (ca === hCASH_CURRENCY.toLowerCase()) return { priceHcash: raw, priceAvax: 0, priceUsdc: 0, currencyLabel: 'hCASH' };
+    if (ca === USDC_NATIVE.toLowerCase() || ca === USDC_BRIDGED.toLowerCase()) {
+      const usdcRaw = parseFloat(ethers.formatUnits(rawWei||0n, 6));
+      return { priceHcash: 0, priceAvax: 0, priceUsdc: usdcRaw, currencyLabel: 'USDC' };
+    }
+    if (ca === WAVAX_LOWER) return { priceHcash: 0, priceAvax: raw, priceUsdc: 0, currencyLabel: 'AVAX' };
+    return { priceHcash: 0, priceAvax: raw, priceUsdc: 0, currencyLabel: 'token' };
+  }
 
   const listings = [];
 
@@ -5618,28 +5712,31 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
       let total = 0;
       try { total = Number(await mktC.totalListings()); } catch(e) {}
       if (total > 0) {
-        const startId = Math.max(0, total - 50);
-        let raw = null;
-        try { raw = await mktC.getAllValidListings(startId, total - 1); } catch(e) {
-          try { raw = await mktC.getAllListings(startId, total - 1); } catch(e2) {}
-        }
-        if (raw && raw.length) {
-          const now = Math.floor(Date.now()/1000);
+        const BATCH = 200;
+        const now = Math.floor(Date.now()/1000);
+        for (let start = 0; start < total; start += BATCH) {
+          const end = Math.min(start + BATCH - 1, total - 1);
+          let raw = null;
+          try { raw = await mktC.getAllValidListings(start, end); } catch(e) {
+            try { raw = await mktC.getAllListings(start, end); } catch(e2) {}
+          }
+          if (!raw || !raw.length) continue;
           for (const l of raw) {
             if (Number(l.status) !== 1) continue;
             const endTs = Number(l.endTimestamp);
             if (endTs > 0 && endTs < now) continue;
             const nftAddr = (l.assetContract||'').toLowerCase();
             const miner = minerByAddr[nftAddr];
-            const isCurrency_hCASH = (l.currency||'').toLowerCase() === hCASH_CURRENCY.toLowerCase();
-            const priceRaw = parseFloat(ethers.formatEther(l.pricePerToken||0n));
+            const cp = parseCurrencyPriceWi(l.pricePerToken||0n, l.currency);
             listings.push({
               listingId: Number(l.listingId||0),
               seller: (l.listingCreator||'').toLowerCase(),
               nftContract: nftAddr,
               tokenId: Number(l.tokenId||0),
-              priceHcash: isCurrency_hCASH ? priceRaw : 0,
-              priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
+              priceHcash: cp.priceHcash,
+              priceAvax:  cp.priceAvax,
+              priceUsdc:  cp.priceUsdc,
+              currencyLabel: cp.currencyLabel,
               currencyAddr: (l.currency||'').toLowerCase(),
               minerName: miner?.name || null,
               minerStats: miner?.minerStats || null,
@@ -5653,11 +5750,11 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
 
     // Fallback: Snowtrace event logs
     if (!listings.length) {
-      const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=50`)
+      const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
         .then(r=>r.json()).catch(()=>null);
       const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
       const now = Math.floor(Date.now()/1000);
-      for (const log of logs.slice(0, 40)) {
+      for (const log of logs) {
         try {
           const creator = log.topics[1] ? '0x'+log.topics[1].slice(26).toLowerCase() : '';
           const listingId = log.topics[2] ? Number(BigInt(log.topics[2])) : 0;
@@ -5671,7 +5768,6 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
           if (w.length < 12) continue;
           const tokenId = Number(BigInt('0x'+w[1]));
           const pricePerToken = BigInt('0x'+w[3]);
-          const startTs = Number(BigInt('0x'+w[4]));
           const endTs   = Number(BigInt('0x'+w[5]));
           const currency = '0x'+w[8].slice(24);
           const status  = Number(BigInt('0x'+w[10]));
@@ -5679,13 +5775,11 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
           if (endTs > 0 && endTs < now) continue;
           if (listings.find(x=>x.listingId===listingId)) continue;
           const miner = minerByAddr[assetContract];
-          const isCurrency_hCASH = currency.toLowerCase() === hCASH_CURRENCY.toLowerCase();
-          const priceRaw = parseFloat(ethers.formatEther(pricePerToken));
+          const cp = parseCurrencyPriceWi(pricePerToken, currency);
           listings.push({
             listingId, seller: creator, nftContract: assetContract, tokenId,
-            priceHcash: isCurrency_hCASH ? priceRaw : 0,
-            priceAvax:  !isCurrency_hCASH ? priceRaw : 0,
-            currencyAddr: currency,
+            priceHcash: cp.priceHcash, priceAvax: cp.priceAvax, priceUsdc: cp.priceUsdc,
+            currencyLabel: cp.currencyLabel, currencyAddr: currency,
             minerName: miner?.name || null, minerStats: miner?.minerStats || null,
             minerImg: miner?.imageUrl || null, _miner: miner || null,
           });
@@ -5697,10 +5791,12 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
   _wiMarketListings = listings;
   renderWiMarket();
 
-  // Update header count
   const hdr = document.getElementById('marketplaceHeader');
   if (hdr) hdr.textContent = `${listings.length} listing${listings.length!==1?'s':''}`;
 }
+
+// ── State for expanded miner in marketplace ──
+let _wiExpandedMiner = null; // nftContract address currently expanded
 
 function renderWiMarket() {
   const el = document.getElementById('wiMarketListings');
@@ -5720,8 +5816,8 @@ function renderWiMarket() {
   });
   // Sort
   listings.sort((a,b) => {
-    const pa = a.priceHcash || a.priceAvax || 0;
-    const pb = b.priceHcash || b.priceAvax || 0;
+    const pa = a.priceHcash || a.priceUsdc || a.priceAvax || 0;
+    const pb = b.priceHcash || b.priceUsdc || b.priceAvax || 0;
     if (sort === 'price_asc')  return pa - pb;
     if (sort === 'price_desc') return pb - pa;
     if (sort === 'hash_desc')  return (b.minerStats?.hashrateMhps||0) - (a.minerStats?.hashrateMhps||0);
@@ -5744,37 +5840,110 @@ function renderWiMarket() {
     return;
   }
 
-  el.innerHTML = listings.map(l => {
-    const s = l.minerStats || {};
+  // ── GROUP by miner (by nftContract, or fall back to minerName) ──
+  const minerGroups = new Map(); // key → { key, minerName, minerImg, minerStats, listings[] }
+  for (const l of listings) {
+    const key = l.nftContract || (l.minerName||'unknown').toLowerCase().replace(/\s+/g,'_');
+    if (!minerGroups.has(key)) {
+      minerGroups.set(key, {
+        key,
+        minerName: l.minerName || 'Miner NFT',
+        minerImg:  l.minerImg  || '',
+        minerStats: l.minerStats || null,
+        listings: [],
+      });
+    }
+    minerGroups.get(key).listings.push(l);
+  }
+
+  // Build HTML: one image card per miner, expandable deals below
+  let html = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.6rem;padding:.1rem 0 .65rem">`;
+
+  for (const [key, group] of minerGroups) {
+    const s = group.minerStats || {};
     const mhs = s.hashrateMhps || s.hashrateRaw || 0;
-    const watts = s.powerWatts || s.powerRaw || 0;
-    const eff = mhs && watts ? (mhs/watts*100).toFixed(1)+' MH/W' : '';
-    const priceNum = l.priceHcash || l.priceAvax || 0;
-    const priceLbl = l.priceHcash > 0 ? `${priceNum.toLocaleString(undefined,{maximumFractionDigits:0})} hCASH` : l.priceAvax > 0 ? `${f4(l.priceAvax)} AVAX` : '— price';
-    const priceUsd = l.priceHcash > 0 ? (l.priceHcash * (priceData?.price||0)) : (l.priceAvax * (priceData?.avaxPrice||0));
-    const prof = getKnownProfile(l.seller);
-    const inCart = _wiCart.some(c => c.listingId === l.listingId && c.tokenId === l.tokenId);
-    return `<div onclick="wiToggleCartListing(${JSON.stringify(l).replace(/"/g,'&quot;')})" style="cursor:pointer;display:flex;gap:9px;align-items:center;padding:.55rem .65rem;background:${inCart?'rgba(212,168,67,.08)':'var(--sur)'};border:1.5px solid ${inCart?'var(--gold)':'var(--bor)'};border-radius:9px;transition:all .15s" onmouseover="if(!this.dataset.inCart)this.style.borderColor='rgba(229,62,62,.35)'" onmouseout="if(!this.dataset.inCart)this.style.borderColor='var(--bor)'" data-in-cart="${inCart}">
-      ${l.minerImg?`<img src="${l.minerImg}" style="width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">` : '<div style="width:38px;height:38px;border-radius:7px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">⛏</div>'}
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-          <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-base);color:var(--txt)">${l.minerName||'Miner NFT'}</span>
-          <span class="mono" style="font-size:var(--fs-xs);color:var(--mut)">#${l.tokenId}</span>
-          ${inCart?`<span style="font-size:var(--fs-xs);background:rgba(212,168,67,.15);color:var(--gold);border:1px solid rgba(212,168,67,.3);border-radius:4px;padding:1px 6px">✓ ADDED</span>`:''}
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
-          ${mhs?`<span class="mono" style="font-size:var(--fs-xs);color:var(--red)">${mhs>=1000?(mhs/1000).toFixed(1)+'GH/s':mhs+'MH/s'}</span>`:''}
-          ${watts?`<span class="mono" style="font-size:var(--fs-xs);color:var(--dim)">${watts}W</span>`:''}
-          ${eff?`<span class="mono" style="font-size:var(--fs-xs);color:var(--grn)">${eff}</span>`:''}
-        </div>
+    const mhsStr = mhs >= 1000 ? (mhs/1000).toFixed(1)+'GH/s' : mhs ? mhs+'MH/s' : '';
+    const isExpanded = _wiExpandedMiner === key;
+    const count = group.listings.length;
+    // Best (lowest) price across listings
+    const bestListing = [...group.listings].sort((a,b)=>(a.priceHcash||a.priceUsdc||a.priceAvax||0)-(b.priceHcash||b.priceUsdc||b.priceAvax||0))[0];
+    const bestPrice = bestListing
+      ? (bestListing.priceHcash > 0 ? `${bestListing.priceHcash.toLocaleString(undefined,{maximumFractionDigits:0})} hC`
+        : bestListing.priceUsdc  > 0 ? `$${bestListing.priceUsdc.toFixed(0)} USDC`
+        : bestListing.priceAvax  > 0 ? `${f4(bestListing.priceAvax)} AVAX` : '—')
+      : '—';
+
+    html += `<div style="display:flex;flex-direction:column;cursor:pointer;border-radius:10px;border:2px solid ${isExpanded?'var(--gold)':'var(--bor)'};overflow:hidden;background:${isExpanded?'rgba(212,168,67,.06)':'var(--sur)'};transition:all .15s"
+      onclick="wiToggleMinerGroup(${JSON.stringify(key).replace(/"/g,'&quot;')})"
+      onmouseover="if('${key}'!==_wiExpandedMiner)this.style.borderColor='rgba(229,62,62,.4)'"
+      onmouseout="if('${key}'!==_wiExpandedMiner)this.style.borderColor='var(--bor)'">
+      <div style="position:relative;aspect-ratio:1;overflow:hidden;background:var(--card)">
+        ${group.minerImg
+          ? `<img src="${group.minerImg}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;font-size:2.2rem\\'>⛏</div>'" alt="${group.minerName}">`
+          : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:2.2rem">⛏</div>`}
+        <div style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.72);border-radius:5px;padding:2px 6px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--gold);font-weight:700">${count} deal${count!==1?'s':''}</div>
+        ${mhsStr?`<div style="position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,.68);border-radius:4px;padding:1px 5px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--red);text-align:center">${mhsStr}</div>`:''}
       </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-base);color:${l.priceHcash>0?'var(--gold)':'var(--grn)'}">${priceLbl}</div>
-        ${priceUsd>0?`<div class="mono" style="font-size:var(--fs-xs);color:var(--mut)">≈$${priceUsd.toFixed(0)}</div>`:''}
-        <div style="font-size:var(--fs-xs);color:${inCart?'var(--gold)':'rgba(229,62,62,.6)'};font-family:'Share Tech Mono',monospace">${inCart?'click to remove':'+ add to sim'}</div>
+      <div style="padding:5px 7px">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--t-sm);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${group.minerName}">${group.minerName}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:${bestListing?.priceHcash>0?'var(--gold)':bestListing?.priceUsdc>0?'var(--grn)':'var(--cyn)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${bestPrice}</div>
       </div>
     </div>`;
-  }).join('');
+  }
+  html += `</div>`;
+
+  // ── Expanded deals panel ──
+  if (_wiExpandedMiner && minerGroups.has(_wiExpandedMiner)) {
+    const group = minerGroups.get(_wiExpandedMiner);
+    html += `<div style="margin-bottom:.65rem;border:1.5px solid var(--gold);border-radius:10px;overflow:hidden;animation:fadeUp .2s ease">
+      <div style="background:rgba(212,168,67,.08);padding:.55rem .85rem;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(212,168,67,.2)">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--t-md);color:var(--gold)">${group.minerName} — ${group.listings.length} active deal${group.listings.length!==1?'s':''}</div>
+        <button onclick="wiToggleMinerGroup(null)" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:.9rem;padding:0;line-height:1" title="Close">✕</button>
+      </div>
+      <div style="padding:.5rem .65rem;display:flex;flex-direction:column;gap:.35rem">
+        ${group.listings.map(l => {
+          const s = l.minerStats || {};
+          const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+          const watts = s.powerWatts || s.powerRaw || 0;
+          const eff = mhs && watts ? (mhs/watts*100).toFixed(1)+' MH/W' : '';
+          const priceNum = l.priceHcash || l.priceUsdc || l.priceAvax || 0;
+          const priceLbl = l.priceHcash > 0 ? `${priceNum.toLocaleString(undefined,{maximumFractionDigits:0})} hCASH`
+            : l.priceUsdc > 0 ? `$${l.priceUsdc.toFixed(2)} USDC`
+            : l.priceAvax > 0 ? `${f4(l.priceAvax)} AVAX` : '— price';
+          const priceUsd = l.priceHcash > 0 ? (l.priceHcash * (priceData?.price||0))
+            : l.priceUsdc > 0 ? l.priceUsdc
+            : (l.priceAvax * (priceData?.avaxPrice||0));
+          const priceColor = l.priceHcash>0?'var(--gold)':l.priceUsdc>0?'var(--grn)':'var(--cyn)';
+          const inCart = _wiCart.some(c => c.listingId === l.listingId && c.tokenId === l.tokenId);
+          return `<div onclick="wiToggleCartListing(${JSON.stringify(l).replace(/"/g,'&quot;')})" style="cursor:pointer;display:flex;gap:9px;align-items:center;padding:.5rem .6rem;background:${inCart?'rgba(212,168,67,.08)':'var(--card)'};border:1.5px solid ${inCart?'var(--gold)':'var(--bor)'};border-radius:8px;transition:all .12s"
+            onmouseover="if(!${inCart})this.style.borderColor='rgba(229,62,62,.35)'"
+            onmouseout="if(!${inCart})this.style.borderColor='var(--bor)'">
+            <div style="min-width:0;flex:1">
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+                <span class="mono" style="font-size:var(--t-xs);color:var(--mut)">#${l.tokenId}</span>
+                ${mhs?`<span class="mono" style="font-size:var(--t-xs);color:var(--red)">${mhs>=1000?(mhs/1000).toFixed(1)+'GH/s':mhs+'MH/s'}</span>`:''}
+                ${watts?`<span class="mono" style="font-size:var(--t-xs);color:var(--dim)">${watts}W</span>`:''}
+                ${eff?`<span class="mono" style="font-size:var(--t-xs);color:var(--grn)">${eff}</span>`:''}
+                ${inCart?`<span style="font-size:var(--t-xs);background:rgba(212,168,67,.15);color:var(--gold);border:1px solid rgba(212,168,67,.3);border-radius:4px;padding:1px 5px">✓ ADDED</span>`:''}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--t-base);color:${priceColor}">${priceLbl}</div>
+              ${priceUsd>0?`<div class="mono" style="font-size:var(--t-xs);color:var(--mut)">≈$${priceUsd.toFixed(0)}</div>`:''}
+              <div style="font-size:var(--t-xs);color:${inCart?'var(--gold)':'rgba(229,62,62,.6)'};font-family:'Share Tech Mono',monospace">${inCart?'tap remove':'+ add to sim'}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function wiToggleMinerGroup(key) {
+  _wiExpandedMiner = (_wiExpandedMiner === key || key === null) ? null : key;
+  renderWiMarket();
 }
 
 // ── Cart system for What If marketplace ──
@@ -6305,18 +6474,45 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ── AVAX price: fetch from multiple sources for accuracy ──
+// ── AVAX price: fetch from multiple reliable sources ──
 async function wiFetchAvaxPrice() {
   const sources = [
-    // CoinGecko
+    // DexScreener WAVAX token page — most reliable, no API key needed
     async () => {
-      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=avalanche-2&vs_currencies=usd', { signal: AbortSignal.timeout(5000) });
+      const r = await fetch(
+        'https://api.dexscreener.com/tokens/v1/avalanche/0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7',
+        { signal: AbortSignal.timeout(6000) }
+      );
+      const d = await r.json();
+      // returns array of pairs — take first with USD price
+      const pairs = Array.isArray(d) ? d : (d?.pairs || []);
+      const p = pairs.find(x => parseFloat(x.priceUsd) > 1);
+      return p ? Number(p.priceUsd) : 0;
+    },
+    // Binance public ticker (no auth needed)
+    async () => {
+      const r = await fetch(
+        'https://api.binance.com/api/v3/ticker/price?symbol=AVAXUSDT',
+        { signal: AbortSignal.timeout(6000) }
+      );
+      const d = await r.json();
+      return Number(d?.price || 0);
+    },
+    // CoinGecko free (may be rate-limited but worth trying)
+    async () => {
+      const r = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=avalanche-2&vs_currencies=usd',
+        { signal: AbortSignal.timeout(7000) }
+      );
       const d = await r.json();
       return Number(d['avalanche-2']?.usd || 0);
     },
-    // DexScreener AVAX/USDC pair on Avalanche
+    // DexScreener AVAX/USDC pair fallback
     async () => {
-      const r = await fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7', { signal: AbortSignal.timeout(5000) });
+      const r = await fetch(
+        'https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7',
+        { signal: AbortSignal.timeout(6000) }
+      );
       const d = await r.json();
       return Number(d?.pairs?.[0]?.priceUsd || 0);
     },
@@ -6325,18 +6521,19 @@ async function wiFetchAvaxPrice() {
     try {
       const price = await fn();
       if (price > 1) {
-        // Update global priceData so wiCalc() uses it
-        if (!priceData) priceData = { price: 0.07, avaxPrice: price, ch24: 0, liq: 0, vol24: 0 };
+        if (!priceData) priceData = { price: 0, avaxPrice: price, ch24: 0, liq: 0, vol24: 0 };
         else priceData.avaxPrice = price;
-        // Update header display if present
-        const avaxEl = document.querySelector('[data-avax-price]');
-        if (avaxEl) avaxEl.textContent = '$' + price.toFixed(2);
+        // Update any header display
+        document.querySelectorAll('[data-avax-price]').forEach(el => { el.textContent = '$' + price.toFixed(2); });
+        console.log('[AVAX price]', price.toFixed(2), 'USD ✓');
         wiCalc();
         return price;
       }
-    } catch(e) { /* try next */ }
+    } catch(e) { /* try next source */ }
   }
-  return priceData?.avaxPrice || 20; // fallback
+  const fallback = priceData?.avaxPrice || 25;
+  console.warn('[AVAX price] all sources failed, using fallback:', fallback);
+  return fallback;
 }
 
 // ── SEARCH FUNCTIONS ──
@@ -6586,11 +6783,21 @@ async function wiEnsureLiveData() {
     }
   } catch(e) { console.warn('wiEnsureLiveData hCASH price:', e.message); }
 
-  // 2. AVAX price — try CoinGecko, fall back to DexScreener AVAX/USDC
+  // 2. AVAX price — same multi-source as wiFetchAvaxPrice
   let avaxPrice = 0;
   const avaxSources = [
+    () => fetch('https://api.dexscreener.com/tokens/v1/avalanche/0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7',
+      { signal: AbortSignal.timeout(6000) })
+      .then(r => r.json()).then(d => {
+        const pairs = Array.isArray(d) ? d : (d?.pairs || []);
+        const p = pairs.find(x => parseFloat(x.priceUsd) > 1);
+        return p ? Number(p.priceUsd) : 0;
+      }),
+    () => fetch('https://api.binance.com/api/v3/ticker/price?symbol=AVAXUSDT',
+      { signal: AbortSignal.timeout(6000) })
+      .then(r => r.json()).then(d => Number(d?.price || 0)),
     () => fetch('https://api.coingecko.com/api/v3/simple/price?ids=avalanche-2&vs_currencies=usd',
-      { signal: AbortSignal.timeout(5000) })
+      { signal: AbortSignal.timeout(7000) })
       .then(r => r.json()).then(d => Number(d['avalanche-2']?.usd || 0)),
     () => fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7',
       { signal: AbortSignal.timeout(5000) })
@@ -6762,14 +6969,13 @@ function wiCalc() {
   const myFeeUsdDay   = vol24h * 0.003 * (lpPoolSharePct / 100);
   const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
 
-  // ── MOAT POINTS CALCULATION (per docs: fortifi.gitbook.io/moats) ──
-  // Moat Points = tokens × multiplier (NOT per-day — it's a live balance)
-  // For LP tokens (dynamic supply): points are proportional to your LP share × lock mult
-  // Fixed supply → static points. Dynamic supply (LP) → points adjust with supply.
-  // Burning = 10×, Locking = 2×–5× by duration, Staking = 1×
+  // ── MOAT POINTS CALCULATION — verified formula from moats.app ──
+  // calcMoatPoints(balance, strategy, totalSupply, nftBoost)
+  // formula: sqrt(balance * multiplier * SCALE_FACTOR / totalSupply) * (1 + nftBoost)
   const mult = lockMultiplier(_wiLockDaysVal);
-  // Your Moat Points = LP tokens you hold × your lock multiplier
-  const lpPtsTotal = lpTokenEst > 0 ? lpTokenEst * mult : 0;
+  const lpPtsTotal = lpTokenEst > 0
+    ? calcMoatPoints(lpTokenEst, _wiLockDaysVal, poolData?.lpSupply || LIL_TOTAL_SUPPLY)
+    : 0;
   // Your share of total moat points (current total from on-chain)
   const totalMoatPts = moatPoints.reduce((s, p) => s + Number(p.points || 0), 0);
   const lpPtsSharePct = totalMoatPts > 0 && lpPtsTotal > 0
