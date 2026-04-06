@@ -1025,26 +1025,41 @@ html.light .banner { background: linear-gradient(135deg, rgba(204,0,8,.05), rgba
     --fs-md: var(--t-base); --fs-lg: var(--t-md); --fs-xl: var(--t-xl);
     --fs-2xl: var(--t-2xl); --fs-3xl: var(--t-3xl);
   }
-  /* On mobile: nav tabs sit below the logo+controls row */
+  /* MOBILE HEADER:
+     Row 1 (order 1): logo  —  Row 1 (order 2): hdr-r (connect+controls)
+     Row 2 (order 3): navtabs — ALWAYS full-width BELOW connect wallet */
   header {
     flex-wrap: wrap;
-    height: auto; min-height: 56px;
+    height: auto; min-height: 52px;
     padding: 0 .75rem;
     row-gap: 0;
+    align-items: center;
   }
-  .logo { padding: 10px 0; font-size: 1.2rem; }
-  .hdr-r { padding: 8px 0; }
-
-  /* Tabs: full-width row, clearly visible pill row */
+  .logo {
+    order: 1;
+    flex: 1;
+    padding: 10px 0;
+    font-size: 1.15rem;
+  }
+  .hdr-r {
+    order: 2;
+    flex-shrink: 0;
+    padding: 8px 0;
+  }
+  /* Tabs: always third item, own full-width row below connect wallet */
   .navtabs {
     order: 3;
-    width: 100%;
+    flex: none;
+    width: calc(100% + 1.5rem);
+    margin-left: -.75rem;
+    margin-right: -.75rem;
     justify-content: flex-start;
-    padding: 6px 0 8px;
+    padding: 6px .75rem 8px;
     gap: 4px;
-    border-top: 1px solid rgba(232,0,14,0.1);
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 6px, black calc(100% - 6px), transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, black 6px, black calc(100% - 6px), transparent 100%);
+    border-top: 1px solid rgba(232,0,14,0.14);
+    background: rgba(5,5,7,0.6);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
   }
   .tab {
     padding: 7px 12px;
@@ -1086,6 +1101,211 @@ html.light .sig     { background: rgba(255,255,255,.8); }
 html.light .liq-pane-inner { box-shadow: 0 1px 6px rgba(0,0,0,.06); }
 html.light .banner  { border-color: rgba(204,0,8,.12); }
 html.light body::after { display: none; }
+
+/* ══════════════════════
+   LEADERBOARD & ACTIVITY — MOBILE FONT FIXES
+══════════════════════ */
+/* Leaderboard table — tighter on mobile */
+@media(max-width: 640px) {
+  #view-leaderboard .tbl th,
+  #view-leaderboard .tbl td {
+    font-size: 0.6875rem;
+    padding: .45rem .5rem;
+  }
+  #view-leaderboard .tbl th:nth-child(3),
+  #view-leaderboard .tbl td:nth-child(3) { /* points col */
+    font-size: 0.6875rem;
+  }
+  #lbSearch { font-size: 0.75rem; }
+
+  /* Activity feed — tighter */
+  .ei { padding: .5rem .6rem; gap: 7px; }
+  .evf { max-height: 420px; }
+  #view-activity .sh-t { font-size: 1.25rem; }
+  #view-leaderboard .sh-t { font-size: 1.25rem; }
+  #evTypeFilter { font-size: 0.6875rem !important; padding: 3px 5px !important; }
+
+  /* Activity stat card text */
+  #activityStats .calc-lbl { font-size: 0.6875rem; }
+  #activityStats .calc-val { font-size: 0.8125rem; }
+
+  /* What-If marketplace grid — smaller cards, more per row */
+  #wiMarketListings > div {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+    gap: .4rem !important;
+  }
+}
+
+/* ══════════════════════
+   FACILITY SLOTS — VISUAL UPGRADE
+══════════════════════ */
+#wi-slotTableWrap {
+  background: linear-gradient(135deg, rgba(15,16,24,0.8), rgba(5,5,7,0.9));
+  border: 1px solid rgba(232,0,14,0.2);
+  border-radius: 12px;
+  padding: .85rem;
+  margin-top: .75rem;
+  position: relative;
+  overflow: hidden;
+}
+#wi-slotTableWrap::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232,0,14,0.5), transparent);
+}
+/* Header label row */
+#wi-slotTableWrap > div:first-child {
+  font-family: 'Space Mono', monospace !important;
+  font-size: 0.6rem !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  color: var(--mut) !important;
+  margin-bottom: 7px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+/* Power bar wrapper */
+#wi-slotTableWrap > div:nth-child(2) {
+  background: var(--bor) !important;
+  border-radius: 99px !important;
+  height: 6px !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+/* Slot grid — no overflow, responsive columns */
+#wi-slotGrid {
+  overflow: hidden !important;
+  width: 100% !important;
+}
+
+/* Slot cells — fixed compact size so they never overflow */
+#wi-slotGrid > div {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+/* Filled slot */
+#wi-slotGrid > div[style*="rgba(229,62,62"] {
+  background: linear-gradient(135deg, rgba(232,0,14,0.08), rgba(15,16,24,0.6)) !important;
+  border: 1px solid rgba(232,0,14,0.3) !important;
+  border-radius: 8px !important;
+  padding: 6px 7px !important;
+  transition: all .15s !important;
+}
+#wi-slotGrid > div[style*="rgba(229,62,62"]:hover {
+  border-color: rgba(232,0,14,0.55) !important;
+  box-shadow: 0 0 12px rgba(232,0,14,0.12) !important;
+}
+/* Empty slot */
+#wi-slotGrid > div[style*="dashed"] {
+  background: rgba(5,5,7,0.5) !important;
+  border: 1px dashed rgba(30,32,44,0.8) !important;
+  border-radius: 8px !important;
+  color: var(--mut) !important;
+  min-height: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.6rem !important;
+  letter-spacing: .1em !important;
+}
+
+/* ══════════════════════
+   PATH A vs B — SIDE-BY-SIDE TABLE
+══════════════════════ */
+/* Override the g2 two-card layout in results to be a single comparison table */
+#wi-resultsSection .g2.wi-compare-grid {
+  display: block;
+  margin-bottom: 1rem;
+}
+.wi-compare-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.wi-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 340px;
+}
+.wi-compare-table th {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  padding: .7rem 1rem;
+  border-bottom: 2px solid var(--bor2);
+  white-space: nowrap;
+}
+.wi-compare-table th.th-label {
+  text-align: left;
+  color: var(--mut);
+  width: 45%;
+}
+.wi-compare-table th.th-a {
+  text-align: right;
+  color: var(--red);
+  background: rgba(232,0,14,0.04);
+}
+.wi-compare-table th.th-b {
+  text-align: right;
+  color: var(--gold);
+  background: rgba(240,165,0,0.04);
+}
+.wi-compare-table td {
+  font-family: 'Outfit', sans-serif;
+  font-size: var(--t-sm);
+  padding: .55rem 1rem;
+  border-bottom: 1px solid rgba(28,30,44,0.5);
+  vertical-align: middle;
+}
+.wi-compare-table td:first-child {
+  color: var(--dim);
+  font-size: 0.6875rem;
+}
+.wi-compare-table td.td-a {
+  text-align: right;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: var(--t-md);
+  letter-spacing: .03em;
+  background: rgba(232,0,14,0.02);
+}
+.wi-compare-table td.td-b {
+  text-align: right;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: var(--t-md);
+  letter-spacing: .03em;
+  background: rgba(240,165,0,0.02);
+}
+.wi-compare-table tr.sep-row td {
+  padding: .3rem 1rem;
+  border-bottom: 1px solid var(--bor2);
+  font-size: 0;
+  background: transparent;
+}
+@media(max-width: 640px) {
+  .wi-compare-table td, .wi-compare-table th {
+    padding: .45rem .65rem;
+    font-size: 0.6875rem;
+  }
+  .wi-compare-table td.td-a, .wi-compare-table td.td-b {
+    font-size: 0.9rem;
+  }
+}
+
+/* ══════════════════════
+   BACKGROUND CANVAS ANIMATION — enhanced
+══════════════════════ */
+#miningCanvas {
+  opacity: 0.9 !important;
+}
+/* Particle field boost via CSS — adds floating ember effect on top */
+body > canvas + div + div + main::before {
+  display: none; /* prevent double grid */
+}
+
 </style>
 </head>
 <body>
@@ -2197,52 +2417,47 @@ html.light body::after { display: none; }
       <div id="wi-winnerBadge" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:.5rem 1rem;border-radius:8px;font-weight:700;flex-shrink:0"></div>
     </div>
 
-    <!-- Side-by-side comparison table -->
-    <div class="g2" style="margin-bottom:1rem">
-
-      <!-- Miner daily/monthly card -->
-      <div class="card">
-        <div class="ch" style="border-left:3px solid var(--red)">
-          <div class="ctitle" style="color:var(--red)">⛏ Path A — Miner Earnings</div>
-        </div>
-        <div class="cbody">
-          <div class="calc-row"><span class="calc-lbl">Gross hCASH/day</span><span class="calc-val cr" id="wi-mGrossDay">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Electricity cost/day</span><span class="calc-val" style="color:var(--mut)" id="wi-mElecDay">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Net hCASH/day</span><span class="calc-val cr" id="wi-mNetDay">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Net USD/day</span><span class="calc-val" id="wi-mNetUsdDay">—</span></div>
-          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
-          <div class="calc-row"><span class="calc-lbl">30-day net hCASH</span><span class="calc-val cr" id="wi-mNet30">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">30-day net USD</span><span class="calc-val" id="wi-mNetUsd30">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">1-year net hCASH</span><span class="calc-val cr" id="wi-mNet365">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">1-year net USD</span><span class="calc-val" id="wi-mNetUsd365">—</span></div>
-          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
-          <div class="calc-row"><span class="calc-lbl">Break-even</span><span class="calc-val cg" id="wi-mBreakeven">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Network share</span><span class="calc-val cd" id="wi-mShare">—</span></div>
-          <!-- Risk tag -->
-          <div id="wi-mRisk" style="margin-top:.65rem;padding:.5rem .65rem;border-radius:6px;font-size:var(--fs-xs);font-family:'Share Tech Mono',monospace;line-height:1.55"></div>
+    <!-- Side-by-side comparison table — Path A vs B -->
+    <div class="card wi-compare-grid" style="margin-bottom:1rem;overflow:hidden">
+      <div class="ch" style="background:linear-gradient(90deg,rgba(232,0,14,.04),rgba(240,165,0,.04))">
+        <div style="display:flex;align-items:center;gap:0;flex:1">
+          <div class="ctitle" style="color:var(--red);flex:1">⛏ Path A — Miner</div>
+          <div style="width:1px;height:18px;background:var(--bor);margin:0 12px;flex-shrink:0"></div>
+          <div class="ctitle" style="color:var(--gold);flex:1">💧 Path B — LP Moat</div>
         </div>
       </div>
-
-      <!-- LP daily/monthly card -->
-      <div class="card">
-        <div class="ch" style="border-left:3px solid var(--gold)">
-          <div class="ctitle" style="color:var(--gold)">💧 Path B — LP Moat Earnings</div>
-        </div>
-        <div class="cbody">
-          <div class="calc-row"><span class="calc-lbl">Swap fees/day (est.)</span><span class="calc-val cg" id="wi-lpFeeDay">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">LP value (no IL)</span><span class="calc-val cg" id="wi-lpValue">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Moat points (total held)</span><span class="calc-val cr" id="wi-lpPtsDay">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">Lock multiplier</span><span class="calc-val" id="wi-lpMultDisplay">—</span></div>
-          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
-          <div class="calc-row"><span class="calc-lbl">30-day fees (hCASH)</span><span class="calc-val cg" id="wi-lpFee30">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">30-day fees (USD)</span><span class="calc-val" id="wi-lpFeeUsd30">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">1-year fees (hCASH)</span><span class="calc-val cg" id="wi-lpFee365">—</span></div>
-          <div class="calc-row"><span class="calc-lbl">1-year fees (USD)</span><span class="calc-val" id="wi-lpFeeUsd365">—</span></div>
-          <div style="height:1px;background:var(--bor);margin:.4rem 0"></div>
-          <div class="calc-row"><span class="calc-lbl">Capital locked (exit anytime)</span><span class="calc-val cg" id="wi-lpCapital">—</span></div>
-          <!-- Risk tag -->
-          <div id="wi-lpRisk" style="margin-top:.65rem;padding:.5rem .65rem;border-radius:6px;font-size:var(--fs-xs);font-family:'Share Tech Mono',monospace;line-height:1.55"></div>
-        </div>
+      <div class="wi-compare-table-wrap">
+        <table class="wi-compare-table">
+          <thead>
+            <tr>
+              <th class="th-label">Metric</th>
+              <th class="th-a">⛏ Miner</th>
+              <th class="th-b">💧 LP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Daily gross (hCASH)</td><td class="td-a cr" id="wi-mGrossDay">—</td><td class="td-b cg" id="wi-lpFeeDay">—</td></tr>
+            <tr><td>Electricity cost/day</td><td class="td-a" style="color:var(--mut)" id="wi-mElecDay">—</td><td class="td-b" style="color:var(--mut)">—</td></tr>
+            <tr><td>Net/day (hCASH)</td><td class="td-a cr" id="wi-mNetDay">—</td><td class="td-b cg">—</td></tr>
+            <tr><td>Net/day (USD)</td><td class="td-a" id="wi-mNetUsdDay">—</td><td class="td-b cg" id="wi-lpValue">—</td></tr>
+            <tr class="sep-row"><td></td><td></td><td></td></tr>
+            <tr><td>30-day net (hCASH)</td><td class="td-a cr" id="wi-mNet30">—</td><td class="td-b cg" id="wi-lpFee30">—</td></tr>
+            <tr><td>30-day net (USD)</td><td class="td-a" id="wi-mNetUsd30">—</td><td class="td-b" id="wi-lpFeeUsd30">—</td></tr>
+            <tr><td>1-year net (hCASH)</td><td class="td-a cr" id="wi-mNet365">—</td><td class="td-b cg" id="wi-lpFee365">—</td></tr>
+            <tr><td>1-year net (USD)</td><td class="td-a" id="wi-mNetUsd365">—</td><td class="td-b" id="wi-lpFeeUsd365">—</td></tr>
+            <tr class="sep-row"><td></td><td></td><td></td></tr>
+            <tr><td>Break-even</td><td class="td-a cg" id="wi-mBreakeven">—</td><td class="td-b" style="color:var(--grn)">Liquid</td></tr>
+            <tr><td>Network share</td><td class="td-a cd" id="wi-mShare">—</td><td class="td-b cd">—</td></tr>
+            <tr><td>Moat points held</td><td class="td-a cd">—</td><td class="td-b cr" id="wi-lpPtsDay">—</td></tr>
+            <tr><td>Lock multiplier</td><td class="td-a cd">—</td><td class="td-b cg" id="wi-lpMultDisplay">—</td></tr>
+            <tr><td>Capital (exit anytime)</td><td class="td-a cd">—</td><td class="td-b cg" id="wi-lpCapital">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Risk tags below table -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--bor)">
+        <div id="wi-mRisk" style="padding:.65rem 1rem;font-size:var(--fs-xs);font-family:'Space Mono',monospace;line-height:1.55;border-right:1px solid var(--bor)"></div>
+        <div id="wi-lpRisk" style="padding:.65rem 1rem;font-size:var(--fs-xs);font-family:'Space Mono',monospace;line-height:1.55"></div>
       </div>
     </div>
 
@@ -5516,28 +5731,61 @@ document.addEventListener('click', function(e) {
   const ctx = canvas.getContext('2d');
   let W, H, animId;
 
-  const ORBS = [];
-  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    initOrbs();
+    if (typeof initEmbers === 'function') initEmbers();
+  }
   window.addEventListener('resize', resize);
   resize();
 
   function rnd(a,b){ return a + Math.random()*(b-a); }
 
+  // ── Glowing orbs ──
+  const ORBS = [];
   function initOrbs() {
     ORBS.length = 0;
-    const count = Math.min(8, Math.floor(W / 220));
-    const colors = ['229,62,62','212,168,67','74,222,128','129,140,248','34,211,238'];
+    const count = Math.min(6, Math.floor(W / 260));
+    // Theme: red-dominant with faint gold accent — no blues/greens
+    const colors = ['232,0,14','200,0,8','232,0,14','232,60,60','240,165,0'];
     for (let i = 0; i < count; i++) {
       ORBS.push({
-        x: rnd(0.1,0.9), y: rnd(0.1,0.9),
-        vx: rnd(-0.00012, 0.00012), vy: rnd(-0.00012, 0.00012),
-        r: rnd(180, 320),
+        x: rnd(0.05,0.95), y: rnd(0.05,0.95),
+        vx: rnd(-0.00014, 0.00014), vy: rnd(-0.00014, 0.00014),
+        r: rnd(200, 380),
         col: colors[i % colors.length],
-        alpha: rnd(0.04, 0.10),
+        alpha: rnd(0.05, 0.13),
         phase: rnd(0, Math.PI*2),
       });
     }
   }
+
+  // ── Floating ember particles ──
+  const EMBERS = [];
+  function initEmbers() {
+    EMBERS.length = 0;
+    const count = Math.min(40, Math.floor(W / 28));
+    for (let i = 0; i < count; i++) {
+      EMBERS.push(spawnEmber(true));
+    }
+  }
+  function spawnEmber(random) {
+    return {
+      x: rnd(0, W),
+      y: random ? rnd(0, H) : H + rnd(5, 20),
+      vx: rnd(-0.3, 0.3),
+      vy: rnd(-0.5, -1.4),
+      r: rnd(1, 2.8),
+      alpha: rnd(0.15, 0.55),
+      fade: rnd(0.003, 0.008),
+      col: Math.random() < 0.7 ? '232,0,14' : Math.random() < 0.5 ? '240,165,0' : '255,80,60',
+      life: 1,
+    };
+  }
+
+  // ── Scan lines ──
+  let scanY = 0;
 
   let frame = 0;
   function draw() {
@@ -5545,16 +5793,17 @@ document.addEventListener('click', function(e) {
     frame++;
     const isLight = document.documentElement.classList.contains('light');
 
+    // Orbs
     for (const o of ORBS) {
       o.x += o.vx; o.y += o.vy;
       if (o.x < 0 || o.x > 1) o.vx *= -1;
       if (o.y < 0 || o.y > 1) o.vy *= -1;
-      o.phase += 0.003;
-      const pulse = 1 + Math.sin(o.phase) * 0.12;
+      o.phase += 0.0025;
+      const pulse = 1 + Math.sin(o.phase) * 0.15;
       const grad = ctx.createRadialGradient(o.x*W, o.y*H, 0, o.x*W, o.y*H, o.r * pulse);
-      const a = isLight ? o.alpha * 0.45 : o.alpha;
+      const a = isLight ? o.alpha * 0.35 : o.alpha;
       grad.addColorStop(0,   `rgba(${o.col},${a})`);
-      grad.addColorStop(0.5, `rgba(${o.col},${a*0.4})`);
+      grad.addColorStop(0.45,`rgba(${o.col},${(a*0.35).toFixed(3)})`);
       grad.addColorStop(1,   `rgba(${o.col},0)`);
       ctx.fillStyle = grad;
       ctx.beginPath();
@@ -5562,10 +5811,48 @@ document.addEventListener('click', function(e) {
       ctx.fill();
     }
 
+    if (!isLight) {
+      // Ember particles
+      for (let i = EMBERS.length - 1; i >= 0; i--) {
+        const e = EMBERS[i];
+        e.x += e.vx;
+        e.y += e.vy;
+        e.life -= e.fade;
+        if (e.life <= 0 || e.y < -10) {
+          EMBERS[i] = spawnEmber(false);
+          continue;
+        }
+        const a = e.alpha * e.life;
+        // Glow halo
+        const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 3);
+        g.addColorStop(0, `rgba(${e.col},${(a*0.7).toFixed(3)})`);
+        g.addColorStop(1, `rgba(${e.col},0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r * 3, 0, Math.PI*2);
+        ctx.fill();
+        // Core dot
+        ctx.fillStyle = `rgba(${e.col},${a.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // Subtle horizontal scan line sweep
+      scanY = (scanY + 0.5) % H;
+      const scanGrad = ctx.createLinearGradient(0, scanY - 2, 0, scanY + 2);
+      scanGrad.addColorStop(0,   'rgba(232,0,14,0)');
+      scanGrad.addColorStop(0.5, 'rgba(232,0,14,0.025)');
+      scanGrad.addColorStop(1,   'rgba(232,0,14,0)');
+      ctx.fillStyle = scanGrad;
+      ctx.fillRect(0, scanY - 2, W, 4);
+    }
+
     animId = requestAnimationFrame(draw);
   }
 
   initOrbs();
+  initEmbers();
   draw();
 
   window._miningAnim = {
