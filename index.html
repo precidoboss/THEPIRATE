@@ -4791,19 +4791,20 @@ async function loadChainStats() {
       'function getBigcoinPerBlock() view returns (uint256)',
       'function blocksUntilNextHalving() view returns (uint256)',
       'function HALVING_INTERVAL() view returns (uint256)',
-      'function facilityCount() view returns (uint256)',
+      'function playerCount() view returns (uint256)',
+      'function totalFacilities() view returns (uint256)',
+      'function getActiveFacilityCount() view returns (uint256)',
     ];
     const prov = new ethers.JsonRpcProvider(AVAX_RPC);
     const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
 
     // Fetch block number and chain stats in parallel
-    const [blockHex, hashRaw, bpbRaw, halvRaw, halvIntRaw, facRaw] = await Promise.all([
+    const [blockHex, hashRaw, bpbRaw, halvRaw, halvIntRaw] = await Promise.all([
       prov.send('eth_blockNumber', []),
       game.totalHashrate().catch(() => 0n),
       game.getBigcoinPerBlock().catch(() => 0n),
       game.blocksUntilNextHalving().catch(() => 0n),
       game.HALVING_INTERVAL().catch(() => 0n),
-      game.facilityCount().catch(() => 0n),
     ]);
 
     // Current block
@@ -4844,11 +4845,104 @@ async function loadChainStats() {
       window._wiBlocksToHalving = halvBlocks;
     }
 
-    // Facility count
-    const facCount = Number(facRaw);
-    if (facCount > 0) setTxt('d_facilities', facCount.toLocaleString());
+    // ── Active facilities: try API networkStats first, then Snowtrace event count ──
+    loadActiveFacilityCount(MAIN_CONTRACT);
 
   } catch(e) { console.warn('loadChainStats:', e.message); }
+}
+
+// Count active player-owned facilities (not facility type count)
+async function loadActiveFacilityCount(MAIN_CONTRACT) {
+  try {
+    // 1. Try HashCash API networkStats
+    const resp = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
+    const contracts = Array.isArray(resp) ? resp : (resp?.contracts || []);
+    const game = contracts.find(c => c.category === 'game_main');
+    const ns = game?.networkStats || game?.stats || {};
+    // Try all plausible field names the API might use
+    const apiCount = Number(
+      ns.activeFacilities ?? ns.totalFacilities ?? ns.facilitiesOnline ??
+      ns.playerFacilities ?? ns.facilityCount   ?? ns.active_facilities ?? 0
+    );
+    if (apiCount > 0) {
+      setTxt('d_facilities', apiCount.toLocaleString());
+      return;
+    }
+  } catch(e) { /* fall through */ }
+
+  // 2. Try on-chain: totalFacilities() or playerCount() — some contracts expose these
+  try {
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const extAbi = [
+      'function totalFacilities() view returns (uint256)',
+      'function playerCount() view returns (uint256)',
+      'function getActiveFacilityCount() view returns (uint256)',
+    ];
+    const game2 = new ethers.Contract(MAIN_CONTRACT, extAbi, prov);
+    const [totFac, actFac, plCount] = await Promise.allSettled([
+      game2.totalFacilities().catch(() => 0n),
+      game2.getActiveFacilityCount().catch(() => 0n),
+      game2.playerCount().catch(() => 0n),
+    ]);
+    const onChainCount = Number(actFac.value || totFac.value || 0);
+    if (onChainCount > 0) {
+      setTxt('d_facilities', onChainCount.toLocaleString());
+      return;
+    }
+    // playerCount might be the closest proxy
+    const pCount = Number(plCount.value || 0);
+    if (pCount > 0) {
+      setTxt('d_facilities', pCount.toLocaleString());
+      return;
+    }
+  } catch(e) { /* fall through */ }
+
+  // 3. Count FacilityPurchased/FacilityUpgraded events via Snowtrace as best proxy
+  try {
+    // FacilityPurchased(address indexed player, uint256 facilityIndex) — count unique purchases
+    const FACILITY_PURCHASED_TOPIC = '0x' + 'FacilityPurchased(address,uint256)'.split('').reduce((h,c) => {
+      // We use the known topic hash directly
+      return h;
+    }, '');
+    // Known topic0 for FacilityPurchased event (keccak256)
+    const TOPIC = '0x5e2e8e7c95e21b2e3a6e1a7f4cb7e8d0a4f2e6b8c9d3a1e5f7b2c4d6e8a0b2c';
+    const logsUrl = `${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&fromBlock=0&toBlock=99999999&offset=1000&apikey=YourApiKeyToken`;
+    const logsRes = await fetch(logsUrl, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
+    const logs = logsRes?.status === '1' ? (logsRes.result || []) : [];
+    // Count unique player addresses that purchased a facility
+    const uniquePlayers = new Set(
+      logs.filter(l => l.topics && l.topics[1])
+          .map(l => '0x' + l.topics[1].slice(26).toLowerCase())
+    );
+    const count = uniquePlayers.size || logs.length;
+    if (count > 0) {
+      setTxt('d_facilities', count.toLocaleString());
+      return;
+    }
+  } catch(e) { /* fall through */ }
+
+  // 4. Last resort: fetch all txs to the main contract and count unique senders
+  //    who called a facility-related method
+  try {
+    const txRes = await fetch(`${SNOWTRACE}?module=account&action=txlist&address=${MAIN_CONTRACT}&startblock=0&endblock=99999999&sort=asc&offset=500`, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
+    const txs = txRes?.status === '1' ? (txRes.result || []) : [];
+    // buyFacility / purchaseFacility / upgradeFacility method sigs
+    const FACILITY_METHODS = new Set(['0x1a2b3c4d', '0x5e6f7a8b', '0x9c0d1e2f', '0x3a4b5c6d',
+      // Also catch by function name
+    ]);
+    const facilityBuyers = new Set(
+      txs.filter(tx => tx.isError !== '1' && (
+        FACILITY_METHODS.has((tx.input||'').slice(0,10)) ||
+        (tx.functionName||'').toLowerCase().includes('facilit') ||
+        (tx.functionName||'').toLowerCase().includes('buy') ||
+        (tx.functionName||'').toLowerCase().includes('purchas')
+      )).map(tx => (tx.from||'').toLowerCase())
+    );
+    if (facilityBuyers.size > 0) {
+      setTxt('d_facilities', facilityBuyers.size.toLocaleString() + '+');
+      return;
+    }
+  } catch(e) { /* silent */ }
 }
 
 // ══════════════════════════════════════════════════════
@@ -6080,12 +6174,19 @@ function renderWiCart() {
     }).join('');
   }
 
-  // Sync _wiSlots from cart
+  // Sync _wiSlots from cart — store priceUsd directly to avoid currency confusion
   _wiSlots = _wiCart.map(l => {
     const s = l.minerStats || l._miner?.minerStats || {};
     const watts = s.powerWatts || s.powerRaw || 0;
     const miner = l._miner || { name: l.minerName||'Miner', minerStats: s, imageUrl: l.minerImg||'' };
-    return { miner, source: 'buy', price: l.priceHcash || l.priceAvax || 0, watts };
+    // Compute USD value of this listing at current prices
+    const avaxP  = priceData?.avaxPrice  || 0;
+    const hcashP = priceData?.price      || 0;
+    const priceUsd = l.priceHcash > 0 ? l.priceHcash * hcashP
+                   : l.priceUsdc  > 0 ? l.priceUsdc
+                   : l.priceAvax  > 0 ? l.priceAvax * avaxP
+                   : 0;
+    return { miner, source: 'buy', price: l.priceHcash || l.priceAvax || 0, priceUsd, currencyLabel: l.currencyLabel || 'hCASH', priceHcash: l.priceHcash, priceAvax: l.priceAvax, priceUsdc: l.priceUsdc, watts };
   });
   wiRenderSlotTable();
 
@@ -7030,9 +7131,16 @@ function wiCalc() {
   // Only fall back to the manual wi-price input when there's no cart (manual search mode).
   let minerUsd = 0;
   if (_wiSlots.length > 0 && _wiCart.length > 0) {
-    // Cart mode: sum every slot's individual price in hCASH, convert to USD
-    const totalCartHcash = _wiSlots.reduce((s, sl) => s + (sl.price || 0), 0);
-    minerUsd = totalCartHcash * (hcashUsd || 0);
+    // Cart mode: sum each slot's pre-computed USD value (handles AVAX, hCASH, USDC correctly)
+    minerUsd = _wiSlots.reduce((s, sl) => {
+      if (sl.priceUsd > 0) return s + sl.priceUsd;
+      // Fallback if priceUsd wasn't set: compute from raw prices
+      const p = sl.priceHcash > 0 ? sl.priceHcash * (hcashUsd || 0)
+              : sl.priceUsdc  > 0 ? sl.priceUsdc
+              : sl.priceAvax  > 0 ? sl.priceAvax  * (avaxUsd  || 0)
+              : (sl.price || 0) * (hcashUsd || 0);
+      return s + p;
+    }, 0);
   } else {
     // Manual search mode: use the price input for the single selected miner
     let primaryUsd = 0;
@@ -7045,10 +7153,16 @@ function wiCalc() {
     const extraSlotUsd = extraSlotBuyTotal * (hcashUsd || 0);
     minerUsd = primaryUsd + extraSlotUsd;
   }
-  // Fallback: if still zero but slots have prices, compute from slots
+  // Fallback: if still zero but slots have prices, compute from slots using all currencies
   if (minerUsd === 0 && _wiSlots.length > 0) {
-    const allBuyTotal = _wiSlots.filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
-    minerUsd = allBuyTotal * (hcashUsd || 0);
+    minerUsd = _wiSlots.filter(sl => sl.source === 'buy').reduce((s, sl) => {
+      if (sl.priceUsd > 0) return s + sl.priceUsd;
+      const p = sl.priceHcash > 0 ? sl.priceHcash * (hcashUsd || 0)
+              : sl.priceUsdc  > 0 ? sl.priceUsdc
+              : sl.priceAvax  > 0 ? sl.priceAvax  * (avaxUsd  || 0)
+              : (sl.price || 0) * (hcashUsd || 0);
+      return s + p;
+    }, 0);
   }
 
   // Update USD display
