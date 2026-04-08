@@ -6260,7 +6260,7 @@ async function wiFetchFacilityRatesOnChain() {
         game.getBigcoinPerBlock().catch(() => 0n),
         game.blocksUntilNextHalving().catch(() => 0n),
         game.HALVING_INTERVAL().catch(() => 0n),
-        game.facilityCount().catch(() => 6n),
+        game.facilityCount().catch(() => 0n),
       ]);
 
     // totalHashrate: raw value is in MH/s (verified: 200148 MH/s = 200.148 GH/s)
@@ -6285,8 +6285,8 @@ async function wiFetchFacilityRatesOnChain() {
       console.log('[Chain] blocksUntilNextHalving:', halvBlocks.toLocaleString(), '(~' + (halvBlocks/85460).toFixed(1) + 'd) ✓');
     }
 
-    // ── 2. Facility slots: index 0 = starter (skip), index 1-5 = Lv1-Lv5 ──
-    const facCount = Math.min(Number(facilityCountRaw) || 6, 8);
+    // ── 2. Facility slots: index 0 = starter (skip), index 1-N = Lv1-LvN ──
+    const facCount = Number(facilityCountRaw) || 6;
     const facCalls = [];
     for (let i = 0; i < facCount; i++) facCalls.push(game.facilities(i).catch(() => null));
     const facResults = await Promise.all(facCalls);
@@ -7137,6 +7137,9 @@ function wiCalc() {
     : (priceData.liq || 0);
   const poolLiq     = poolTvlUsd;
 
+  // LP swap fees: 24h pool volume (declare here so it's available everywhere below)
+  const vol24h        = priceData.vol24 || 0;
+
   // LP tokens — show proportional estimate immediately, then update with Pharaoh quote async
   const lpTokenEst = poolData?.lpSupply > 0 && poolLiq > 0
     ? (minerUsd / poolLiq) * poolData.lpSupply
@@ -7149,9 +7152,6 @@ function wiCalc() {
   if (avaxSide > 0) {
     wiQuoteLpFromPharaoh(avaxSide, hcashSide, poolData?.lpSupply || LIL_TOTAL_SUPPLY, _wiLockDaysVal, poolLiq, vol24h, hcashUsd);
   }
-
-  // LP swap fees: 24h pool volume × 0.3% fee × my share of pool
-  const vol24h        = priceData.vol24 || 0;
   const myFeeUsdDay   = vol24h * 0.003 * (lpPoolSharePct / 100);
   const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
 
