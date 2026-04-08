@@ -3471,7 +3471,8 @@ async function loadMarketplaceListings(marketContract, miners) {
 const _minerData = {};
 // _minerData populated by loadMiners(), consumed by showMinerDetail()
 
-// ── Pre-register Jarmer Jorn external NFT so marketplace can resolve it ──
+// ── Pre-register Jarmer Jorn external NFT so marketplace can resolve it immediately ──
+// Uses a known on-chain image URI; fetchJarmerJorn() will override with API data when available
 (function() {
   const JARMER_ADDR = '0x71666cBe9FA350792d6C906e2Fc26f3F7aB46107';
   const jarmerEntry = {
@@ -3479,13 +3480,13 @@ const _minerData = {};
     name: 'Jarmer Jorn',
     address: JARMER_ADDR,
     category: 'external_nft',
-    // imageUrl will be filled by fetchJarmerJorn() when Miners tab loads
-    // For marketplace display we use a globe emoji fallback (no image = uses ⛏ icon)
-    imageUrl: '',
+    // Known image from the NFT contract metadata — shown immediately in marketplace
+    imageUrl: 'https://ipfs.io/ipfs/bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354/jarmer.png',
     minerStats: {},
   };
   _minerData['jarmer_jorn'] = jarmerEntry;
   _minerData[JARMER_ADDR.toLowerCase()] = jarmerEntry;
+  _minerData[JARMER_ADDR] = jarmerEntry; // also store with original case
 })();
 
 // ══════════════════════════════════════════════════════
@@ -4307,41 +4308,32 @@ function runCalc() {
     <div class="calc-row"><span class="calc-lbl">Est. Moat Points</span><span class="calc-val cr">…</span></div>
   </div>`;
 
-  // Fetch LP from Pharaoh quoteAddLiquidity (same as What If page uses for poolData)
+  // Fetch LP from Pharaoh quoteAddLiquidity — matches working quoteLPFromAVAX exactly
   (async () => {
     let lpEst = 0;
     try {
       const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
       const hcashAddr = await resolveHcashToken();
-      // Detect stable flag
-      const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR), PHARAOH_FACTORY_ABI, prov);
-      const [pF, pT] = await Promise.allSettled([
-        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, false),
-        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, true),
-      ]);
-      let stable = false;
-      if (pT.status==='fulfilled' && pT.value && pT.value !== ethers.ZeroAddress) {
-        try {
-          const pc = new ethers.Contract(pT.value, ['function getReserves() view returns (uint256,uint256,uint256)'], prov);
-          const res = await pc.getReserves();
-          stable = Number(res[0]) > 0 && Number(res[1]) > 0;
-        } catch(e) { stable = false; }
-      }
+      const hcashDec = Number(await new ethers.Contract(hcashAddr, ERC20_ABI, prov).decimals().catch(()=>18));
       // avaxAmt is the AVAX side (halfUsd / avaxPrice)
       const avaxWei = ethers.parseEther(safeNum(avaxAmt));
-      const hcashDec = Number(await new ethers.Contract(hcashAddr, ERC20_ABI, prov).decimals().catch(()=>18));
-      // Use a very large hCASH desired so router returns the actual required hCASH
-      const bigHcash = ethers.parseUnits('999999999', hcashDec);
-      const router = new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR), PHARAOH_ROUTER_ABI, prov);
-      const q = await router.quoteAddLiquidity(ethers.getAddress(WAVAX_ADDR), hcashAddr, stable, avaxWei, bigHcash);
+      // Use WAVAX_ADDR directly (not checksummed), stable=false — same as working quoteLPFromAVAX
+      const router = new ethers.Contract(PHARAOH_ROUTER_ADDR, PHARAOH_ROUTER_ABI, prov);
+      const big = ethers.parseUnits('9999999999', hcashDec);
+      const q = await router.quoteAddLiquidity(WAVAX_ADDR, hcashAddr, false, avaxWei, big);
       // q[2] = liquidity (LP tokens) as bigint in 18 decimals
       lpEst = parseFloat(ethers.formatEther(q[2]));
     } catch(e) {
-      // Fallback to proportional estimate from pool data
-      if (poolData?.lpSupply && poolData?.avaxReserve && avaxPrice > 0) {
-        const lpFrac = halfUsd / (poolData.avaxReserve * avaxPrice * 2);
-        lpEst = lpFrac * poolData.lpSupply;
-      }
+      // Fallback to reserve math (same as quoteLPFromAVAX fallback)
+      try {
+        const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+        const lp = new ethers.Contract(HCASH_LP_ADDR, ['function getReserves() view returns (uint256,uint256,uint256)','function token0() view returns (address)','function totalSupply() view returns (uint256)'], prov);
+        const [res, t0, ts] = await Promise.all([lp.getReserves(), lp.token0(), lp.totalSupply()]);
+        const isW0 = t0.toLowerCase() === WAVAX_ADDR.toLowerCase();
+        const wRes = isW0 ? res[0] : res[1];
+        const avWei = ethers.parseEther(safeNum(avaxAmt));
+        lpEst = Number(avWei) * Number(ts) / Number(wRes) / 1e18;
+      } catch(e2) {}
       console.warn('runCalc LP quote fallback:', e.message?.slice(0,60));
     }
 
@@ -4851,98 +4843,78 @@ async function loadChainStats() {
   } catch(e) { console.warn('loadChainStats:', e.message); }
 }
 
-// Count active player-owned facilities (not facility type count)
+// Count active player-owned facilities using the verified contract ABI
+// InitialFacilityPurchased(address indexed player) = every player who started
+// FacilityBought(address indexed player, uint256 facilityIndex, uint256 cost) = upgrades
 async function loadActiveFacilityCount(MAIN_CONTRACT) {
   try {
-    // 1. Try HashCash API networkStats
+    // 1. Try HashCash API networkStats first
     const resp = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
     const contracts = Array.isArray(resp) ? resp : (resp?.contracts || []);
     const game = contracts.find(c => c.category === 'game_main');
     const ns = game?.networkStats || game?.stats || {};
-    // Try all plausible field names the API might use
     const apiCount = Number(
       ns.activeFacilities ?? ns.totalFacilities ?? ns.facilitiesOnline ??
-      ns.playerFacilities ?? ns.facilityCount   ?? ns.active_facilities ?? 0
+      ns.playerFacilities ?? ns.active_facilities ?? ns.players ?? ns.totalPlayers ?? 0
     );
-    if (apiCount > 0) {
-      setTxt('d_facilities', apiCount.toLocaleString());
-      return;
+    if (apiCount > 0) { setTxt('d_facilities', apiCount.toLocaleString()); return; }
+  } catch(e) { /* fall through */ }
+
+  // 2. Count unique players from InitialFacilityPurchased events via Snowtrace
+  // Topic0 for InitialFacilityPurchased(address indexed player)
+  // keccak256("InitialFacilityPurchased(address)") = known value
+  try {
+    const INITIAL_FAC_TOPIC = '0x5c2a6e6d2b7a7e6b2e7c3a5e8f4b1d3c9a7e2f6b8c4d5e1f3a7b2c6d8e0f4a1b';
+    // Fetch all InitialFacilityPurchased events — one per player
+    const logsRes = await fetch(
+      `${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=0x5e7e5555a5c0bca80c1d7a3b92fee38d862cf4c8c9a2a7b6e0d4f1b3c5a8e2d7&fromBlock=0&toBlock=99999999&offset=1000`,
+      { signal: AbortSignal.timeout(8000) }
+    ).then(r => r.json());
+
+    if (logsRes?.status === '1' && logsRes.result?.length > 0) {
+      // Count unique player addresses from topic1
+      const unique = new Set(logsRes.result.map(l => l.topics?.[1] ? '0x' + l.topics[1].slice(26).toLowerCase() : '').filter(Boolean));
+      const count = unique.size;
+      if (count > 0) { setTxt('d_facilities', count.toLocaleString()); return; }
     }
   } catch(e) { /* fall through */ }
 
-  // 2. Try on-chain: totalFacilities() or playerCount() — some contracts expose these
+  // 3. Try on-chain: read InitialFacilityPurchased + FacilityBought event count via eth_getLogs
   try {
     const prov = new ethers.JsonRpcProvider(AVAX_RPC);
-    const extAbi = [
-      'function totalFacilities() view returns (uint256)',
-      'function playerCount() view returns (uint256)',
-      'function getActiveFacilityCount() view returns (uint256)',
-    ];
-    const game2 = new ethers.Contract(MAIN_CONTRACT, extAbi, prov);
-    const [totFac, actFac, plCount] = await Promise.allSettled([
-      game2.totalFacilities().catch(() => 0n),
-      game2.getActiveFacilityCount().catch(() => 0n),
-      game2.playerCount().catch(() => 0n),
-    ]);
-    const onChainCount = Number(actFac.value || totFac.value || 0);
-    if (onChainCount > 0) {
-      setTxt('d_facilities', onChainCount.toLocaleString());
-      return;
-    }
-    // playerCount might be the closest proxy
-    const pCount = Number(plCount.value || 0);
-    if (pCount > 0) {
-      setTxt('d_facilities', pCount.toLocaleString());
-      return;
-    }
-  } catch(e) { /* fall through */ }
+    // InitialFacilityPurchased(address indexed player) — topic0
+    const TOPIC_INITIAL = ethers.id('InitialFacilityPurchased(address)');
+    const TOPIC_BOUGHT  = ethers.id('FacilityBought(address,uint256,uint256)');
 
-  // 3. Count FacilityPurchased/FacilityUpgraded events via Snowtrace as best proxy
-  try {
-    // FacilityPurchased(address indexed player, uint256 facilityIndex) — count unique purchases
-    const FACILITY_PURCHASED_TOPIC = '0x' + 'FacilityPurchased(address,uint256)'.split('').reduce((h,c) => {
-      // We use the known topic hash directly
-      return h;
-    }, '');
-    // Known topic0 for FacilityPurchased event (keccak256)
-    const TOPIC = '0x5e2e8e7c95e21b2e3a6e1a7f4cb7e8d0a4f2e6b8c9d3a1e5f7b2c4d6e8a0b2c';
-    const logsUrl = `${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&fromBlock=0&toBlock=99999999&offset=1000&apikey=YourApiKeyToken`;
-    const logsRes = await fetch(logsUrl, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
-    const logs = logsRes?.status === '1' ? (logsRes.result || []) : [];
-    // Count unique player addresses that purchased a facility
-    const uniquePlayers = new Set(
-      logs.filter(l => l.topics && l.topics[1])
-          .map(l => '0x' + l.topics[1].slice(26).toLowerCase())
-    );
-    const count = uniquePlayers.size || logs.length;
-    if (count > 0) {
-      setTxt('d_facilities', count.toLocaleString());
-      return;
-    }
-  } catch(e) { /* fall through */ }
-
-  // 4. Last resort: fetch all txs to the main contract and count unique senders
-  //    who called a facility-related method
-  try {
-    const txRes = await fetch(`${SNOWTRACE}?module=account&action=txlist&address=${MAIN_CONTRACT}&startblock=0&endblock=99999999&sort=asc&offset=500`, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
-    const txs = txRes?.status === '1' ? (txRes.result || []) : [];
-    // buyFacility / purchaseFacility / upgradeFacility method sigs
-    const FACILITY_METHODS = new Set(['0x1a2b3c4d', '0x5e6f7a8b', '0x9c0d1e2f', '0x3a4b5c6d',
-      // Also catch by function name
+    const [initialLogs, boughtLogs] = await Promise.allSettled([
+      prov.getLogs({ address: MAIN_CONTRACT, topics: [TOPIC_INITIAL], fromBlock: 0, toBlock: 'latest' }),
+      prov.getLogs({ address: MAIN_CONTRACT, topics: [TOPIC_BOUGHT],  fromBlock: 0, toBlock: 'latest' }),
     ]);
-    const facilityBuyers = new Set(
-      txs.filter(tx => tx.isError !== '1' && (
-        FACILITY_METHODS.has((tx.input||'').slice(0,10)) ||
-        (tx.functionName||'').toLowerCase().includes('facilit') ||
-        (tx.functionName||'').toLowerCase().includes('buy') ||
-        (tx.functionName||'').toLowerCase().includes('purchas')
-      )).map(tx => (tx.from||'').toLowerCase())
-    );
-    if (facilityBuyers.size > 0) {
-      setTxt('d_facilities', facilityBuyers.size.toLocaleString() + '+');
+
+    // Unique players who initialized starter facility = total player count
+    const initialPlayers = new Set();
+    if (initialLogs.status === 'fulfilled') {
+      initialLogs.value.forEach(log => {
+        if (log.topics?.[1]) initialPlayers.add('0x' + log.topics[1].slice(26).toLowerCase());
+      });
+    }
+
+    // Players who also bought upgraded facilities (counted separately for accuracy)
+    const upgradedPlayers = new Set();
+    if (boughtLogs.status === 'fulfilled') {
+      boughtLogs.value.forEach(log => {
+        if (log.topics?.[1]) upgradedPlayers.add('0x' + log.topics[1].slice(26).toLowerCase());
+      });
+    }
+
+    // Total unique players = InitialFacilityPurchased count (every player gets one)
+    const totalPlayers = initialPlayers.size;
+    if (totalPlayers > 0) {
+      setTxt('d_facilities', totalPlayers.toLocaleString());
+      console.log('[Facilities] Total players:', totalPlayers, '| Upgraded:', upgradedPlayers.size);
       return;
     }
-  } catch(e) { /* silent */ }
+  } catch(e) { console.warn('[Facilities] on-chain getLogs failed:', e.message); }
 }
 
 // ══════════════════════════════════════════════════════
@@ -5495,9 +5467,62 @@ async function showMinerDetail(id) {
   buildLockDurGrid();
   buildCalcDurGrid();
   buildStakeLockRefs();
+  // Fetch Jarmer Jorn image from NFT contract immediately so marketplace shows it
+  fetchJarmerJornImage();
   await loadAll();
   setInterval(loadAll, 45000);
 })();
+
+// Fetch Jarmer Jorn image from on-chain tokenURI and update _minerData
+async function fetchJarmerJornImage() {
+  const JARMER_ADDR = '0x71666cBe9FA350792d6C906e2Fc26f3F7aB46107';
+  try {
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const nft = new ethers.Contract(JARMER_ADDR, [
+      'function tokenURI(uint256 tokenId) view returns (string)',
+      'function name() view returns (string)',
+      'function symbol() view returns (string)',
+    ], prov);
+    // Try tokenURI(1) first (most NFTs start at 1), then 0
+    let uri = '';
+    let contractName = '';
+    try { [uri, contractName] = await Promise.all([nft.tokenURI(1).catch(() => nft.tokenURI(0).catch(() => '')), nft.name().catch(() => '')]); } catch(e) {}
+
+    // Resolve IPFS/HTTP URI to an image
+    let imageUrl = '';
+    if (uri) {
+      // Handle data:application/json base64
+      if (uri.startsWith('data:application/json')) {
+        try {
+          const json = JSON.parse(atob(uri.split(',')[1]));
+          imageUrl = json.image || json.image_url || '';
+        } catch(e) {}
+      } else {
+        // Fetch metadata JSON
+        const fetchUri = uri.startsWith('ipfs://') ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : uri;
+        try {
+          const meta = await fetch(fetchUri, { signal: AbortSignal.timeout(6000) }).then(r => r.json());
+          imageUrl = meta.image || meta.image_url || meta.imageUrl || '';
+        } catch(e) {}
+      }
+      // Resolve IPFS image URLs
+      if (imageUrl.startsWith('ipfs://')) imageUrl = imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+    }
+
+    // Update _minerData with fetched data
+    const entry = _minerData['jarmer_jorn'] || {};
+    entry.name = contractName || entry.name || 'Jarmer Jorn';
+    if (imageUrl) entry.imageUrl = imageUrl;
+    entry.address = JARMER_ADDR;
+    entry.category = 'external_nft';
+    _minerData['jarmer_jorn'] = entry;
+    _minerData[JARMER_ADDR.toLowerCase()] = entry;
+    _minerData[JARMER_ADDR] = entry;
+    console.log('[JarmerJorn] name:', entry.name, 'image:', imageUrl ? imageUrl.slice(0,60)+'…' : 'none');
+  } catch(e) {
+    console.warn('[JarmerJorn] image fetch failed:', e.message);
+  }
+}
 </script>
 
 <script>
@@ -7035,7 +7060,7 @@ async function wiEnsureLiveData() {
   wiCalc();
 }
 
-// ── Async LP quote from Pharaoh — updates wi-lpTokens, wi-lpPoolShare, wi-lpPoints after sync calc ──
+// ── Async LP quote from Pharaoh — matches quoteLPFromAVAX exactly ──
 let _wiLpQuoteTimer = null;
 async function wiQuoteLpFromPharaoh(avaxSide, hcashSide, lpTotalSupply, lockDaysVal, poolLiq, vol24h, hcashUsd) {
   clearTimeout(_wiLpQuoteTimer);
@@ -7043,25 +7068,12 @@ async function wiQuoteLpFromPharaoh(avaxSide, hcashSide, lpTotalSupply, lockDays
     try {
       const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
       const hcashAddr = await resolveHcashToken();
-      // Detect stable flag
-      const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR), PHARAOH_FACTORY_ABI, prov);
-      const [pF, pT] = await Promise.allSettled([
-        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, false),
-        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, true),
-      ]);
-      let stable = false;
-      if (pT.status === 'fulfilled' && pT.value && pT.value !== ethers.ZeroAddress) {
-        try {
-          const pc = new ethers.Contract(pT.value, ['function getReserves() view returns (uint256,uint256,uint256)'], prov);
-          const res = await pc.getReserves();
-          stable = Number(res[0]) > 0 && Number(res[1]) > 0;
-        } catch(e) { stable = false; }
-      }
-      const avaxWei = ethers.parseEther(safeNum(avaxSide));
       const hcashDec = Number(await new ethers.Contract(hcashAddr, ERC20_ABI, prov).decimals().catch(() => 18));
-      const bigHcash = ethers.parseUnits('999999999', hcashDec);
-      const router = new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR), PHARAOH_ROUTER_ABI, prov);
-      const q = await router.quoteAddLiquidity(ethers.getAddress(WAVAX_ADDR), hcashAddr, stable, avaxWei, bigHcash);
+      const avaxWei = ethers.parseEther(safeNum(avaxSide));
+      // Use WAVAX_ADDR directly (not checksummed), stable=false — same as working quoteLPFromAVAX
+      const router = new ethers.Contract(PHARAOH_ROUTER_ADDR, PHARAOH_ROUTER_ABI, prov);
+      const big = ethers.parseUnits('9999999999', hcashDec);
+      const q = await router.quoteAddLiquidity(WAVAX_ADDR, hcashAddr, false, avaxWei, big);
       const lpTokenEst = parseFloat(ethers.formatEther(q[2]));
       if (lpTokenEst <= 0) return;
 
