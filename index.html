@@ -6,360 +6,305 @@
 <meta name="theme-color" content="#0a0a0f">
 <title>hCASH Moat — Liquidity Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-/* ═══════════════════════════════════════════════════════════════════
-   hCASH MOAT INTEL — ULTRA REDESIGN v5
-   Theme: Industrial Mining Terminal · Red × White × Black
-   Fonts: Bebas Neue (display) · Space Mono (data) · Outfit (body)
-   Aesthetic: Hardcore miner terminal — glowing red veins in obsidian
-═══════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   hCASH MOAT INTEL — DESIGN v3
+   Fonts:  Chakra Petch · DM Mono · Barlow
+   Colors: Warm dark (charcoal/brown) + RED accent
+   Replaces: Bebas Neue / Space Mono / Outfit + blue-black
+════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=Barlow:wght@300;400;500;600&display=swap');
 
-/* ══════════════════════
-   DESIGN TOKENS
-══════════════════════ */
+/* ── TOKENS ── */
 :root {
-  /* Core palette — BLACK × RED × WHITE */
-  --bg:      #050507;
-  --bg2:     #080a0e;
-  --sur:     #0c0d12;
-  --card:    #0f1018;
-  --card2:   #13141f;
-  --bor:     #1c1e2c;
-  --bor2:    #272940;
-  --bor3:    #343660;
+  /* Backgrounds — warm charcoal */
+  --bg:    #141210;
+  --bg2:   #141210;
+  --sur:   #1c1916;
+  --card:  #211e1a;
+  --card2: #252118;
+  --bor:   #332e28;
+  --bor2:  #3e3830;
+  --bor3:  #4a433a;
 
-  /* RED — primary brand */
-  --red:     #e8000e;
-  --red2:    #ff1a26;
-  --red3:    #c0000b;
-  --red-dim: rgba(232,0,14,0.12);
-  --red-glow:rgba(232,0,14,0.25);
+  /* Accent — RED (matching hCASH brand) */
+  --red:   #e83535;
+  --red2:  #ff4444;
+  --red3:  #c42020;
+  --red-dim: rgba(232,53,53,0.12);
+  --red-glow: rgba(232,53,53,0.25);
 
-  /* WHITE — contrast text */
-  --white:   #ffffff;
-  --txt:     #f2f3f8;
-  --txt2:    #b8bbd0;
-  --dim:     #707292;
-  --mut:     #3a3c52;
+  /* Aliases so old .cr / .cg / inline refs still work */
+  --acc:   #e83535;
+  --acc2:  #ff4444;
 
-  /* Accents */
-  --gold:    #f0a500;
-  --gold2:   #ffcc44;
-  --gold-dim:rgba(240,165,0,0.12);
-  --grn:     #22e87a;
-  --grn2:    #5effaa;
-  --grn-dim: rgba(34,232,122,0.1);
-  --cyn:     #00d4ff;
+  /* Text */
+  --txt:   #f0ebe4;
+  --txt2:  #c8bfb5;
+  --dim:   #a89880;
+  --mut:   #6b5f54;
+  --ash:   #8c8074;
+  --ash2:  #6b5f54;
+  --white: #f0ebe4;
 
-  /* Glow effects */
-  --glow-red:  0 0 24px rgba(232,0,14,0.4), 0 0 60px rgba(232,0,14,0.12);
-  --glow-gold: 0 0 20px rgba(240,165,0,0.35), 0 0 50px rgba(240,165,0,0.1);
-  --glow-grn:  0 0 20px rgba(34,232,122,0.3), 0 0 50px rgba(34,232,122,0.08);
+  /* Status */
+  --grn:   #6db87a;
+  --grn2:  #8dd49a;
+  --grn-dim: rgba(109,184,122,0.1);
+  --gold:  #d4a843;
+  --gold2: #e8c060;
+  --gold-dim: rgba(212,168,67,0.1);
+  --gld:   #d4a843;
+  --pur:   #a78bfa;
+  --cyn:   #22d3ee;
 
-  /* Typography — UNIFIED SCALE */
-  --t-xs:   0.6875rem;   /* 11px — badges, labels */
-  --t-sm:   0.75rem;     /* 12px — secondary mono */
-  --t-base: 0.875rem;    /* 14px — body */
-  --t-md:   1rem;        /* 16px — card titles */
-  --t-lg:   1.125rem;    /* 18px — section heads */
-  --t-xl:   1.375rem;    /* 22px — stat values */
-  --t-2xl:  1.75rem;     /* 28px — hero numbers */
-  --t-3xl:  2.25rem;     /* 36px — display */
+  /* Glows — subtle, warm */
+  --glow-red:  0 0 18px rgba(232,53,53,0.3), 0 0 40px rgba(232,53,53,0.1);
+  --glow-gold: 0 0 16px rgba(212,168,67,0.25), 0 0 36px rgba(212,168,67,0.08);
+  --glow-grn:  0 0 16px rgba(109,184,122,0.2), 0 0 36px rgba(109,184,122,0.07);
+
+  /* Typography — UNIFIED */
+  --t-xs:   0.58rem;    /* labels, badges */
+  --t-sm:   0.66rem;    /* secondary */
+  --t-base: 0.75rem;    /* body, table cells */
+  --t-md:   0.82rem;    /* card titles */
+  --t-lg:   0.92rem;    /* section heads */
+  --t-xl:   1.1rem;     /* stat values */
+  --t-2xl:  1.35rem;    /* hero numbers */
+  --t-3xl:  1.75rem;    /* display */
 
   /* Legacy aliases */
-  --fs-xs: var(--t-xs); --fs-sm: var(--t-sm); --fs-base: var(--t-base);
-  --fs-md: var(--t-base); --fs-lg: var(--t-md); --fs-xl: var(--t-xl);
-  --fs-2xl: var(--t-2xl); --fs-3xl: var(--t-3xl);
+  --fs-xs:   var(--t-xs);
+  --fs-sm:   var(--t-sm);
+  --fs-base: var(--t-base);
+  --fs-md:   var(--t-base);
+  --fs-lg:   var(--t-md);
+  --fs-xl:   var(--t-xl);
+  --fs-2xl:  var(--t-2xl);
+  --fs-3xl:  var(--t-3xl);
 
   /* Spacing */
-  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px;
-  --sp-1: 0.5rem; --sp-2: 0.75rem; --sp-3: 1rem;
-  --sp-4: 1.25rem; --sp-5: 1.5rem;
+  --r-sm: 6px; --r-md: 9px; --r-lg: 12px; --r-xl: 16px;
+  --sp-1: 0.4rem; --sp-2: 0.65rem; --sp-3: 0.85rem;
+  --sp-4: 1.05rem; --sp-5: 1.3rem;
 
   /* Motion */
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --fast: 140ms; --mid: 240ms; --slow: 380ms;
+  --fast: 150ms; --mid: 240ms; --slow: 380ms;
 
-  --header-bg: rgba(5,5,7,0.94);
-  --grid-line: rgba(232,0,14,0.03);
+  --header-bg: rgba(20,18,16,0.96);
+  --grid-line: rgba(232,53,53,0.025);
 }
 
 /* LIGHT MODE */
 html.light {
-  --bg: #f0f1f5; --bg2: #e8eaf0; --sur: #ffffff;
-  --card: #ffffff; --card2: #f5f6fb;
-  --bor: #dde0f0; --bor2: #c5c8de; --bor3: #adb0cc;
-  --red: #cc0008; --red2: #e8000e; --red3: #a80006;
-  --red-dim: rgba(204,0,8,0.06); --red-glow: rgba(204,0,8,0.15);
-  --txt: #0d0e14; --txt2: #2e3050; --dim: #5a5d78; --mut: #9a9cb8;
-  --gold: #c07800; --gold2: #d4a000; --gold-dim: rgba(192,120,0,0.06);
-  --grn: #0aa855; --grn2: #12d46a; --grn-dim: rgba(10,168,85,0.06);
+  --bg: #f4f0eb; --bg2: #ede8e2; --sur: #ffffff;
+  --card: #ffffff; --card2: #f8f4ef;
+  --bor: #e0d8d0; --bor2: #cec5bb; --bor3: #bbb0a5;
+  --red: #cc2020; --red2: #e83535; --red3: #a81818;
+  --red-dim: rgba(204,32,32,0.06); --red-glow: rgba(204,32,32,0.12);
+  --acc: #cc2020; --acc2: #e83535;
+  --txt: #1a1614; --txt2: #3a3028; --dim: #6b5f54; --mut: #9a8c80;
+  --gold: #b8860b; --gold2: #d4a020; --gld: #b8860b;
+  --grn: #2e8b4a; --grn2: #45a862;
   --glow-red: none; --glow-gold: none; --glow-grn: none;
-  --header-bg: rgba(240,241,245,0.95);
-  --grid-line: rgba(204,0,8,0.025);
+  --header-bg: rgba(244,240,235,0.96);
+  --grid-line: rgba(204,32,32,0.02);
 }
 
-/* ══════════════════════
-   RESET & BASE
-══════════════════════ */
+/* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--txt);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Barlow', sans-serif;
   font-size: var(--t-base);
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.55;
   overflow-x: hidden;
   min-height: 100dvh;
 }
 
-/* ── Animated grid background ── */
+/* Noise texture overlay — from reference app */
 body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+/* Subtle grid lines */
+body::after {
   content: '';
   position: fixed; inset: 0;
   background-image:
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 56px 56px;
-  animation: gridDrift 30s ease-in-out infinite alternate;
   pointer-events: none; z-index: 0;
 }
 
-/* ── Deep red radial vignette ── */
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(232,0,14,0.06) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 40% at 15% 100%, rgba(232,0,14,0.03) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(232,0,14,0.03) 0%, transparent 55%);
-  pointer-events: none; z-index: 0;
-  animation: vignettePulse 8s ease-in-out infinite alternate;
-}
-
+/* Canvas bg */
 #miningCanvas {
   position: fixed; inset: 0; z-index: 0;
   pointer-events: none;
-  opacity: 0.85; transition: opacity .6s;
+  opacity: 0.6; transition: opacity .6s;
 }
 #miningCanvas.hidden { opacity: 0; }
-html.light #miningCanvas { opacity: .25; }
+html.light #miningCanvas { opacity: .15; }
 
-/* ── Scrollbar ── */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bor2); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--red); }
+::-webkit-scrollbar-thumb { background: var(--bor); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--acc); }
 
-/* ══════════════════════
-   KEYFRAMES LIBRARY
-══════════════════════ */
-@keyframes gridDrift    { from{background-position:0 0} to{background-position:28px 28px} }
-@keyframes vignettePulse{ 0%{opacity:.7} 100%{opacity:1} }
-@keyframes pulse        { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.2;transform:scale(.5)} }
-@keyframes tka          { to{transform:translateX(-50%)} }
-@keyframes fadeUp       { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-@keyframes fadeIn       { from{opacity:0} to{opacity:1} }
-@keyframes slideIn      { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:none} }
-@keyframes ntfIn        { from{opacity:0;transform:translateX(24px) scale(.94)} to{opacity:1;transform:none} }
-@keyframes shimmer      { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-@keyframes spinR        { to{transform:rotate(360deg)} }
-@keyframes rippleOut    { 0%{transform:scale(0);opacity:.5} 100%{transform:scale(4.5);opacity:0} }
-@keyframes countUp      { from{transform:translateY(10px);opacity:0} to{transform:none;opacity:1} }
-@keyframes scanline     { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
-@keyframes borderFlow   { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-@keyframes floatUp      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-@keyframes redGlowPulse { 0%,100%{box-shadow:0 0 16px rgba(232,0,14,.2)} 50%{box-shadow:0 0 36px rgba(232,0,14,.5),0 0 60px rgba(232,0,14,.15)} }
-@keyframes charBlink    { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-@keyframes scanBand     {
-  0%   { transform: translateY(-100%); opacity: 0.04; }
-  50%  { opacity: 0.04; }
-  100% { transform: translateY(100vh); opacity: 0; }
-}
-@keyframes textFlicker  { 0%,96%,100%{opacity:1} 97%{opacity:.6} 98%{opacity:.9} 99%{opacity:.5} }
+/* ── KEYFRAMES ── */
+@keyframes pulse      { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+@keyframes tka        { to{transform:translateX(-50%)} }
+@keyframes fadeUp     { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+@keyframes fadeIn     { from{opacity:0} to{opacity:1} }
+@keyframes slideIn    { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:none} }
+@keyframes ntfIn      { from{opacity:0;transform:translateX(20px) scale(.94)} to{opacity:1;transform:none} }
+@keyframes shimmer    { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+@keyframes spinR      { to{transform:rotate(360deg)} }
+@keyframes rippleOut  { 0%{transform:scale(0);opacity:.4} 100%{transform:scale(4);opacity:0} }
+@keyframes countUp    { from{transform:translateY(8px);opacity:0} to{transform:none;opacity:1} }
+@keyframes borderFlow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes floatUp    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+@keyframes scanBand   { 0%{transform:translateY(-100%);opacity:.03} 50%{opacity:.03} 100%{transform:translateY(100vh);opacity:0} }
+@keyframes textFlicker{ 0%,96%,100%{opacity:1} 97%{opacity:.6} 98%{opacity:.9} 99%{opacity:.5} }
+@keyframes nev        { 0%{background:rgba(232,53,53,.1);border-radius:6px} 100%{background:transparent} }
 
-/* ── View entrance ── */
-.view.on { animation: fadeUp .35s var(--ease); }
+/* View entrance */
+.view.on { animation: fadeUp .25s ease forwards; }
 
-/* ── Scanline overlay on cards ── */
-.card::after, .sc::after, .miner-card::after {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 120px;
-  background: linear-gradient(180deg, rgba(255,255,255,.012) 0%, transparent 100%);
-  pointer-events: none;
-  animation: scanBand 6s linear infinite;
-}
-
-/* ── Button ripple ── */
+/* Button ripple */
 .btn { position: relative; overflow: hidden; }
 .btn .ripple {
   position: absolute; border-radius: 50%;
-  background: rgba(255,255,255,0.22); pointer-events: none;
-  animation: rippleOut 0.65s ease-out forwards;
+  background: rgba(255,255,255,.2); pointer-events: none;
+  animation: rippleOut .6s ease-out forwards;
   transform-origin: center;
 }
 
-/* ══════════════════════
-   FONT HELPERS
-══════════════════════ */
-.mono  { font-family: 'Space Mono', monospace; }
-.raj   { font-family: 'Bebas Neue', sans-serif; letter-spacing: .05em; }
-.inter { font-family: 'Outfit', sans-serif; }
-.cr { color: var(--red) } .cg { color: var(--gold) } .cgn { color: var(--grn) }
-.cd { color: var(--dim) } .cw { color: var(--white) }
+/* ── FONT HELPERS ── */
+.mono  { font-family: 'DM Mono', monospace; }
+.raj   { font-family: 'Chakra Petch', sans-serif; font-weight: 700; }
+.inter { font-family: 'Barlow', sans-serif; }
+.cr { color: var(--acc) } .cg { color: var(--gld) } .cgn { color: var(--grn) }
+.cd { color: var(--dim) } .cw { color: var(--txt) }
 
-/* ══════════════════════
-   LIVE DOT
-══════════════════════ */
+/* ── LIVE DOT ── */
 .live {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Space Mono', monospace;
-  font-size: var(--t-xs); letter-spacing: .12em; text-transform: uppercase; color: var(--grn);
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: var(--t-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--grn);
 }
 .ld {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--grn); box-shadow: 0 0 8px var(--grn);
-  animation: pulse 2s ease-in-out infinite;
+  background: var(--grn); box-shadow: 0 0 6px var(--grn);
+  animation: pulse 1.8s ease-in-out infinite; flex-shrink: 0;
 }
 
-/* ══════════════════════
-   TICKER BAR
-══════════════════════ */
+/* ── TICKER ── */
 .tkbar {
-  height: 32px; overflow: hidden;
-  display: flex; align-items: center;
-  background: rgba(232,0,14,0.05);
-  border-bottom: 1px solid rgba(232,0,14,0.15);
+  background: var(--sur); border-bottom: 1px solid var(--bor);
+  height: 28px; overflow: hidden; display: flex; align-items: center;
   position: relative; z-index: 20;
 }
 .tkin {
-  display: inline-flex; gap: 60px; white-space: nowrap;
-  font-family: 'Space Mono', monospace;
-  font-size: var(--t-xs); color: var(--dim);
-  animation: tka 50s linear infinite;
+  display: inline-flex; gap: 56px; white-space: nowrap;
+  font-family: 'DM Mono', monospace; font-size: var(--t-xs);
+  color: var(--dim); animation: tka 55s linear infinite; will-change: transform;
 }
-.tks { color: var(--red); margin: 0 4px; opacity: .7; }
-html.light .tkbar { background: rgba(204,0,8,0.04); border-bottom-color: rgba(204,0,8,0.12); }
+.tks { color: var(--acc); margin: 0 3px; opacity: .8; }
+html.light .tkbar { background: var(--sur); }
 
-/* ══════════════════════
-   HEADER — Full rework
-══════════════════════ */
+/* ── HEADER ── */
 header {
   position: sticky; top: 0; z-index: 200;
+  border-bottom: 1px solid var(--bor);
   background: var(--header-bg);
-  backdrop-filter: blur(40px) saturate(2);
-  -webkit-backdrop-filter: blur(40px) saturate(2);
-  border-bottom: 1px solid rgba(232,0,14,0.18);
-  box-shadow: 0 1px 0 rgba(232,0,14,0.06), 0 4px 32px rgba(0,0,0,0.5);
-  padding: 0 1.25rem;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  /* Allow wrapping on mobile so tabs get own row */
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: 0 .9rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 54px; gap: 8px;
 }
-/* Red accent line at top of header */
-header::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--red) 30%, var(--red2) 70%, transparent 100%);
-  animation: borderFlow 4s ease-in-out infinite;
-  background-size: 200% 100%;
-}
-html.light header { box-shadow: 0 1px 0 var(--bor), 0 4px 24px rgba(0,0,0,.07); }
+html.light header { box-shadow: 0 1px 0 var(--bor); }
 
 /* ── LOGO ── */
 .logo {
-  display: flex; align-items: center; gap: 10px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.45rem; letter-spacing: .08em;
-  color: var(--txt); text-decoration: none; flex-shrink: 0;
-  padding: 10px 0;
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 700;
+  font-size: .95rem; letter-spacing: .05em;
+  color: var(--txt); flex-shrink: 0; text-decoration: none;
 }
 .logo-img {
-  width: 36px; height: 36px; border-radius: var(--r-sm);
-  object-fit: cover;
-  border: 1px solid rgba(232,0,14,0.4);
-  box-shadow: 0 0 14px rgba(232,0,14,0.22);
-  transition: box-shadow var(--mid) var(--ease);
-  animation: redGlowPulse 3s ease-in-out infinite;
+  width: 34px; height: 34px; border-radius: 8px; object-fit: cover;
+  flex-shrink: 0; border: 1px solid var(--bor);
+  transition: border-color var(--mid); animation: none;
 }
-.logo:hover .logo-img { box-shadow: var(--glow-red); }
-.logo em { color: var(--red); font-style: normal; }
+.logo:hover .logo-img { border-color: var(--acc); }
+.logo em { color: var(--acc); font-style: normal; }
 .logo-sub {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.6rem; letter-spacing: .16em; color: var(--mut);
-  text-transform: uppercase; display: block; margin-top: 2px;
+  font-family: 'DM Mono', monospace; font-size: 0.52rem;
+  letter-spacing: .14em; color: var(--mut);
+  text-transform: uppercase; display: block; margin-top: 1px;
   animation: textFlicker 7s ease-in-out infinite;
 }
 
-/* ══════════════════════
-   NAV TABS — MOBILE FIRST
-   Full-width pill tab bar below header on mobile
-══════════════════════ */
+/* ── NAV TABS ── */
 .navtabs {
-  /* On mobile: separate row, full width, pill style */
   display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none;
   flex: 1; justify-content: flex-start;
   padding: 0 2px;
   -webkit-overflow-scrolling: touch;
-  /* Mask edges to hint scrollability */
   -webkit-mask-image: linear-gradient(90deg, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
   mask-image: linear-gradient(90deg, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
 }
 .navtabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  padding: 8px 14px; border-radius: 99px;
-  cursor: pointer; color: var(--dim);
-  transition: color var(--fast), background var(--fast), box-shadow var(--fast), transform var(--fast);
+  padding: 5px 9px; border-radius: 6px;
+  cursor: pointer; color: var(--mut);
+  transition: all var(--fast);
   border: 1px solid transparent;
-  font-family: 'Outfit', sans-serif; font-weight: 600;
+  font-family: 'DM Mono', monospace; font-weight: 400;
   font-size: var(--t-xs);
   white-space: nowrap; user-select: none; flex-shrink: 0;
-  letter-spacing: .04em; text-transform: uppercase;
-  position: relative;
+  letter-spacing: .02em;
 }
-.tab:hover {
-  color: var(--txt);
-  background: rgba(232,0,14,0.07);
-  border-color: rgba(232,0,14,0.15);
-  transform: translateY(-1px);
-}
+.tab:hover { color: var(--txt); background: rgba(232,53,53,.07); }
 .tab.on {
-  color: #fff;
-  background: linear-gradient(135deg, rgba(232,0,14,0.85), rgba(200,0,8,0.75));
-  border-color: rgba(232,0,14,0.5);
-  box-shadow: 0 0 18px rgba(232,0,14,0.35), 0 2px 8px rgba(0,0,0,0.4);
-  text-shadow: 0 0 12px rgba(255,100,100,0.6);
+  color: var(--acc);
+  background: rgba(232,53,53,.12);
+  border-color: rgba(232,53,53,.28);
 }
-/* Remove the old ::after underline bar on active tab */
+/* Remove previous pill/glow style */
 .tab.on::after { display: none; }
 
-/* ── Header right ── */
-.hdr-r { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+/* ── HEADER RIGHT ── */
+.hdr-r { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 #uiControls { display: flex; align-items: center; gap: 5px; }
 .ctrl-btn {
   background: transparent;
-  border: 1px solid var(--bor2);
-  border-radius: 99px;
+  border: 1px solid var(--bor);
+  border-radius: 6px;
   color: var(--dim);
-  font-family: 'Outfit', sans-serif; font-weight: 600;
-  font-size: var(--t-xs);
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: all var(--fast) var(--ease);
-  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'DM Mono', monospace; font-size: .6rem;
+  padding: 4px 9px; cursor: pointer;
+  transition: all var(--fast);
+  display: inline-flex; align-items: center; gap: 4px;
   white-space: nowrap; user-select: none;
-  letter-spacing: .03em;
 }
-.ctrl-btn:hover { border-color: var(--bor3); color: var(--txt); background: rgba(255,255,255,.04); }
-.ctrl-btn.active { background: rgba(232,0,14,.1); border-color: rgba(232,0,14,.35); color: var(--red2); }
+.ctrl-btn:hover { border-color: var(--acc); color: var(--acc); }
+.ctrl-btn.active { background: rgba(232,53,53,.1); border-color: rgba(232,53,53,.3); color: var(--acc); }
 #themeBtn .icon-dark  { display: inline; }
 #themeBtn .icon-light { display: none; }
 html.light #themeBtn .icon-dark  { display: none; }
@@ -368,513 +313,398 @@ html.light #themeBtn .icon-light { display: inline; }
 /* Connect wallet badge */
 #connectedBadge {
   display: none; align-items: center; gap: 6px;
-  background: rgba(34,232,122,.06);
-  border: 1px solid rgba(34,232,122,.22);
-  border-radius: 99px;
-  padding: 5px 12px;
+  background: rgba(109,184,122,.06);
+  border: 1px solid rgba(109,184,122,.2);
+  border-radius: 6px; padding: 4px 10px;
 }
 
-/* ══════════════════════
-   MAIN LAYOUT
-══════════════════════ */
+/* ── MAIN ── */
 main {
   position: relative; z-index: 1;
-  padding: 1.5rem 1rem 3rem;
+  padding: .85rem .85rem 3rem;
   max-width: 1440px; margin: 0 auto;
 }
-@media(min-width: 768px)  { main { padding: 1.75rem 1.5rem 3rem; } }
-@media(min-width: 1200px) { main { padding: 2rem 2.25rem 3rem; } }
+@media(min-width: 768px)  { main { padding: 1.1rem 1.1rem 3rem; } }
+@media(min-width: 1200px) { main { padding: 1.25rem 1.5rem 3rem; } }
 
 .view { display: none; }
 .view.on { display: block; }
 
-/* ── Grids ── */
-.g2  { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
-.gsb { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+/* ── GRIDS ── */
+.g2  { display: grid; grid-template-columns: 1fr; gap: .85rem; }
+.gsb { display: grid; grid-template-columns: 1fr; gap: .85rem; }
 @media(min-width: 720px)  { .g2  { grid-template-columns: 1fr 1fr; } }
-@media(min-width: 1024px) { .gsb { grid-template-columns: 1fr 360px; } }
+@media(min-width: 1024px) { .gsb { grid-template-columns: 1fr 320px; } }
 
-/* ── Section header ── */
+/* ── SECTION HEADER ── */
 .sh {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 1.5rem; gap: 10px;
-  padding-bottom: .75rem;
-  border-bottom: 1px solid rgba(232,0,14,0.1);
+  margin-bottom: .85rem; gap: 8px;
 }
 .sh-t {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: var(--t-3xl); letter-spacing: .08em;
-  color: var(--txt);
-  display: flex; align-items: center; gap: 12px;
-  line-height: 1;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600;
+  font-size: var(--t-xs); text-transform: uppercase; letter-spacing: .1em;
+  color: var(--dim); display: flex; align-items: center; gap: 8px;
 }
 .sh-t::before {
   content: '';
-  width: 4px; height: 28px;
-  background: linear-gradient(180deg, var(--red2) 0%, var(--red3) 100%);
-  border-radius: 2px;
+  width: 14px; height: 1px;
+  background: var(--acc);
   display: inline-block; flex-shrink: 0;
-  box-shadow: 0 0 10px rgba(232,0,14,0.5);
-  animation: redGlowPulse 3s ease-in-out infinite;
+  /* No glow on this — matches reference */
 }
 
-/* ══════════════════════
-   CARD SYSTEM
-══════════════════════ */
+/* ── CARD SYSTEM ── */
+/* Main .card → becomes .panel style from reference */
 .card {
   background: var(--card);
   border: 1px solid var(--bor);
-  border-radius: var(--r-lg);
+  border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 1.25rem;
+  margin-bottom: .85rem;
   position: relative;
-  transition: border-color var(--mid) var(--ease), box-shadow var(--mid) var(--ease), transform var(--mid) var(--ease);
+  transition: border-color var(--mid), box-shadow var(--mid), transform var(--mid);
 }
 .card::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(232,0,14,.35), transparent);
-  opacity: 0;
-  transition: opacity var(--mid);
+  background: linear-gradient(90deg, transparent, var(--acc), transparent);
+  opacity: 0; transition: opacity var(--mid);
 }
-.card:hover {
-  border-color: rgba(232,0,14,.22);
-  box-shadow: 0 6px 32px rgba(0,0,0,.45), 0 0 0 1px rgba(232,0,14,.05) inset;
-  transform: translateY(-2px);
-}
+.card:hover { border-color: rgba(232,53,53,.22); }
 .card:hover::before { opacity: 1; }
-html.light .card {
-  background: var(--card);
-  box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.04);
-  border-color: var(--bor);
-}
+/* Suppress scanline on card — cleaner look like reference */
+.card::after { display: none; }
+.sc::after   { display: none; }
+.miner-card::after { display: none; }
+html.light .card { box-shadow: 0 1px 4px rgba(0,0,0,.06); border-color: var(--bor); }
 
-/* Card header */
+/* Card header .ch */
 .ch {
-  padding: 1rem 1.25rem;
+  padding: .7rem .95rem;
   border-bottom: 1px solid var(--bor);
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  background: rgba(232,0,14,0.025);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: transparent;
 }
-html.light .ch { background: rgba(0,0,0,.015); }
-
 .ctitle {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.1rem; letter-spacing: .1em; text-transform: uppercase;
-  display: flex; align-items: center; gap: 8px; color: var(--txt2);
+  font-family: 'Chakra Petch', sans-serif; font-size: var(--t-xs);
+  font-weight: 600; text-transform: uppercase; letter-spacing: .07em;
+  display: flex; align-items: center; gap: 6px; color: var(--dim);
 }
 
 /* Card body */
-.cbody { padding: 1.25rem; }
+.cbody { padding: .95rem; }
 
-/* ── Stat cards (.sc) ── */
-.sg {
-  display: grid; grid-template-columns: repeat(2,1fr); gap: .875rem; margin-bottom: 1.5rem;
-}
+/* ── STAT CARDS ── */
+.sg { display: grid; grid-template-columns: repeat(2,1fr); gap: .55rem; margin-bottom: .85rem; }
 @media(min-width: 460px) { .sg { grid-template-columns: repeat(3,1fr); } }
 @media(min-width: 900px) { .sg { grid-template-columns: repeat(6,1fr); } }
 
 .sc {
   background: var(--card);
   border: 1px solid var(--bor);
-  border-radius: var(--r-md);
-  padding: 1.1rem 1rem;
-  position: relative; overflow: hidden;
-  transition: transform var(--mid) var(--ease), border-color var(--mid), box-shadow var(--mid);
+  border-radius: 10px; padding: .8rem;
+  transition: border-color var(--mid); position: relative; overflow: hidden;
   cursor: default;
 }
-/* Animated bottom glow bar on stat cards */
+.sc:hover { border-color: rgba(232,53,53,.22); }
+/* Subtle top line on hover */
 .sc::before {
   content: '';
-  position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--acc), transparent);
   opacity: 0; transition: opacity var(--mid);
 }
-.sc:hover {
-  transform: translateY(-3px);
-  border-color: rgba(232,0,14,.25);
-  box-shadow: 0 8px 28px rgba(0,0,0,.3), 0 0 24px rgba(232,0,14,.08);
-}
 .sc:hover::before { opacity: 1; }
-html.light .sc { background: var(--sur); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+html.light .sc { background: var(--sur); }
 
 .sl {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.6rem; color: var(--mut);
-  text-transform: uppercase; letter-spacing: .14em; margin-bottom: .5rem;
+  font-family: 'DM Mono', monospace; font-size: .53rem;
+  color: var(--mut); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .28rem;
 }
 .sv {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: var(--t-2xl); line-height: 1; color: var(--txt);
-  letter-spacing: .03em;
+  font-family: 'Chakra Petch', sans-serif; font-size: var(--t-xl);
+  font-weight: 700; line-height: 1; transition: color .3s;
   animation: countUp .4s var(--ease);
 }
 .ss {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.6rem; color: var(--mut); margin-top: 5px;
+  font-family: 'DM Mono', monospace; font-size: .53rem; color: var(--mut); margin-top: 2px;
 }
 
-/* ══════════════════════
-   BUTTONS
-══════════════════════ */
+/* ── BUTTONS ── */
 .btn {
-  padding: .55rem 1.15rem;
-  background: linear-gradient(135deg, var(--red), var(--red3));
-  border: none;
-  border-radius: 99px;
-  color: #fff;
-  font-family: 'Outfit', sans-serif; font-weight: 700;
-  font-size: var(--t-xs); letter-spacing: .06em;
-  cursor: pointer;
-  transition: transform var(--fast) var(--ease), box-shadow var(--fast), filter var(--fast);
-  text-transform: uppercase;
-  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-  position: relative; overflow: hidden;
-  user-select: none;
+  padding: .58rem 1.05rem;
+  background: var(--acc); color: #141210;
+  border: none; border-radius: 8px;
+  font-family: 'Chakra Petch', sans-serif; font-size: var(--t-xs);
+  font-weight: 700; cursor: pointer;
+  transition: all var(--fast); white-space: nowrap; letter-spacing: .03em;
+  display: inline-flex; align-items: center; gap: 5px;
+  user-select: none; position: relative; overflow: hidden;
 }
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--glow-red);
-  filter: brightness(1.1);
-}
-.btn:active { transform: translateY(0) scale(.97); box-shadow: none; filter: brightness(.9); }
-.btn:disabled { opacity: .32; cursor: not-allowed; transform: none; box-shadow: none; filter: none; }
+.btn:hover { background: var(--acc2); transform: translateY(-1px); }
+.btn:active { transform: translateY(0) scale(.98); }
+.btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
 
 .btn-g {
-  background: transparent;
-  border: 1px solid var(--bor2);
-  color: var(--dim); box-shadow: none;
+  background: transparent; color: var(--acc);
+  border: 1px solid rgba(232,53,53,.28); box-shadow: none;
 }
-.btn-g:hover {
-  border-color: rgba(232,0,14,.4); color: var(--txt);
-  background: rgba(232,0,14,.06);
-  box-shadow: none; filter: none;
-}
-.btn-sm { padding: 5px 13px; font-size: var(--t-xs); }
+.btn-g:hover { background: rgba(232,53,53,.08); transform: none; }
+.btn-sm { padding: .28rem .65rem; font-size: var(--t-xs); }
 
 .btn-gold {
-  background: linear-gradient(135deg, var(--gold), var(--gold2));
-  color: #0a0908;
+  background: var(--gld); color: #141210;
 }
-.btn-gold:hover { box-shadow: var(--glow-gold); }
+.btn-gold:hover { filter: brightness(1.1); }
 
 .btn-green {
-  background: linear-gradient(135deg, var(--grn), var(--grn2));
-  color: #050a0a;
+  background: var(--grn); color: #141210;
 }
-.btn-green:hover { box-shadow: var(--glow-grn); }
+.btn-green:hover { filter: brightness(1.1); }
 
 #connectBtn {
-  background: linear-gradient(135deg, rgba(232,0,14,.18), rgba(200,0,8,.1));
-  border: 1px solid rgba(232,0,14,.35);
-  color: var(--red2);
-  border-radius: 99px;
+  background: rgba(232,53,53,.1);
+  border: 1px solid rgba(232,53,53,.3);
+  color: var(--acc);
 }
 #connectBtn:hover {
-  background: linear-gradient(135deg, rgba(232,0,14,.28), rgba(200,0,8,.16));
-  border-color: rgba(232,0,14,.6);
-  box-shadow: 0 0 24px rgba(232,0,14,.2);
+  background: rgba(232,53,53,.18);
+  border-color: rgba(232,53,53,.5);
 }
 
-/* ══════════════════════
-   INPUTS & SELECTS
-══════════════════════ */
+/* ── INPUTS ── */
 .inp {
-  background: rgba(255,255,255,.035);
-  border: 1px solid var(--bor);
-  border-radius: var(--r-md);
-  padding: .65rem 1rem;
-  color: var(--txt);
-  font-family: 'Outfit', sans-serif; font-weight: 400;
-  font-size: var(--t-base);
-  outline: none; width: 100%;
-  transition: border-color var(--fast), background var(--fast), box-shadow var(--fast);
+  padding: .52rem .75rem;
+  background: var(--sur); border: 1px solid var(--bor);
+  border-radius: 8px; color: var(--txt);
+  font-family: 'DM Mono', monospace; font-size: var(--t-base);
+  outline: none; transition: border-color var(--fast); width: 100%;
 }
-.inp:focus {
-  border-color: rgba(232,0,14,.5);
-  background: rgba(232,0,14,.03);
-  box-shadow: 0 0 0 3px rgba(232,0,14,.08);
-}
+.inp:focus { border-color: var(--acc); }
 .inp::placeholder { color: var(--mut); }
-html.light .inp { background: rgba(0,0,0,.03); }
-html.light .inp:focus { background: rgba(204,0,8,.025); }
+html.light .inp { background: var(--sur); }
 
-/* ══════════════════════
-   TABLES
-══════════════════════ */
+/* ── TABLES ── */
 .tbl { width: 100%; border-collapse: collapse; }
 .tbl th {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.6rem; text-transform: uppercase; letter-spacing: .12em;
-  color: var(--mut); padding: .8rem 1rem; text-align: left;
-  border-bottom: 1px solid var(--bor);
-  background: rgba(232,0,14,.02);
+  font-family: 'DM Mono', monospace; font-size: .52rem;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--mut); padding: .48rem .75rem;
+  text-align: left; border-bottom: 1px solid var(--bor); white-space: nowrap;
 }
 .tbl td {
-  padding: .8rem 1rem;
-  font-size: var(--t-base);
-  border-bottom: 1px solid rgba(28,30,44,.6);
-  vertical-align: middle;
-  color: var(--txt2);
-  transition: background var(--fast), color var(--fast);
-  font-family: 'Outfit', sans-serif;
+  padding: .55rem .75rem; font-size: var(--t-base);
+  border-bottom: 1px solid rgba(51,46,40,.35); vertical-align: middle;
+  font-family: 'Barlow', sans-serif; color: var(--txt2);
 }
 .tbl tr:last-child td { border-bottom: none; }
-.tbl tbody tr { transition: background var(--fast); }
-.tbl tbody tr:hover td { background: rgba(232,0,14,.04); color: var(--txt); }
+.tbl tbody tr:hover td { background: rgba(232,53,53,.03); color: var(--txt); }
 .tw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .tw::-webkit-scrollbar { height: 2px; }
+.tw::-webkit-scrollbar-thumb { background: var(--bor); border-radius: 99px; }
 
-/* ── Spinner ── */
+/* ── SPINNER ── */
 .spin {
-  display: inline-block; width: 14px; height: 14px;
-  border: 2px solid rgba(232,0,14,.15);
-  border-top-color: var(--red);
-  border-radius: 50%;
-  animation: spinR .7s linear infinite;
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid var(--bor); border-top-color: var(--acc);
+  border-radius: 50%; animation: spinR .7s linear infinite;
   vertical-align: middle; margin-right: 5px; flex-shrink: 0;
 }
 
-/* ── Bar chart ── */
-.bw  { display: flex; align-items: center; gap: 9px; }
-.bt  { flex: 1; background: var(--bor); border-radius: 99px; height: 5px; overflow: hidden; }
-.bf  { height: 100%; background: linear-gradient(90deg, var(--red3), var(--red2)); border-radius: 99px; transition: width .8s var(--ease); }
-.bv  { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-md); min-width: 80px; text-align: right; color: var(--txt); letter-spacing: .03em; }
+/* ── BAR CHART ── */
+.bw { display: flex; align-items: center; gap: 6px; }
+.bt { flex: 1; background: var(--bor); border-radius: 99px; height: 3px; overflow: hidden; min-width: 28px; }
+.bf { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--acc), var(--acc2)); transition: width .8s var(--ease); }
+.bv { font-family: 'DM Mono', monospace; font-size: var(--t-sm); min-width: 42px; text-align: right; white-space: nowrap; color: var(--txt); }
 
-/* ── Calc rows ── */
+/* ── CALC ROWS ── */
 .calc-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: .55rem 0;
-  border-bottom: 1px solid rgba(28,30,44,.5);
-  gap: 8px;
+  padding: 3px 0; border-bottom: 1px solid rgba(51,46,40,.35); gap: 8px;
 }
 .calc-row:last-child { border-bottom: none; }
-.calc-lbl { font-family: 'Outfit', sans-serif; font-weight: 500; font-size: var(--t-sm); color: var(--dim); }
-.calc-val  { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-md); color: var(--txt); text-align: right; letter-spacing: .03em; }
+.calc-lbl { font-family: 'DM Mono', monospace; font-size: .57rem; color: var(--mut); }
+.calc-val  { font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: var(--t-base); color: var(--txt); text-align: right; }
 
-/* ── Pool bars ── */
-.pool-bar-wrap { background: var(--bor); border-radius: 99px; height: 7px; overflow: hidden; margin: .5rem 0; }
-.pool-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--red3), var(--red2)); transition: width .8s var(--ease); }
+/* ── POOL BAR ── */
+.pool-bar-wrap { background: var(--bor); border-radius: 99px; height: 4px; overflow: hidden; margin: .4rem 0; }
+.pool-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--acc), var(--acc2)); transition: width .8s var(--ease); }
 
-/* ══════════════════════
-   NOTIFICATIONS
-══════════════════════ */
+/* ── NOTIFICATIONS ── */
 #notif {
-  position: fixed; top: 72px; right: 16px; z-index: 9999;
-  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  position: fixed; top: 66px; right: 14px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 6px; pointer-events: none;
 }
 .ntf {
-  background: rgba(15,16,24,.96);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--bor2);
-  border-radius: var(--r-md);
-  padding: .8rem 1.1rem;
-  font-family: 'Outfit', sans-serif; font-weight: 500;
-  font-size: var(--t-sm); color: var(--txt); pointer-events: auto;
-  animation: ntfIn .25s var(--ease);
-  max-width: 300px; line-height: 1.55;
-  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  background: rgba(33,30,26,.97); backdrop-filter: blur(16px);
+  border: 1px solid var(--bor2); border-radius: 8px;
+  padding: .6rem .9rem;
+  font-family: 'DM Mono', monospace; font-size: var(--t-sm);
+  color: var(--txt); pointer-events: auto;
+  animation: ntfIn .2s ease;
+  max-width: 300px; line-height: 1.5;
+  box-shadow: 0 6px 24px rgba(0,0,0,.4);
 }
-.ntf.success { border-color: rgba(34,232,122,.4); background: rgba(34,232,122,.07); color: var(--grn2); }
-.ntf.error   { border-color: rgba(232,0,14,.4); background: rgba(232,0,14,.07); color: var(--red2); }
-.ntf.warn    { border-color: rgba(240,165,0,.4); background: rgba(240,165,0,.07); color: var(--gold2); }
+.ntf.success { border-color: rgba(109,184,122,.38); background: rgba(109,184,122,.08); color: var(--grn); }
+.ntf.error   { border-color: rgba(232,53,53,.38);  background: rgba(232,53,53,.08);  color: var(--acc2); }
+.ntf.warn    { border-color: rgba(212,168,67,.38); background: rgba(212,168,67,.08); color: var(--gld); }
 
-/* ══════════════════════
-   INNER NAV TABS (ptabs / liq-tabs)
-══════════════════════ */
+/* ── INNER TABS (ptabs / liq-tabs) ── */
 .ptabs, .liq-tabs {
   display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
-  background: rgba(5,5,7,0.6);
-  border: 1px solid var(--bor);
-  border-radius: 99px;
-  padding: 4px;
-  margin-bottom: 1.25rem;
-  -webkit-overflow-scrolling: touch;
+  background: var(--sur); border: 1px solid var(--bor);
+  border-radius: 9px; padding: 3px;
+  margin-bottom: .85rem; -webkit-overflow-scrolling: touch;
 }
 .ptabs::-webkit-scrollbar, .liq-tabs::-webkit-scrollbar { display: none; }
 
 .ptab, .liq-tab {
-  flex-shrink: 0;
-  padding: 7px 16px; border-radius: 99px;
+  flex-shrink: 0; padding: 5px 13px; border-radius: 7px;
   background: transparent; border: none;
-  color: var(--dim);
-  font-family: 'Outfit', sans-serif; font-weight: 600;
-  font-size: var(--t-xs);
-  cursor: pointer;
-  transition: color var(--fast), background var(--fast), box-shadow var(--fast);
-  white-space: nowrap;
-  display: flex; align-items: center; gap: 5px; justify-content: center;
-  user-select: none; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--mut);
+  font-family: 'DM Mono', monospace; font-size: var(--t-xs);
+  cursor: pointer; transition: all var(--fast); white-space: nowrap;
+  display: flex; align-items: center; gap: 4px; justify-content: center;
+  user-select: none; letter-spacing: .03em;
 }
-.ptab:hover, .liq-tab:hover { color: var(--txt); background: rgba(255,255,255,.04); }
+.ptab:hover, .liq-tab:hover { color: var(--txt); }
 .ptab.on, .liq-tab.active {
-  background: linear-gradient(135deg, rgba(232,0,14,.8), rgba(190,0,8,.7));
-  color: #fff;
-  box-shadow: 0 0 16px rgba(232,0,14,.3);
+  background: rgba(232,53,53,.1); color: var(--acc);
+  border: 1px solid rgba(232,53,53,.28);
 }
-.liq-tab-gold.active { background: rgba(240,165,0,.15); color: var(--gold); box-shadow: 0 0 12px rgba(240,165,0,.2); }
-.liq-tab-green.active { background: rgba(34,232,122,.12); color: var(--grn); box-shadow: 0 0 12px rgba(34,232,122,.2); }
+.liq-tab-gold.active { background: rgba(212,168,67,.1); color: var(--gld); border: 1px solid rgba(212,168,67,.28); }
+.liq-tab-green.active { background: rgba(109,184,122,.1); color: var(--grn); border: 1px solid rgba(109,184,122,.28); }
 .pane { display: none; } .pane.on { display: block; }
 .liq-pane { display: none; } .liq-pane.active { display: block; }
 
-/* ══════════════════════
-   LIQUIDITY PANE
-══════════════════════ */
+/* ── LIQUIDITY PANE ── */
 .liq-pane-inner {
-  background: var(--card);
-  border: 1px solid var(--bor);
-  border-radius: var(--r-lg);
-  padding: 1.5rem;
-  margin-bottom: 0;
+  background: var(--card); border: 1px solid var(--bor);
+  border-radius: 12px; padding: 1.1rem; margin-bottom: 0;
 }
 html.light .liq-pane-inner { background: var(--sur); }
 
 .liq-step-label {
-  font-size: var(--t-sm); color: var(--dim); line-height: 1.7;
-  margin-bottom: 1.1rem; padding-bottom: .8rem;
-  border-bottom: 1px solid var(--bor);
-  font-family: 'Space Mono', monospace;
+  font-family: 'DM Mono', monospace; font-size: var(--t-xs); color: var(--dim); line-height: 1.65;
+  margin-bottom: .9rem; padding-bottom: .7rem; border-bottom: 1px solid var(--bor);
 }
 .liq-token-row {
-  display: flex; align-items: center; gap: 12px;
-  background: rgba(255,255,255,.025);
-  border: 1px solid var(--bor);
-  border-radius: var(--r-md);
-  padding: .9rem 1rem; margin-bottom: .65rem;
-  transition: border-color var(--fast), background var(--fast);
+  display: flex; align-items: center; gap: 10px;
+  background: var(--sur); border: 1px solid var(--bor);
+  border-radius: 9px; padding: .75rem .9rem; margin-bottom: .5rem;
+  transition: border-color var(--fast);
 }
-.liq-token-row:focus-within {
-  border-color: rgba(232,0,14,.4);
-  background: rgba(232,0,14,.02);
-}
-html.light .liq-token-row { background: rgba(0,0,0,.03); }
+.liq-token-row:focus-within { border-color: rgba(232,53,53,.4); }
+html.light .liq-token-row { background: rgba(0,0,0,.02); }
 
 .liq-token-icon {
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; background: rgba(255,255,255,.05);
-  border: 1px solid var(--bor); overflow: hidden;
+  font-size: 1.2rem; background: var(--bor); border: 1px solid var(--bor); overflow: hidden;
 }
 .liq-token-info { flex: 1; min-width: 0; }
-.liq-token-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; color: var(--txt); letter-spacing: .05em; }
-.liq-token-bal  { font-family: 'Space Mono', monospace; font-size: var(--t-xs); color: var(--mut); margin-top: 2px; }
-.liq-token-input-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.liq-token-name { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: var(--t-md); color: var(--txt); }
+.liq-token-bal  { font-family: 'DM Mono', monospace; font-size: var(--t-xs); color: var(--mut); margin-top: 2px; }
+.liq-token-input-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .liq-input {
   background: transparent; border: none; outline: none;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: var(--t-2xl); letter-spacing: .03em; color: var(--txt);
-  text-align: right; width: 130px; padding: 0;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 700;
+  font-size: var(--t-2xl); color: var(--txt);
+  text-align: right; width: 110px; padding: 0;
 }
-@media(max-width: 380px) { .liq-input { width: 90px; font-size: var(--t-xl); } }
+@media(max-width: 380px) { .liq-input { width: 85px; font-size: var(--t-xl); } }
 .liq-max-btn {
-  padding: 4px 10px;
-  background: rgba(232,0,14,.08); border: 1px solid rgba(232,0,14,.22);
-  border-radius: 99px; color: var(--red);
-  font-family: 'Outfit', sans-serif; font-weight: 700;
+  padding: 3px 8px;
+  background: rgba(232,53,53,.08); border: 1px solid rgba(232,53,53,.22);
+  border-radius: 5px; color: var(--acc);
+  font-family: 'DM Mono', monospace; font-weight: 500;
   font-size: var(--t-xs); cursor: pointer;
   transition: all var(--fast); white-space: nowrap;
-  letter-spacing: .06em; text-transform: uppercase;
 }
-.liq-max-btn:hover { background: rgba(232,0,14,.18); border-color: rgba(232,0,14,.4); }
+.liq-max-btn:hover { background: rgba(232,53,53,.16); border-color: rgba(232,53,53,.4); }
 
-.liq-plus-divider { text-align: center; color: var(--mut); font-size: 1.5rem; margin: .1rem 0; line-height: 1; }
-.liq-preview { font-family: 'Space Mono', monospace; font-size: var(--t-sm); color: var(--gold); min-height: 1.4em; padding: .3rem 0; margin: .2rem 0; }
-.liq-slip-row { display: flex; align-items: center; gap: 5px; margin: .65rem 0; flex-wrap: wrap; }
+.liq-plus-divider { text-align: center; color: var(--mut); font-size: 1.3rem; margin: .1rem 0; line-height: 1; }
+.liq-preview { font-family: 'DM Mono', monospace; font-size: var(--t-xs); color: var(--gld); min-height: 1.3em; padding: .25rem 0; }
+.liq-slip-row { display: flex; align-items: center; gap: 4px; margin: .55rem 0; flex-wrap: wrap; }
 .slip-btn {
-  padding: 4px 11px;
-  background: transparent; border: 1px solid var(--bor);
-  border-radius: 99px; color: var(--dim);
-  font-family: 'Outfit', sans-serif; font-weight: 700;
-  font-size: var(--t-xs); cursor: pointer; transition: all var(--fast);
-  letter-spacing: .04em;
+  padding: 3px 9px; background: transparent; border: 1px solid var(--bor);
+  border-radius: 5px; color: var(--mut);
+  font-family: 'DM Mono', monospace; font-size: var(--t-xs); cursor: pointer; transition: all var(--fast);
 }
-.slip-btn:hover { border-color: var(--bor3); color: var(--txt); }
-.slip-btn.active { background: rgba(232,0,14,.1); border-color: rgba(232,0,14,.35); color: var(--red2); }
-.liq-action-btn { width: 100%; padding: .85rem; margin-top: .65rem; font-size: var(--t-base); border-radius: var(--r-md); }
-.liq-status { font-family: 'Space Mono', monospace; font-size: var(--t-xs); color: var(--mut); text-align: center; margin-top: .5rem; min-height: 1.2em; line-height: 1.65; }
-.liq-note { font-size: var(--t-xs); color: var(--mut); line-height: 1.65; margin-top: .75rem; padding-top: .65rem; border-top: 1px solid var(--bor); font-family: 'Space Mono', monospace; }
-.liq-info-strip { display: flex; gap: 1rem; flex-wrap: wrap; background: rgba(255,255,255,.02); border: 1px solid var(--bor); border-radius: var(--r-sm); padding: .65rem .95rem; }
-.liq-swap-dir-row { display: flex; gap: 7px; margin-bottom: .65rem; }
+.slip-btn:hover { border-color: var(--bor2); color: var(--txt); }
+.slip-btn.active { background: rgba(232,53,53,.1); border-color: rgba(232,53,53,.3); color: var(--acc); }
+.liq-action-btn { width: 100%; padding: .75rem; margin-top: .55rem; font-size: var(--t-base); border-radius: var(--r-md); }
+.liq-status { font-family: 'DM Mono', monospace; font-size: var(--t-xs); color: var(--mut); text-align: center; margin-top: .4rem; min-height: 1.2em; line-height: 1.5; }
+.liq-note { font-family: 'DM Mono', monospace; font-size: var(--t-xs); color: var(--mut); line-height: 1.6; margin-top: .6rem; padding-top: .55rem; border-top: 1px solid var(--bor); }
+.liq-info-strip { display: flex; gap: .85rem; flex-wrap: wrap; background: var(--sur); border: 1px solid var(--bor); border-radius: 6px; padding: .5rem .8rem; }
+.liq-swap-dir-row { display: flex; gap: 6px; margin-bottom: .55rem; }
 .liq-dir-btn {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: .75rem; background: rgba(255,255,255,.025);
-  border: 1px solid var(--bor); border-radius: var(--r-md);
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: .65rem; background: var(--sur); border: 1px solid var(--bor); border-radius: 9px;
   cursor: pointer; transition: all var(--fast);
-  font-family: 'Outfit', sans-serif; font-weight: 600;
-  font-size: var(--t-xs); color: var(--dim);
+  font-family: 'DM Mono', monospace; font-size: var(--t-xs); color: var(--mut);
 }
-.liq-dir-btn.active { background: rgba(232,0,14,.08); border-color: rgba(232,0,14,.35); color: var(--txt); }
-.liq-dir-btn:hover:not(.active) { border-color: var(--bor2); color: var(--txt); background: rgba(255,255,255,.04); }
-.liq-dir-arrow { color: var(--mut); font-size: 1.1rem; }
+.liq-dir-btn.active { background: rgba(232,53,53,.08); border-color: rgba(232,53,53,.3); color: var(--txt); }
+.liq-dir-btn:hover:not(.active) { border-color: var(--bor2); color: var(--txt); }
+.liq-dir-arrow { color: var(--mut); font-size: 1rem; }
 .liq-dex-link {
-  display: flex; align-items: center; gap: 10px;
-  flex: 1; min-width: 130px;
-  background: rgba(255,255,255,.025); border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: .7rem 1rem;
+  display: flex; align-items: center; gap: 9px;
+  flex: 1; min-width: 120px;
+  background: var(--sur); border: 1px solid var(--bor);
+  border-radius: 9px; padding: .6rem .85rem;
   transition: border-color var(--mid), transform var(--fast);
   color: var(--txt); text-decoration: none;
 }
-.liq-dex-link:hover { border-color: rgba(232,0,14,.25); transform: translateY(-2px); }
+.liq-dex-link:hover { border-color: rgba(232,53,53,.25); transform: translateY(-1px); }
 
-/* ══════════════════════
-   RANK BADGES
-══════════════════════ */
+/* ── RANK BADGES ── */
 .rk {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: var(--r-sm);
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: var(--t-md); background: var(--sur); letter-spacing: .03em;
+  font-family: 'DM Mono', monospace; font-size: .62rem; font-weight: 700;
+  width: 22px; height: 22px; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.r1 { background: rgba(240,165,0,.15); color: var(--gold); box-shadow: 0 0 10px rgba(240,165,0,.18); }
-.r2 { background: rgba(200,200,200,.1); color: #ccc; }
-.r3 { background: rgba(180,100,50,.1); color: #cd7f32; }
-.rn { color: var(--mut); }
+.r1 { background: rgba(212,168,67,.14); color: var(--gld); border: 1px solid rgba(212,168,67,.28); }
+.r2 { background: rgba(160,160,170,.08); color: #9aa0a8; border: 1px solid rgba(160,160,170,.18); }
+.r3 { background: rgba(140,90,60,.1); color: #a07050; border: 1px solid rgba(140,90,60,.22); }
+.rn { background: rgba(107,95,84,.08); color: var(--mut); border: 1px solid var(--bor); }
 
-/* ══════════════════════
-   SIGNAL CARDS
-══════════════════════ */
+/* ── SIGNAL CARDS ── */
 .sig {
-  display: flex; gap: 14px;
-  background: var(--card);
-  border: 1px solid var(--bor);
-  border-left: 3px solid var(--red);
-  border-radius: var(--r-md); padding: 1rem 1.1rem;
-  margin-bottom: .75rem;
-  transition: border-color var(--mid), transform var(--mid), box-shadow var(--mid);
+  display: flex; gap: 12px;
+  background: var(--card); border: 1px solid var(--bor);
+  border-radius: 11px; padding: .9rem;
+  margin-bottom: .6rem;
+  transition: border-color var(--mid), transform var(--mid);
 }
-.sig:hover { border-color: rgba(232,0,14,.4); transform: translateX(3px); box-shadow: 0 4px 20px rgba(0,0,0,.25); }
-.sig-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; animation: floatUp 4s ease-in-out infinite; }
-.sig-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: .06em; margin-bottom: 5px; }
-.sig-desc { font-family: 'Outfit', sans-serif; font-size: var(--t-xs); color: var(--dim); line-height: 1.65; }
+.sig:hover { border-color: rgba(232,53,53,.22); transform: translateX(2px); }
+.sig-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+.sig-title { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: var(--t-md); margin-bottom: 3px; }
+.sig-desc { font-family: 'Barlow', sans-serif; font-size: var(--t-xs); color: var(--dim); line-height: 1.6; }
 
-/* ══════════════════════
-   MINER CARDS
-══════════════════════ */
+/* ── MINER CARDS ── */
 .miner-grid {
-  display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; margin-bottom: 1.25rem;
+  display: grid; grid-template-columns: repeat(2,1fr); gap: .65rem; margin-bottom: .9rem;
 }
 @media(min-width: 600px)  { .miner-grid { grid-template-columns: repeat(3,1fr); } }
 @media(min-width: 900px)  { .miner-grid { grid-template-columns: repeat(4,1fr); } }
 @media(min-width: 1200px) { .miner-grid { grid-template-columns: repeat(5,1fr); } }
 
 .miner-card {
-  background: var(--card);
-  border: 1px solid var(--bor);
-  border-radius: var(--r-md); overflow: hidden; cursor: pointer;
-  transition: transform var(--mid) var(--ease), border-color var(--mid), box-shadow var(--mid);
+  background: var(--card); border: 1px solid var(--bor);
+  border-radius: 12px; overflow: hidden; cursor: pointer;
+  transition: transform var(--mid), border-color var(--mid), box-shadow var(--mid);
   position: relative;
 }
 .miner-card::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 55%, rgba(232,0,14,.1));
-  pointer-events: none; opacity: 0;
-  transition: opacity var(--mid);
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(232,53,53,.08));
+  pointer-events: none; opacity: 0; transition: opacity var(--mid);
 }
 .miner-card:hover {
-  border-color: rgba(232,0,14,.35);
-  transform: translateY(-5px);
-  box-shadow: 0 14px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(232,0,14,.12), 0 0 30px rgba(232,0,14,.06);
+  border-color: rgba(232,53,53,.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
 }
 .miner-card:hover::before { opacity: 1; }
 html.light .miner-card { background: var(--sur); }
@@ -882,430 +712,216 @@ html.light .miner-card { background: var(--sur); }
 .miner-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
 .miner-img-fb {
   width: 100%; aspect-ratio: 1;
-  background: linear-gradient(135deg, rgba(232,0,14,.07), rgba(240,165,0,.04));
-  display: flex; align-items: center; justify-content: center; font-size: 3rem;
+  background: linear-gradient(135deg, rgba(232,53,53,.06), rgba(212,168,67,.04));
+  display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
 }
-.miner-info { padding: .85rem; }
-.miner-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: .05em; margin-bottom: .45rem; color: var(--txt); }
-.miner-stat { display: flex; justify-content: space-between; align-items: center; padding: .2rem 0; }
-.miner-stat-k { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--mut); text-transform: uppercase; letter-spacing: .1em; }
-.miner-stat-v { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-sm); color: var(--txt2); letter-spacing: .03em; }
+.miner-info { padding: .65rem .75rem; }
+.miner-name { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: var(--t-sm); margin-bottom: .35rem; color: var(--txt); }
+.miner-stat { display: flex; justify-content: space-between; align-items: center; padding: .15rem 0; }
+.miner-stat-k { font-family: 'DM Mono', monospace; font-size: .5rem; color: var(--mut); text-transform: uppercase; letter-spacing: .08em; }
+.miner-stat-v { font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: var(--t-xs); color: var(--txt2); }
 
-/* ══════════════════════
-   DURATION GRID
-══════════════════════ */
-.dur-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: .45rem; margin-bottom: .85rem; }
+/* ── DURATION GRID ── */
+.dur-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: .4rem; margin-bottom: .75rem; }
 .dur-btn {
-  background: rgba(255,255,255,.02);
-  border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: .55rem .4rem;
+  background: var(--sur); border: 1px solid var(--bor);
+  border-radius: 7px; padding: .45rem .35rem;
   cursor: pointer; text-align: center;
-  transition: all var(--fast) var(--ease); user-select: none;
+  transition: all var(--fast); user-select: none;
 }
-.dur-btn:hover { border-color: var(--bor2); background: rgba(255,255,255,.04); transform: translateY(-1px); }
-.dur-btn.active {
-  background: rgba(240,165,0,.1); border-color: rgba(240,165,0,.4);
-  box-shadow: 0 0 14px rgba(240,165,0,.14);
-}
-.dur-days { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-md); color: var(--txt2); letter-spacing: .04em; }
-.dur-mult { font-family: 'Space Mono', monospace; font-size: var(--t-xs); color: var(--gold); margin-top: 2px; }
-.dur-btn.active .dur-days { color: var(--gold); }
+.dur-btn:hover { border-color: var(--bor2); background: var(--card); }
+.dur-btn.active { background: rgba(212,168,67,.1); border-color: rgba(212,168,67,.35); }
+.dur-days { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: var(--t-sm); color: var(--txt2); }
+.dur-mult { font-family: 'DM Mono', monospace; font-size: var(--t-xs); color: var(--gld); margin-top: 1px; }
+.dur-btn.active .dur-days { color: var(--gld); }
 
-/* ── Lock row ── */
+/* Lock row */
 .lock-row {
-  background: rgba(255,255,255,.02);
-  border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: .95rem;
-  margin-bottom: .7rem;
+  background: var(--sur); border: 1px solid var(--bor);
+  border-radius: 9px; padding: .8rem; margin-bottom: .55rem;
   transition: border-color var(--mid);
 }
 .lock-row:hover { border-color: var(--bor2); }
-.lock-prog { background: var(--bor); border-radius: 99px; height: 4px; overflow: hidden; margin: .4rem 0; }
+.lock-prog { background: var(--bor); border-radius: 99px; height: 3px; overflow: hidden; margin: .35rem 0; }
 .lock-prog-fill { height: 100%; border-radius: 99px; transition: width .8s var(--ease); }
 
-/* ══════════════════════
-   ACTIVITY FEED
-══════════════════════ */
-.evf { max-height: 540px; overflow-y: auto; }
+/* ── ACTIVITY FEED ── */
+.evf { max-height: 400px; overflow-y: auto; padding: .45rem .75rem; }
+.evf::-webkit-scrollbar { width: 2px; }
+.evf::-webkit-scrollbar-thumb { background: var(--bor); border-radius: 99px; }
 .ei {
-  display: flex; gap: 10px; padding: .75rem .9rem;
-  border-bottom: 1px solid rgba(28,30,44,.5);
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: .45rem 0; border-bottom: 1px solid rgba(51,46,40,.28);
   transition: background var(--fast);
 }
 .ei:last-child { border-bottom: none; }
-.ei:hover { background: rgba(232,0,14,.03); }
+.ei:hover { background: rgba(232,53,53,.025); }
+.ei.new-ev { animation: nev .8s ease; }
 
-/* ══════════════════════
-   EXPLORER HERO
-══════════════════════ */
+/* ── EXPLORER HERO ── */
 .explorer-hero {
-  display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap;
-  background: linear-gradient(135deg, rgba(232,0,14,.06), rgba(240,165,0,.03), transparent 80%);
-  border: 1px solid rgba(232,0,14,.15);
-  border-radius: var(--r-xl); padding: 1.5rem; margin-bottom: 1.5rem;
-  position: relative; overflow: hidden;
-}
-.explorer-hero::before {
-  content: '⛏';
-  position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
-  font-size: 5rem; opacity: .04; pointer-events: none;
-  animation: floatUp 5s ease-in-out infinite;
+  display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(232,53,53,.06), rgba(212,168,67,.03), transparent 80%);
+  border: 1px solid rgba(232,53,53,.14);
+  border-radius: var(--r-xl); padding: 1.25rem; margin-bottom: 1.1rem;
 }
 
-/* ══════════════════════
-   BANNER
-══════════════════════ */
+/* ── BANNER ── */
 .banner {
-  background: linear-gradient(135deg, rgba(232,0,14,.07), rgba(15,16,24,.8));
-  border: 1px solid rgba(232,0,14,.15);
-  border-radius: var(--r-xl);
-  padding: 1.4rem 1.5rem;
-  margin-bottom: 1.5rem;
-  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(232,53,53,.07), rgba(33,30,26,.8));
+  border: 1px solid rgba(232,53,53,.15);
+  border-radius: var(--r-xl); padding: 1.15rem 1.25rem;
+  margin-bottom: 1.1rem; position: relative; overflow: hidden;
 }
 .banner::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(232,0,14,.5), transparent);
-  animation: borderFlow 4s ease-in-out infinite;
-  background-size: 200% 100%;
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232,53,53,.45), transparent);
 }
-html.light .banner { background: linear-gradient(135deg, rgba(204,0,8,.05), rgba(255,255,255,.85)); }
+html.light .banner { background: linear-gradient(135deg, rgba(204,32,32,.05), rgba(255,255,255,.85)); }
 
-/* ══════════════════════
-   WHAT IF PAGE
-══════════════════════ */
+/* ── WHAT IF ── */
 #wi-slotTableWrap {
-  background: rgba(15,16,24,.5);
-  border: 1px solid var(--bor);
-  border-radius: var(--r-md); padding: 1rem;
+  background: var(--sur); border: 1px solid var(--bor);
+  border-radius: 10px; padding: .8rem; margin-top: .65rem;
+}
+#wi-slotGrid { overflow: hidden; width: 100%; }
+#wi-slotGrid > div { min-width: 0; max-width: 100%; overflow: hidden; box-sizing: border-box; }
+#wi-slotGrid > div[style*="rgba(229,62,62"] {
+  background: rgba(232,53,53,.05) !important;
+  border: 1px solid rgba(232,53,53,.25) !important;
+  border-radius: 7px !important; padding: 5px 6px !important;
+}
+#wi-slotGrid > div[style*="dashed"] {
+  background: var(--card) !important;
+  border: 1px dashed var(--bor) !important;
+  border-radius: 7px !important; min-height: 48px !important;
+  display: flex !important; align-items: center !important;
+  justify-content: center !important; font-family: 'DM Mono', monospace !important;
+  font-size: .52rem !important; color: var(--mut) !important;
 }
 
-/* ══════════════════════
-   WALLET CONNECT BUTTON
-══════════════════════ */
+/* Path A/B comparison table */
+.wi-compare-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.wi-compare-table { width: 100%; border-collapse: collapse; min-width: 320px; }
+.wi-compare-table th {
+  font-family: 'DM Mono', monospace; font-size: .52rem;
+  text-transform: uppercase; letter-spacing: .08em;
+  padding: .48rem .75rem; border-bottom: 2px solid var(--bor); white-space: nowrap;
+}
+.wi-compare-table th.th-label { text-align: left; color: var(--mut); width: 45%; }
+.wi-compare-table th.th-a { text-align: right; color: var(--acc); background: rgba(232,53,53,.04); }
+.wi-compare-table th.th-b { text-align: right; color: var(--gld); background: rgba(212,168,67,.04); }
+.wi-compare-table td {
+  font-family: 'Barlow', sans-serif; font-size: var(--t-xs);
+  padding: .4rem .75rem; border-bottom: 1px solid rgba(51,46,40,.3); vertical-align: middle;
+}
+.wi-compare-table td:first-child { color: var(--mut); font-family: 'DM Mono', monospace; font-size: .57rem; }
+.wi-compare-table td.td-a { text-align: right; font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: var(--t-base); background: rgba(232,53,53,.02); }
+.wi-compare-table td.td-b { text-align: right; font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: var(--t-base); background: rgba(212,168,67,.02); }
+.wi-compare-table tr.sep-row td { padding: .2rem; border-bottom: 1px solid var(--bor); background: transparent; font-size: 0; }
+.wi-compare-grid { overflow: hidden; }
+
+/* ── WALLET CONNECT BUTTON ── */
 .wc-btn {
-  display: flex; align-items: center; gap: 16px;
-  background: linear-gradient(135deg, rgba(232,0,14,.06), rgba(15,16,24,.7));
-  border: 1px solid rgba(232,0,14,.18);
-  border-radius: var(--r-xl); padding: 1.2rem 1.4rem;
-  cursor: pointer; transition: all var(--mid) var(--ease);
-  margin-bottom: .85rem;
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, rgba(249,115,22,.08), rgba(212,168,67,.04));
+  border: 1.5px solid rgba(232,53,53,.2);
+  border-radius: 14px; padding: 1rem 1.2rem;
+  cursor: pointer; transition: all var(--mid); margin-bottom: .75rem;
 }
 .wc-btn:hover {
-  border-color: rgba(232,0,14,.4);
-  background: linear-gradient(135deg, rgba(232,0,14,.1), rgba(15,16,24,.75));
+  border-color: var(--acc);
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(232,0,14,.12);
+  box-shadow: 0 8px 24px rgba(232,53,53,.15);
 }
 
-/* ── PEN GRID ── */
-.pen-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .5rem; margin-bottom: 1rem; }
+/* ── PEN / LP GRIDS ── */
+.pen-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .4rem; margin-bottom: .85rem; }
 @media(min-width: 600px) { .pen-grid { grid-template-columns: repeat(5,1fr); } }
-.pen-row { background: var(--card); border: 1px solid var(--bor); border-radius: var(--r-sm); padding: .65rem .8rem; display: flex; flex-direction: column; gap: 3px; }
-
-/* ── LP AMOUNT ROW ── */
-.lp-amt-row { display: flex; gap: 6px; align-items: center; }
+.pen-row { background: var(--card); border: 1px solid var(--bor); border-radius: 6px; padding: .55rem .7rem; display: flex; flex-direction: column; gap: 2px; }
+.lp-amt-row { display: flex; gap: 5px; align-items: center; }
 .lp-hero {
-  background: linear-gradient(135deg, rgba(232,0,14,0.07), rgba(240,165,0,0.03), transparent 70%);
-  border: 1px solid rgba(232,0,14,0.18); border-radius: var(--r-lg);
-  padding: 1.35rem; margin-bottom: 1.1rem; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(232,53,53,.07), rgba(212,168,67,.03), transparent 70%);
+  border: 1px solid rgba(232,53,53,.15); border-radius: var(--r-lg);
+  padding: 1.1rem; margin-bottom: .85rem; position: relative; overflow: hidden;
 }
-.lp-hero::before { content: '💧'; position: absolute; right: 1.2rem; top: .9rem; font-size: 4.5rem; opacity: .05; pointer-events: none; }
+.lp-hero::before { content: '💧'; position: absolute; right: 1rem; top: .8rem; font-size: 4rem; opacity: .05; pointer-events: none; }
 
-/* ══════════════════════
-   RESPONSIVE
-══════════════════════ */
+/* ── MOBILE RESPONSIVE ── */
 @media(max-width: 640px) {
   :root {
-    --t-xs: 0.625rem; --t-sm: 0.6875rem; --t-base: 0.8125rem;
-    --t-md: 0.9375rem; --t-lg: 1.0625rem; --t-xl: 1.25rem;
-    --t-2xl: 1.5rem; --t-3xl: 2rem;
+    --t-xs:   0.56rem; --t-sm:   0.63rem; --t-base: 0.72rem;
+    --t-md:   0.80rem; --t-lg:   0.88rem; --t-xl:   1rem;
+    --t-2xl:  1.2rem;  --t-3xl:  1.5rem;
     --fs-xs: var(--t-xs); --fs-sm: var(--t-sm); --fs-base: var(--t-base);
     --fs-md: var(--t-base); --fs-lg: var(--t-md); --fs-xl: var(--t-xl);
     --fs-2xl: var(--t-2xl); --fs-3xl: var(--t-3xl);
   }
-  /* MOBILE HEADER:
-     Row 1 (order 1): logo  —  Row 1 (order 2): hdr-r (connect+controls)
-     Row 2 (order 3): navtabs — ALWAYS full-width BELOW connect wallet */
+  /* Header row 1: logo (order 1) + controls (order 2) */
   header {
-    flex-wrap: wrap;
-    height: auto; min-height: 52px;
-    padding: 0 .75rem;
-    row-gap: 0;
-    align-items: center;
+    flex-wrap: wrap; height: auto; min-height: 52px;
+    padding: 0 .75rem; row-gap: 0; align-items: center;
   }
-  .logo {
-    order: 1;
-    flex: 1;
-    padding: 10px 0;
-    font-size: 1.15rem;
-  }
-  .hdr-r {
-    order: 2;
-    flex-shrink: 0;
-    padding: 8px 0;
-  }
-  /* Tabs: always third item, own full-width row below connect wallet */
+  .logo { order: 1; flex: 1; padding: 9px 0; font-size: .88rem; }
+  .hdr-r { order: 2; flex-shrink: 0; padding: 8px 0; }
+  /* Tabs: order 3 — full-width row below connect wallet */
   .navtabs {
-    order: 3;
-    flex: none;
-    width: calc(100% + 1.5rem);
-    margin-left: -.75rem;
-    margin-right: -.75rem;
-    justify-content: flex-start;
-    padding: 6px .75rem 8px;
-    gap: 4px;
-    border-top: 1px solid rgba(232,0,14,0.14);
-    background: rgba(5,5,7,0.6);
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+    order: 3; flex: none;
+    width: calc(100% + 1.5rem); margin-left: -.75rem; margin-right: -.75rem;
+    justify-content: flex-start; padding: 4px .75rem 6px;
+    gap: 3px; border-top: 1px solid var(--bor);
+    background: var(--sur);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
   }
-  .tab {
-    padding: 7px 12px;
-    font-size: 0.6rem;
-    letter-spacing: .06em;
-  }
-  main { padding: .9rem .75rem 2.5rem; }
-  .sg { grid-template-columns: repeat(2,1fr); gap: .6rem; }
-  .sc { padding: .85rem .8rem; }
+  .tab { padding: 4px 8px; font-size: .56rem; }
+
+  main { padding: .7rem .7rem 2.5rem; }
+  .sg { grid-template-columns: repeat(2,1fr); gap: .45rem; }
+  .sc { padding: .65rem .7rem; }
   .g2 { grid-template-columns: 1fr; }
-  .cbody { padding: 1rem; }
-  .ch { padding: .75rem 1rem; }
-  .sh { margin-bottom: 1rem; }
-  .sh-t { font-size: var(--t-2xl); }
-  .miner-grid { grid-template-columns: repeat(2,1fr); gap: .65rem; }
-  .tbl th, .tbl td { padding: .6rem .75rem; }
-  .dur-grid { gap: .35rem; }
+  .cbody { padding: .85rem; }
+  .ch { padding: .6rem .85rem; }
+  .sh { margin-bottom: .65rem; }
+  .sh-t { font-size: var(--t-xs); }
+  .miner-grid { grid-template-columns: repeat(2,1fr); gap: .5rem; }
+  .dur-grid { gap: .3rem; }
   #uiControls { gap: 3px; }
-  .ctrl-btn { padding: 4px 9px; font-size: 0.6rem; }
-  .hdr-r { flex-shrink: 0; gap: 4px; }
-  .liq-tabs { border-radius: var(--r-md); }
+  .ctrl-btn { padding: 3px 7px; font-size: .56rem; }
+
+  /* Leaderboard mobile */
+  #view-leaderboard .tbl th,
+  #view-leaderboard .tbl td { font-size: .56rem; padding: .38rem .5rem; }
+
+  /* Activity mobile */
+  .ei { padding: .38rem 0; gap: 6px; }
+  .evf { max-height: 360px; }
+  #evTypeFilter { font-size: .56rem !important; padding: 2px 5px !important; }
+
+  /* What-If marketplace — compact grid */
+  #wiMarketListings > div {
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)) !important;
+    gap: .35rem !important;
+  }
+
+  /* Path A/B table */
+  .wi-compare-table td, .wi-compare-table th { padding: .35rem .5rem; font-size: .56rem; }
+  .wi-compare-table td.td-a, .wi-compare-table td.td-b { font-size: .72rem; }
 }
 @media(max-width: 380px) {
+  .tab { padding: 4px 7px; font-size: .52rem; }
   .sg { grid-template-columns: repeat(2,1fr); }
-  .tab { padding: 6px 9px; font-size: 0.575rem; }
-  .logo { font-size: 1.05rem; }
+  .logo { font-size: .82rem; }
 }
 
-/* ══════════════════════
-   LIGHT MODE OVERRIDES
-══════════════════════ */
-html.light .card    { box-shadow: 0 1px 8px rgba(0,0,0,.07), 0 4px 18px rgba(0,0,0,.04); }
-html.light .sc      { box-shadow: 0 1px 4px rgba(0,0,0,.05); }
-html.light .miner-card { box-shadow: 0 2px 12px rgba(0,0,0,.07); }
-html.light .tkbar   { background: rgba(204,0,8,.04); border-bottom-color: rgba(204,0,8,.12); }
-html.light .tab.on  { background: linear-gradient(135deg, rgba(204,0,8,.8), rgba(180,0,6,.7)); }
-html.light .ntf     { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: rgba(255,255,255,.97); }
-html.light .sig     { background: rgba(255,255,255,.8); }
-html.light .liq-pane-inner { box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-html.light .banner  { border-color: rgba(204,0,8,.12); }
+/* ── LIGHT MODE ── */
+html.light .card    { box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+html.light .sc      { box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+html.light .miner-card { box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+html.light .ntf     { box-shadow: 0 4px 14px rgba(0,0,0,.1); }
+html.light .sig     { background: rgba(255,255,255,.7); }
 html.light body::after { display: none; }
-
-/* ══════════════════════
-   LEADERBOARD & ACTIVITY — MOBILE FONT FIXES
-══════════════════════ */
-/* Leaderboard table — tighter on mobile */
-@media(max-width: 640px) {
-  #view-leaderboard .tbl th,
-  #view-leaderboard .tbl td {
-    font-size: 0.6875rem;
-    padding: .45rem .5rem;
-  }
-  #view-leaderboard .tbl th:nth-child(3),
-  #view-leaderboard .tbl td:nth-child(3) { /* points col */
-    font-size: 0.6875rem;
-  }
-  #lbSearch { font-size: 0.75rem; }
-
-  /* Activity feed — tighter */
-  .ei { padding: .5rem .6rem; gap: 7px; }
-  .evf { max-height: 420px; }
-  #view-activity .sh-t { font-size: 1.25rem; }
-  #view-leaderboard .sh-t { font-size: 1.25rem; }
-  #evTypeFilter { font-size: 0.6875rem !important; padding: 3px 5px !important; }
-
-  /* Activity stat card text */
-  #activityStats .calc-lbl { font-size: 0.6875rem; }
-  #activityStats .calc-val { font-size: 0.8125rem; }
-
-  /* What-If marketplace grid — smaller cards, more per row */
-  #wiMarketListings > div {
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
-    gap: .4rem !important;
-  }
-}
-
-/* ══════════════════════
-   FACILITY SLOTS — VISUAL UPGRADE
-══════════════════════ */
-#wi-slotTableWrap {
-  background: linear-gradient(135deg, rgba(15,16,24,0.8), rgba(5,5,7,0.9));
-  border: 1px solid rgba(232,0,14,0.2);
-  border-radius: 12px;
-  padding: .85rem;
-  margin-top: .75rem;
-  position: relative;
-  overflow: hidden;
-}
-#wi-slotTableWrap::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(232,0,14,0.5), transparent);
-}
-/* Header label row */
-#wi-slotTableWrap > div:first-child {
-  font-family: 'Space Mono', monospace !important;
-  font-size: 0.6rem !important;
-  letter-spacing: .14em !important;
-  text-transform: uppercase !important;
-  color: var(--mut) !important;
-  margin-bottom: 7px !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-}
-/* Power bar wrapper */
-#wi-slotTableWrap > div:nth-child(2) {
-  background: var(--bor) !important;
-  border-radius: 99px !important;
-  height: 6px !important;
-  overflow: hidden !important;
-  margin-bottom: 10px !important;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5) !important;
-}
-/* Slot grid — no overflow, responsive columns */
-#wi-slotGrid {
-  overflow: hidden !important;
-  width: 100% !important;
-}
-
-/* Slot cells — fixed compact size so they never overflow */
-#wi-slotGrid > div {
-  min-width: 0 !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
-}
-/* Filled slot */
-#wi-slotGrid > div[style*="rgba(229,62,62"] {
-  background: linear-gradient(135deg, rgba(232,0,14,0.08), rgba(15,16,24,0.6)) !important;
-  border: 1px solid rgba(232,0,14,0.3) !important;
-  border-radius: 8px !important;
-  padding: 6px 7px !important;
-  transition: all .15s !important;
-}
-#wi-slotGrid > div[style*="rgba(229,62,62"]:hover {
-  border-color: rgba(232,0,14,0.55) !important;
-  box-shadow: 0 0 12px rgba(232,0,14,0.12) !important;
-}
-/* Empty slot */
-#wi-slotGrid > div[style*="dashed"] {
-  background: rgba(5,5,7,0.5) !important;
-  border: 1px dashed rgba(30,32,44,0.8) !important;
-  border-radius: 8px !important;
-  color: var(--mut) !important;
-  min-height: 52px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 0.6rem !important;
-  letter-spacing: .1em !important;
-}
-
-/* ══════════════════════
-   PATH A vs B — SIDE-BY-SIDE TABLE
-══════════════════════ */
-/* Override the g2 two-card layout in results to be a single comparison table */
-#wi-resultsSection .g2.wi-compare-grid {
-  display: block;
-  margin-bottom: 1rem;
-}
-.wi-compare-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.wi-compare-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 340px;
-}
-.wi-compare-table th {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  padding: .7rem 1rem;
-  border-bottom: 2px solid var(--bor2);
-  white-space: nowrap;
-}
-.wi-compare-table th.th-label {
-  text-align: left;
-  color: var(--mut);
-  width: 45%;
-}
-.wi-compare-table th.th-a {
-  text-align: right;
-  color: var(--red);
-  background: rgba(232,0,14,0.04);
-}
-.wi-compare-table th.th-b {
-  text-align: right;
-  color: var(--gold);
-  background: rgba(240,165,0,0.04);
-}
-.wi-compare-table td {
-  font-family: 'Outfit', sans-serif;
-  font-size: var(--t-sm);
-  padding: .55rem 1rem;
-  border-bottom: 1px solid rgba(28,30,44,0.5);
-  vertical-align: middle;
-}
-.wi-compare-table td:first-child {
-  color: var(--dim);
-  font-size: 0.6875rem;
-}
-.wi-compare-table td.td-a {
-  text-align: right;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: var(--t-md);
-  letter-spacing: .03em;
-  background: rgba(232,0,14,0.02);
-}
-.wi-compare-table td.td-b {
-  text-align: right;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: var(--t-md);
-  letter-spacing: .03em;
-  background: rgba(240,165,0,0.02);
-}
-.wi-compare-table tr.sep-row td {
-  padding: .3rem 1rem;
-  border-bottom: 1px solid var(--bor2);
-  font-size: 0;
-  background: transparent;
-}
-@media(max-width: 640px) {
-  .wi-compare-table td, .wi-compare-table th {
-    padding: .45rem .65rem;
-    font-size: 0.6875rem;
-  }
-  .wi-compare-table td.td-a, .wi-compare-table td.td-b {
-    font-size: 0.9rem;
-  }
-}
-
-/* ══════════════════════
-   BACKGROUND CANVAS ANIMATION — enhanced
-══════════════════════ */
-#miningCanvas {
-  opacity: 0.9 !important;
-}
-/* Particle field boost via CSS — adds floating ember effect on top */
-body > canvas + div + div + main::before {
-  display: none; /* prevent double grid */
-}
-
+html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
 </style>
 </head>
 <body>
@@ -1428,6 +1044,11 @@ body > canvas + div + div + main::before {
     <div class="sc"><div class="sl">Volume 24h</div><div class="sv cg" id="d_vol">—</div><div class="ss">Pharaoh pool</div></div>
     <div class="sc"><div class="sl">Moat Stakers</div><div class="sv cd" id="d_wallets">—</div><div class="ss">unique wallets</div></div>
     <div class="sc"><div class="sl">Total Points</div><div class="sv cr" id="d_points">—</div><div class="ss">across all stakers</div></div>
+    <div class="sc"><div class="sl">Current Block</div><div class="sv cw" id="d_block">—</div><div class="ss" id="d_blockTime">Avalanche C-Chain</div></div>
+    <div class="sc"><div class="sl">Network Hash</div><div class="sv cr" id="d_netHash">—</div><div class="ss">total hashrate</div></div>
+    <div class="sc"><div class="sl">Emission/Block</div><div class="sv cg" id="d_emitBlock">—</div><div class="ss" id="d_emitDay">current reward</div></div>
+    <div class="sc"><div class="sl">Halving In</div><div class="sv" style="color:var(--pur)" id="d_halving">—</div><div class="ss" id="d_halvingBlocks">blocks remaining</div></div>
+    <div class="sc"><div class="sl">Facilities</div><div class="sv cd" id="d_facilities">—</div><div class="ss">online</div></div>
   </div>
 
   <div class="g2">
@@ -2081,9 +1702,13 @@ body > canvas + div + div + main::before {
 
   <!-- Rigs section (shown when not filtered to rigs specifically) -->
   <div class="sh" id="rigSectionHead" style="margin-top:.5rem"><div class="sh-t">🔧 Rig Assemblers</div></div>
-  <div id="rigGrid" class="g2">
+  <div id="rigGrid" class="miner-grid">
     <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading rig data…</div>
   </div>
+
+  <!-- External NFT miners (e.g. Jarmer Jorn) -->
+  <div class="sh" id="extNftSectionHead" style="margin-top:.5rem;display:none"><div class="sh-t">🌐 External NFT Miners</div></div>
+  <div id="extNftGrid" class="miner-grid"></div>
 
   <!-- Other contracts -->
   <div class="sh" style="margin-top:.5rem"><div class="sh-t">📄 Other HashCash Contracts</div></div>
@@ -2148,7 +1773,8 @@ body > canvas + div + div + main::before {
             <option value="staked">🔒 Staked</option>
             <option value="locked">⏳ Locked</option>
             <option value="reward">💰 Rewards</option>
-            <option value="unstake">↩ Unstake</option>
+            <option value="unstake">↩ Unstake / Exit</option>
+            <option value="eel">⚡ EEL (Early Exit)</option>
           </select>
           <span class="mono" style="font-size:.80rem;color:var(--mut);align-self:center" id="evCount"></span>
         </div>
@@ -2456,8 +2082,8 @@ body > canvas + div + div + main::before {
       </div>
       <!-- Risk tags below table -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--bor)">
-        <div id="wi-mRisk" style="padding:.65rem 1rem;font-size:var(--fs-xs);font-family:'Space Mono',monospace;line-height:1.55;border-right:1px solid var(--bor)"></div>
-        <div id="wi-lpRisk" style="padding:.65rem 1rem;font-size:var(--fs-xs);font-family:'Space Mono',monospace;line-height:1.55"></div>
+        <div id="wi-mRisk" style="padding:.65rem 1rem;font-size:var(--fs-xs);font-family:'DM Mono',monospace;line-height:1.55;border-right:1px solid var(--bor)"></div>
+        <div id="wi-lpRisk" style="padding:.65rem 1rem;font-size:var(--fs-xs);font-family:'DM Mono',monospace;line-height:1.55"></div>
       </div>
     </div>
 
@@ -2671,6 +2297,14 @@ const WAVAX_ABI = [
 // ══════════════════════════════════════════════════════
 const fmtP = n => {if(!n||isNaN(n))return'0';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.round(n).toLocaleString()};
 const fmtK = n => {if(!n)return'$0';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(1)+'K';return'$'+n.toFixed(2)};
+// Human-readable LP token amounts (LP tokens are tiny fractions — show meaningful decimals)
+const fmtLP = n => {
+  if(!n||isNaN(n))return'0';
+  if(n>=1000)return n.toFixed(2);
+  if(n>=1)return n.toFixed(4);
+  if(n>=0.0001)return n.toFixed(6);
+  return n.toExponential(4); // only fallback for extremely tiny amounts
+};
 const fmtPrice = n => {if(!n||n===0)return'0';if(n>=1000)return n.toLocaleString(undefined,{maximumFractionDigits:2});if(n>=1)return n.toFixed(4);if(n>=0.01)return n.toFixed(6);if(n>=0.0001)return n.toFixed(8);return parseFloat(n.toPrecision(6)).toString()};
 const f4 = n => Number(n).toFixed(4);
 const f2 = n => Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
@@ -3003,10 +2637,16 @@ async function loadPoolComposition() {
     const lpSupply = parseFloat(ethers.formatEther(ts));
     const ratio = hcashRes/wavaxRes;
     poolData = {avaxReserve:wavaxRes, hcashReserve:hcashRes, lpSupply, ratio};
-    // AVAX price from dexscreener
-    let avaxUsd = 0;
-    try{const av=await fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7').then(x=>x.json());avaxUsd=Number(av?.pairs?.[0]?.priceUsd||0);}catch(e){}
-    if(priceData)priceData.avaxPrice=avaxUsd;
+    // AVAX price — use multi-source fetcher (same one used by What If page)
+    let avaxUsd = priceData?.avaxPrice || 0;
+    if (!avaxUsd) {
+      try { avaxUsd = await wiFetchAvaxPrice(); } catch(e) {}
+    }
+    if (!avaxUsd) {
+      try{const av=await fetch('https://api.dexscreener.com/latest/dex/pairs/avalanche/0xe4cf417081a0ab3f964b44d904bc2b534351a9a7').then(x=>x.json());avaxUsd=Number(av?.pairs?.[0]?.priceUsd||0);}catch(e){}
+    }
+    if(priceData) priceData.avaxPrice = avaxUsd;
+    else priceData = { price: 0, avaxPrice: avaxUsd, ch24: 0, liq: 0, vol24: 0 };
     const avaxUsdV = wavaxRes*avaxUsd;
     const hcashUsdV = hcashRes*(priceData?.price||0);
     const totalUsd = avaxUsdV+hcashUsdV;
@@ -3088,6 +2728,7 @@ const MOAT_ADDR_LC = HCASH_MOAT_ADDR.toLowerCase();
 const EV_STAKED   = '0x9e71bc8eea02a63969f509818f2dafb9254532904319f9dbda79b67bd34a5f3d'; // Staked(address,uint256)
 const EV_LOCKED   = '0x7ff7bacc6cd661809ed1ddce1c0b4ad1d43db434d2b0f2b2a51b4a31d9da6a38'; // Locked(address,uint256,uint256)
 const EV_UNSTAKED = '0x0f5bb82176feb1b5e747e28471aa92156a04d9f3ab9f45f28e2d704232b93f75'; // Unstaked(address,uint256)
+const EV_EEL      = '0x'; // EarlyExitLock — placeholder, falls through to METHOD_MAP
 const EV_TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'; // Transfer
 
 async function loadEvents() {
@@ -3095,137 +2736,88 @@ async function loadEvents() {
   if(feed)feed.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading events…</div>';
   try{
     const MOAT_LC=HCASH_MOAT_ADDR.toLowerCase();
-    const LP_LC=HCASH_LP_ADDR.toLowerCase();
     const events=[];
 
-    // ── PRIMARY: Snowtrace API — normal txs to moat contract (gives real timeStamp) ──
+    // Fetch normal txs (gives method sig + timestamp) AND token transfers (gives exact LP amount)
     const [txRes, tokenTxRes] = await Promise.allSettled([
-      // Normal transactions to the moat contract (stake/lock/unstake calls)
-      fetch(`${SNOWTRACE}?module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=200`)
+      fetch(`${SNOWTRACE}?module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
         .then(r=>r.json()),
-      // Token (LP) transfers to/from moat contract
-      fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=200`)
+      fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=300`)
         .then(r=>r.json()),
     ]);
 
-    // Parse normal txs — decode method signature to determine event type
+    // ── Step 1: Build a type-map from normal txs keyed by txhash ──
+    // These tell us WHAT action was called (stake/lock/unstake/exit/eel/reward)
     const METHOD_MAP={
-      '0xa694fc3a':'staked',    // stake(uint256)
-      '0xf83d08ba':'staked',    // stake() variants
-      '0x23b872dd':'deposit',   // transferFrom
-      '0xb88d4fde':'deposit',
-      '0x2e1a7d4d':'unstake',   // withdraw(uint256)
-      '0x4e71d92d':'reward',    // claim()
-      '0xe9fad8ee':'unstake',   // exit()
-      '0x84e9c9af':'locked',    // lock(uint256,uint256)
-      '0x1e83409a':'reward',    // claimAllRewards
-      '0xd96a094a':'staked',    // buy/stake
-      '0x2f48ab7d':'locked',    // lockTokens
-      '0x7acb7757':'unstake',   // earlyExitLock
-      '0x3d18b912':'reward',    // getReward
-      '0x39941fa9':'locked',    // lock variants
+      '0xa694fc3a':'staked',
+      '0xf83d08ba':'staked',
+      '0x2e1a7d4d':'unstake',
+      '0x4e71d92d':'reward',
+      '0xe9fad8ee':'exit',
+      '0x84e9c9af':'locked',
+      '0x1e83409a':'reward',
+      '0xd96a094a':'staked',
+      '0x2f48ab7d':'locked',
+      '0x7acb7757':'eel',
+      '0x3d18b912':'reward',
+      '0x39941fa9':'locked',
     };
+    const txTypeMap={};   // txhash → { type, wallet, timestamp, blockNumber }
     const txs=(txRes.status==='fulfilled'&&txRes.value?.status==='1')?(txRes.value.result||[]):[];
     for(const tx of txs){
       if(tx.isError==='1') continue;
       const method=(tx.input||'').slice(0,10).toLowerCase();
       let type=METHOD_MAP[method]||null;
-      // Also classify by function name if available
       if(!type){
         const fn=(tx.functionName||'').toLowerCase();
-        if(fn.includes('stake'))type='staked';
+        if(fn.includes('earlyexit'))type='eel';
+        else if(fn.includes('stake'))type='staked';
         else if(fn.includes('lock'))type='locked';
-        else if(fn.includes('unstake')||fn.includes('withdraw')||fn.includes('exit'))type='unstake';
+        else if(fn==='exit'||fn.includes('exit()'))type='exit';
+        else if(fn.includes('unstake')||fn.includes('withdraw'))type='unstake';
         else if(fn.includes('claim')||fn.includes('reward'))type='reward';
-        else if(fn.includes('burn'))type='burned';
-        else type='activity';
+        else type=null;
       }
-      // Parse amount from input data (first uint256 param = 32 bytes after method sig)
-      let amt=0;
-      try{
-        const data=(tx.input||'').slice(10);
-        if(data.length>=64){
-          amt=Number(BigInt('0x'+data.slice(0,64)))/1e18;
-        }
-      }catch(e){}
-      events.push({
-        eventType:type,
-        wallet:(tx.from||'').toLowerCase(),
-        amount:amt,
-        txHash:tx.hash||'',
-        timestamp:Number(tx.timeStamp||0),
-        blockNumber:tx.blockNumber,
-        _onchain:true,
-      });
+      if(type) txTypeMap[tx.hash]={type,wallet:(tx.from||'').toLowerCase(),timestamp:Number(tx.timeStamp||0),blockNumber:tx.blockNumber};
     }
 
-    // Parse token transfer txs — gives actual LP amounts with timestamps
+    // ── Step 2: Build events from token transfers (have the real LP amounts) ──
+    // Cross-reference txTypeMap to get the correct action label
     const tokenTxs=(tokenTxRes.status==='fulfilled'&&tokenTxRes.value?.status==='1')?(tokenTxRes.value.result||[]):[];
-    const seenHashes=new Set(events.map(e=>e.txHash).filter(Boolean));
+    const seenHashes=new Set();
     for(const tx of tokenTxs){
+      if(seenHashes.has(tx.hash)) continue;
       const toLc=(tx.to||'').toLowerCase();
       const fromLc=(tx.from||'').toLowerCase();
       const amt=Number(tx.value||0)/1e18;
-      let type='activity', wallet='';
-      if(toLc===MOAT_LC){type='deposit';wallet=fromLc;}
-      else if(fromLc===MOAT_LC){type='reward';wallet=toLc;}
-      else continue;
-      // Enrich existing events with amount if same txhash
-      if(seenHashes.has(tx.hash)){
-        const existing=events.find(e=>e.txHash===tx.hash);
-        if(existing&&!existing.amount&&amt>0) existing.amount=amt;
-        continue;
-      }
-      events.push({
-        eventType:type,
-        wallet,
-        amount:amt,
-        txHash:tx.hash||'',
-        timestamp:Number(tx.timeStamp||0),
-        blockNumber:tx.blockNumber,
-        _onchain:true,
-      });
+      const meta=txTypeMap[tx.hash];
+      let type, wallet;
+      if(toLc===MOAT_LC){
+        // LP going INTO moat — stake or lock
+        wallet=fromLc;
+        type=meta?.type==='locked'?'locked':(meta?.type||'staked');
+      } else if(fromLc===MOAT_LC){
+        // LP going OUT of moat — unstake, exit, eel, or reward claim
+        wallet=toLc;
+        // Use the method type from the normal tx; default to 'reward' only if truly no method found
+        type=meta?.type||'reward';
+      } else continue;
+      const ts=meta?.timestamp||Number(tx.timeStamp||0);
+      events.push({eventType:type,wallet,amount:amt,txHash:tx.hash||'',timestamp:ts,blockNumber:tx.blockNumber||meta?.blockNumber,_onchain:true});
       seenHashes.add(tx.hash);
     }
 
-    // ── FALLBACK: eth_getLogs for any events missing from Snowtrace ──
-    try{
-      const RPC=AVAX_RPC;
-      const blkRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json());
-      const curBlock=blkRes?.result?parseInt(blkRes.result,16):0;
-      const logsRes=await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
-          fromBlock:'0x'+Math.max(0,curBlock-50000).toString(16),
-          toBlock:'0x'+curBlock.toString(16),
-          address:HCASH_MOAT_ADDR
-        }]})}).then(r=>r.json());
-      const logs=logsRes?.result||[];
-      for(const log of logs){
-        if(seenHashes.has(log.transactionHash)) continue;
-        const topic0=(log.topics||[])[0]||'';
-        const wallet=log.topics?.[1]?'0x'+log.topics[1].slice(26).toLowerCase():'';
-        let amt=0;
-        try{const hex=(log.data||'0x').replace('0x','').padStart(64,'0').slice(0,64);amt=Number(BigInt('0x'+hex))/1e18;}catch(e){}
-        let type='activity';
-        if(topic0===EV_STAKED)type='staked';
-        else if(topic0===EV_LOCKED)type='locked';
-        else if(topic0===EV_UNSTAKED)type='unstake';
-        else continue;
-        const blkNum=parseInt(log.blockNumber||'0',16);
-        const ts=Math.floor(Date.now()/1000)-(curBlock-blkNum)*2;
-        events.push({eventType:type,wallet,amount:amt,txHash:log.transactionHash||'',timestamp:ts,_onchain:true});
-        seenHashes.add(log.transactionHash);
+    // ── Step 3: Add any normal txs not covered by token transfers (e.g. reward claims with no LP transfer) ──
+    for(const [hash,meta] of Object.entries(txTypeMap)){
+      if(seenHashes.has(hash)) continue;
+      if(meta.type==='reward'||meta.type==='staked'||meta.type==='locked'||meta.type==='unstake'||meta.type==='exit'||meta.type==='eel'){
+        events.push({eventType:meta.type,wallet:meta.wallet,amount:0,txHash:hash,timestamp:meta.timestamp,blockNumber:meta.blockNumber,_onchain:true});
+        seenHashes.add(hash);
       }
-    }catch(re){console.warn('getLogs fallback:',re.message);}
+    }
 
-    // Sort by timestamp desc, filter zero-timestamp to bottom
-    events.sort((a,b)=>{
-      if(!a.timestamp&&!b.timestamp)return 0;
-      if(!a.timestamp)return 1;
-      if(!b.timestamp)return -1;
-      return b.timestamp-a.timestamp;
-    });
+    // Sort newest first
+    events.sort((a,b)=>b.timestamp-a.timestamp);
     allEvData=[...events];
     filteredEvData=[...allEvData];
     renderEvFeed();
@@ -3239,7 +2831,16 @@ async function loadEvents() {
 
 function filterEvs() {
   const t = document.getElementById('evTypeFilter')?.value.toLowerCase()||'';
-  filteredEvData = t ? allEvData.filter(e=>(e.eventType||e.type||'').toLowerCase().includes(t)) : [...allEvData];
+  if(!t){ filteredEvData = [...allEvData]; }
+  else if(t==='unstake'){
+    // "Unstake / Exit" catches unstake + exit (normal exit, not EEL)
+    filteredEvData = allEvData.filter(e=>{
+      const et=(e.eventType||e.type||'').toLowerCase();
+      return et==='unstake'||et==='exit'||et==='withdraw';
+    });
+  } else {
+    filteredEvData = allEvData.filter(e=>(e.eventType||e.type||'').toLowerCase()===t);
+  }
   renderEvFeed();
 }
 function renderEvFeed() {
@@ -3247,8 +2848,8 @@ function renderEvFeed() {
   if(!feed)return;
   setTxt('evCount', filteredEvData.length+' events');
   if(!filteredEvData.length){feed.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1.5rem;text-align:center">No events found.</div>';return;}
-  const TYPE_COLOR={staked:'var(--red)',locked:'var(--gold)',burned:'var(--red)',reward:'var(--grn)',claim:'var(--grn)',withdraw:'var(--dim)',unstake:'var(--dim)',deposit:'var(--red)'};
-  const TYPE_ICON={staked:'🔒',locked:'⏳',burned:'🔥',reward:'💰',claim:'💰',unstake:'↩',deposit:'⬇'};
+  const TYPE_COLOR={staked:'var(--red)',locked:'var(--gold)',burned:'var(--red)',reward:'var(--grn)',claim:'var(--grn)',withdraw:'var(--dim)',unstake:'var(--dim)',eel:'var(--pur)',exit:'var(--pur)',deposit:'var(--red)'};
+  const TYPE_ICON={staked:'🔒',locked:'⏳',burned:'🔥',reward:'💰',claim:'💰',unstake:'↩',eel:'⚡',exit:'↩',deposit:'⬇'};
   feed.innerHTML = filteredEvData.slice(0,80).map(e=>{
     const t=(e.eventType||e.type||e.action||'activity').toLowerCase();
     const col=TYPE_COLOR[t]||'var(--mut)';
@@ -3281,16 +2882,18 @@ function renderEvFeed() {
   }).join('');
 }
 function renderActivityStats() {
-  const stakes = allEvData.filter(e=>(e.eventType||'').toLowerCase().includes('stake')||'deposit'==(e.eventType||'').toLowerCase()).length;
-  const locks = allEvData.filter(e=>(e.eventType||'').toLowerCase().includes('lock')).length;
-  const claims = allEvData.filter(e=>(e.eventType||'').toLowerCase().includes('claim')||(e.eventType||'').toLowerCase().includes('reward')).length;
-  const exits = allEvData.filter(e=>(e.eventType||'').toLowerCase().includes('unstake')||(e.eventType||'').toLowerCase().includes('withdraw')).length;
+  const stakes = allEvData.filter(e=>{const t=(e.eventType||'').toLowerCase();return t==='staked'||t==='deposit';}).length;
+  const locks  = allEvData.filter(e=>(e.eventType||'').toLowerCase()==='locked').length;
+  const claims = allEvData.filter(e=>{const t=(e.eventType||'').toLowerCase();return t==='claim'||t==='reward';}).length;
+  const unstakes = allEvData.filter(e=>{const t=(e.eventType||'').toLowerCase();return t==='unstake'||t==='withdraw'||t==='exit';}).length;
+  const eels   = allEvData.filter(e=>(e.eventType||'').toLowerCase()==='eel').length;
   setHtml('activityStats',`
-    <div class="calc-row"><span class="calc-lbl">Total hCASH Events</span><span class="calc-val cw">${allEvData.length}</span></div>
-    <div class="calc-row"><span class="calc-lbl">Stake/Deposit</span><span class="calc-val cr">${stakes}</span></div>
-    <div class="calc-row"><span class="calc-lbl">Lock Events</span><span class="calc-val cg">${locks}</span></div>
-    <div class="calc-row"><span class="calc-lbl">Reward Claims</span><span class="calc-val cgn">${claims}</span></div>
-    <div class="calc-row"><span class="calc-lbl">Unstake/Exit</span><span class="calc-val cd">${exits}</span></div>
+    <div class="calc-row"><span class="calc-lbl">Total Events</span><span class="calc-val cw">${allEvData.length}</span></div>
+    <div class="calc-row"><span class="calc-lbl">🔒 Stake / Deposit</span><span class="calc-val cr">${stakes}</span></div>
+    <div class="calc-row"><span class="calc-lbl">⏳ Lock Events</span><span class="calc-val cg">${locks}</span></div>
+    <div class="calc-row"><span class="calc-lbl">💰 Reward Claims</span><span class="calc-val cgn">${claims}</span></div>
+    <div class="calc-row"><span class="calc-lbl">↩ Unstake / Exit</span><span class="calc-val cd">${unstakes}</span></div>
+    <div class="calc-row"><span class="calc-lbl">⚡ Early Exit (EEL)</span><span class="calc-val" style="color:var(--pur)">${eels}</span></div>
     <div style="margin-top:.9rem">
       <div class="mono" style="font-size:.76rem;color:var(--mut);margin-bottom:5px">Lock vs Stake ratio</div>
       <div class="bw"><div class="bt"><div class="bf" style="width:${locks/(stakes+locks||1)*100}%;background:linear-gradient(90deg,var(--gold),#fbbf24)"></div></div>
@@ -3352,6 +2955,7 @@ function renderLb() {
 // ══════════════════════════════════════════════════════
 async function loadExplorerData() {
   setHtml('explorerStats','<div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading on-chain data…</div>');
+  let lpSup = poolData?.lpSupply || 0;  // fallback to already-loaded value
   try {
     const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
     const lp = new ethers.Contract(HCASH_LP_ADDR,LP_ABI,prov);
@@ -3359,7 +2963,7 @@ async function loadExplorerData() {
     const isWavaxT0 = t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
     const avaxRes = parseFloat(ethers.formatEther(isWavaxT0?res[0]:res[1]));
     const hcashRes = parseFloat(ethers.formatEther(isWavaxT0?res[1]:res[0]));
-    const lpSup = parseFloat(ethers.formatEther(ts));
+    lpSup = parseFloat(ethers.formatEther(ts));
     let avaxUsd = priceData?.avaxPrice||0;
     // Always try to get fresh AVAX price if not available
     if(!avaxUsd) {
@@ -3602,24 +3206,59 @@ async function loadMiners() {
     // ── RIGS ──
     if(rigGrid){
       const rigHtml = rigs.length ? rigs.map(r=>{
-        const s=r.rigStats||{};
-        const isV2=r.rigVersion==='v2';
-        return `<div class="card">
-          <div class="ch">
-            <div class="ctitle">🔧 ${r.name||r.id}</div>
-            <span class="mono" style="font-size:1rem;color:var(--mut)">${r.rigVersion||'v1'}</span>
-          </div>
-          <div class="cbody">
-            ${s.gpusPerRig?`<div class="calc-row"><span class="calc-lbl">GPUs/Rig</span><span class="calc-val">${s.gpusPerRig}</span></div>`:''}
-            ${isV2&&s.recipeActive!==undefined?`<div class="calc-row"><span class="calc-lbl">Recipe</span><span class="calc-val" style="color:${s.recipeActive?'var(--grn)':'var(--mut)'}">${s.recipeActive?'🟢 Active':'⚫ Inactive'}</span></div>`:''}
-            ${s.assemblyCostRaw?`<div class="calc-row"><span class="calc-lbl">Assembly Cost</span><span class="calc-val cd">${s.assemblyCostRaw}</span></div>`:''}
-            ${isV2&&s.outputNftAddress?`<div class="calc-row"><span class="calc-lbl">Output NFT</span><span class="calc-val" style="font-size:1.05rem">${shortA(s.outputNftAddress)}</span></div>`:''}
-            <div class="calc-row"><span class="calc-lbl">Contract</span><a href="https://snowtrace.io/address/${r.address}" target="_blank" class="mono" style="font-size:.80rem;color:var(--red);text-decoration:none">${shortA(r.address)} ↗</a></div>
-            <a href="https://hashcash.club" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none;margin-top:.5rem">hashcash.club ↗</a>
+        const s=r.rigStats||r.minerStats||{};
+        const img=r.imageUrl||'';
+        const mid=r.id||r.name||'';
+        const mhs=s.hashrateMhps||s.hashrateRaw||0;
+        const pw=s.powerWatts||s.powerRaw||0;
+        const eff=mhs&&pw?`${(mhs/pw*100).toFixed(1)} MH/W`:'';
+        return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
+          ${img?`<img class="miner-img" src="${img}" alt="${r.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
+          <div class="miner-img-fb" style="${img?'display:none':''}">🔧</div>
+          <div class="miner-info">
+            <div class="miner-name">${r.name||r.id}</div>
+            ${mhs?`<div class="miner-stat"><span class="miner-stat-k">Hashrate</span><span class="miner-stat-v" style="color:var(--red)">${mhs>=1000?(mhs/1000).toFixed(1)+'GH/s':mhs+'MH/s'}</span></div>`:''}
+            ${pw?`<div class="miner-stat"><span class="miner-stat-k">Power</span><span class="miner-stat-v" style="color:var(--gold)">${pw}W</span></div>`:''}
+            ${eff?`<div class="miner-stat"><span class="miner-stat-k">Efficiency</span><span class="miner-stat-v" style="color:var(--grn)">${eff}</span></div>`:''}
+            <div class="miner-stat"><span class="miner-stat-k">Version</span><span class="miner-stat-v">${r.rigVersion||'v1'}</span></div>
+            <div class="miner-stat" style="margin-top:.25rem"><span class="mono" style="font-size:.7rem;color:var(--mut)">${shortA(r.address||'')}</span></div>
           </div>
         </div>`;
-      }).join('') : '<div class="mono" style="font-size:1.35rem;color:var(--mut)">No rig assemblers in current release.</div>';
+      }).join('') : '<div class="mono" style="grid-column:1/-1;font-size:1.35rem;color:var(--mut)">No rig assemblers in current release.</div>';
       rigGrid.innerHTML=rigHtml;
+    }
+
+    // ── EXTERNAL NFT MINERS (e.g. Jarmer Jorn) ──
+    const extNftGrid = document.getElementById('extNftGrid');
+    const extNftHead = document.getElementById('extNftSectionHead');
+    // Also include any external_nft contracts with miner-like stats
+    const allExtNft = extNft.length ? extNft : [];
+    if (extNftGrid && allExtNft.length) {
+      if (extNftHead) extNftHead.style.display = '';
+      extNftGrid.innerHTML = allExtNft.map(m => {
+        const s=m.minerStats||{};
+        const img=m.imageUrl||'';
+        const mid=m.id||m.name||'';
+        const mhs=s.hashrateMhps||s.hashrateRaw||0;
+        const pw=s.powerWatts||s.powerRaw||0;
+        const eff=mhs&&pw?`${(mhs/pw*100).toFixed(1)} MH/W`:'';
+        return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
+          ${img?`<img class="miner-img" src="${img}" alt="${m.name||'NFT'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
+          <div class="miner-img-fb" style="${img?'display:none':''}">🌐</div>
+          <div class="miner-info">
+            <div class="miner-name">${m.name||m.id||'External NFT'}</div>
+            ${mhs?`<div class="miner-stat"><span class="miner-stat-k">Hashrate</span><span class="miner-stat-v" style="color:var(--red)">${mhs>=1000?(mhs/1000).toFixed(1)+'GH/s':mhs+'MH/s'}</span></div>`:''}
+            ${pw?`<div class="miner-stat"><span class="miner-stat-k">Power</span><span class="miner-stat-v" style="color:var(--gold)">${pw}W</span></div>`:''}
+            ${eff?`<div class="miner-stat"><span class="miner-stat-k">Efficiency</span><span class="miner-stat-v" style="color:var(--grn)">${eff}</span></div>`:''}
+            <div class="miner-stat"><span class="miner-stat-k">Type</span><span class="miner-stat-v" style="color:var(--pur)">External NFT</span></div>
+            <div class="miner-stat" style="margin-top:.25rem"><span class="mono" style="font-size:.7rem;color:var(--mut)">${shortA(m.address||'')}</span></div>
+          </div>
+        </div>`;
+      }).join('');
+    } else if (extNftGrid) {
+      // Try to fetch Jarmer Jorn directly if not in API
+      extNftGrid.innerHTML = '';
+      fetchJarmerJorn();
     }
 
     // ── MARKETPLACE LISTINGS (on-chain) ──
@@ -3656,9 +3295,13 @@ async function loadMarketplaceListings(marketContract, miners) {
   try{
     const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
 
-    // Build miner address→name map
+    // Build miner address→name map (include external NFTs like Jarmer Jorn)
     const minerByAddr={};
     miners.forEach(m=>{if(m.address)minerByAddr[m.address.toLowerCase()]=m;});
+    // Also include external_nft contracts stored in _minerData
+    Object.values(_minerData).forEach(m=>{
+      if(m.category==='external_nft'&&m.address)minerByAddr[m.address.toLowerCase()]=m;
+    });
 
     const listings=[];
 
@@ -3797,10 +3440,11 @@ async function loadMarketplaceListings(marketContract, miners) {
             ? `<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--cyn)">${f4(l.priceAvax)} AVAX</span>`
             : '';
       return `<div style="display:flex;gap:10px;align-items:flex-start;padding:.6rem;background:var(--sur);border:1px solid var(--bor);border-radius:9px;margin-bottom:.4rem">
-        ${l.minerImg?`<img src="${l.minerImg}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">`:
-          '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem">⛏</div>'}
+        ${(l.minerImg || _minerData[l.nftContract]?.imageUrl || _minerData[l.nftContract?.toLowerCase()]?.imageUrl)
+          ? `<img src="${l.minerImg || _minerData[l.nftContract]?.imageUrl || _minerData[l.nftContract?.toLowerCase()]?.imageUrl}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'">`
+          : '<div style="width:42px;height:42px;border-radius:8px;background:var(--card);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem">⛏</div>'}
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem">${l.minerName||'Miner NFT'} <span class="mono" style="font-size:var(--t-xs);color:var(--mut)">#${l.tokenId}</span></div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem">${l.minerName || (_minerData[l.nftContract]?.name) || (_minerData[l.nftContract?.toLowerCase()]?.name) || (l.nftContract ? shortA(l.nftContract) : 'Unknown NFT')} <span class="mono" style="font-size:var(--t-xs);color:var(--mut)">#${l.tokenId}</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin:.2rem 0">
             ${s.hashrateFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--red)">${s.hashrateFormatted}</span>`:''}
             ${s.powerFormatted?`<span class="mono" style="font-size:1.25rem;color:var(--gold)">${s.powerFormatted}</span>`:''}
@@ -3827,6 +3471,23 @@ async function loadMarketplaceListings(marketContract, miners) {
 const _minerData = {};
 // _minerData populated by loadMiners(), consumed by showMinerDetail()
 
+// ── Pre-register Jarmer Jorn external NFT so marketplace can resolve it ──
+(function() {
+  const JARMER_ADDR = '0x71666cBe9FA350792d6C906e2Fc26f3F7aB46107';
+  const jarmerEntry = {
+    id: 'jarmer_jorn',
+    name: 'Jarmer Jorn',
+    address: JARMER_ADDR,
+    category: 'external_nft',
+    // imageUrl will be filled by fetchJarmerJorn() when Miners tab loads
+    // For marketplace display we use a globe emoji fallback (no image = uses ⛏ icon)
+    imageUrl: '',
+    minerStats: {},
+  };
+  _minerData['jarmer_jorn'] = jarmerEntry;
+  _minerData[JARMER_ADDR.toLowerCase()] = jarmerEntry;
+})();
+
 // ══════════════════════════════════════════════════════
 //  LP QUOTE FUNCTIONS
 // ══════════════════════════════════════════════════════
@@ -3852,7 +3513,7 @@ async function quoteLPFromAVAX() {
       const lpExpected=parseFloat(ethers.formatEther(q[2]));
       if(hcashInp&&!hcashInp._userEdited)hcashInp.value=hcashNeeded.toFixed(6);
       const ratio=(hcashNeeded/avaxAmt).toFixed(2);
-      if(preview)preview.innerHTML=`<span style="color:var(--grn)">✓</span> ${lpExpected.toExponential(4)} LP · ${hcashNeeded.toFixed(4)} hCASH · 1 AVAX = ${ratio} hCASH`;
+      if(preview)preview.innerHTML=`<span style="color:var(--grn)">✓</span> ${fmtLP(lpExpected)} LP · ${hcashNeeded.toFixed(4)} hCASH · 1 AVAX = ${ratio} hCASH`;
     } catch(e){
       // Fallback reserve math
       try{
@@ -4600,10 +4261,10 @@ function selectLockDur(d, el) {
 function buildCalcDurGrid() {
   const g=document.getElementById('calcDurGrid');
   if(!g||g.children.length>0)return;
-  const durs=[[1,'2.04×'],[90,'2.73×'],[180,'3.23×'],[365,'4.00×'],[730,'5.00×']];
+  const durs=[['stake','1×'],[1,'2.04×'],[90,'2.73×'],[180,'3.23×'],[365,'4.00×'],[730,'5.00×']];
   g.innerHTML=durs.map(([d,m],i)=>`
-    <div class="dur-btn${i===2?' active':''}" onclick="selectCalcDur(${d},this)" data-days="${d}">
-      <div class="dur-days">${d}d</div>
+    <div class="dur-btn${i===3?' active':''}" onclick="selectCalcDur(${d==='stake'?"'stake'":d},this)" data-days="${d}">
+      <div class="dur-days">${d==='stake'?'Stake':d+'d'}</div>
       <div class="dur-mult">${m}</div>
     </div>`).join('');
 }
@@ -4619,37 +4280,92 @@ function runCalc() {
   if(!el||!usdc)return;
   const hcashPrice=priceData?.price||0;
   const avaxPrice=priceData?.avaxPrice||0;
+  // If AVAX price not loaded yet, trigger a fetch and show loading state
+  if(!avaxPrice && !priceData?.avaxPrice) {
+    wiFetchAvaxPrice().then(()=>runCalc());
+    el.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:.85rem;text-align:center">
+      <span class="spin"></span><span class="mono" style="font-size:.9rem;color:var(--mut);margin-left:6px">Fetching live prices…</span>
+    </div>`;
+    return;
+  }
   const halfUsd=usdc/2;
   const hcashTokens=hcashPrice>0?halfUsd/hcashPrice:0;
   const avaxAmt=avaxPrice>0?halfUsd/avaxPrice:0;
   const mult=lockMultiplier(calcLockDays);
   const totalPts=moatPoints.reduce((s,p)=>s+Number(p.points||0),0);
-  // Estimate LP tokens proportional to pool
-  const lpFrac=poolData?((halfUsd/(poolData.avaxReserve*(avaxPrice||25)*2))||0):0;
-  const lpEst=poolData?(lpFrac*poolData.lpSupply)||0:0;
-  // Correct formula: pts = tokens × ppt × mult, ppt = 1,000,000 / totalSupply
-  const lpTotalSupply = poolData?.lpSupply||1;
-  const ppt = 1000000 / lpTotalSupply;
-  const estPts = lpEst * ppt * mult;
-  // Fort score = additive, total pool grows with new deposits
-  const fortPct=estPts>0?(estPts/(totalPts+estPts)*100).toFixed(5):'—';
+  const lpTotalSupply = poolData?.lpSupply || LIL_TOTAL_SUPPLY;
+
+  // Show loading state while we fetch LP quote from Pharaoh
   el.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:.85rem">
     <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--red);margin-bottom:.6rem">📊 Projection for $${usdc} USDC</div>
     <div class="calc-row"><span class="calc-lbl">Budget Split (50/50)</span><span class="calc-val">${fmtK(halfUsd)} each</span></div>
     <div class="calc-row"><span class="calc-lbl">hCASH to buy</span><span class="calc-val cg">${hcashPrice>0?fmtP(hcashTokens):'—'} hCASH</span></div>
     <div class="calc-row"><span class="calc-lbl">AVAX to pair</span><span class="calc-val cw">${avaxPrice>0?f4(avaxAmt):'—'} AVAX</span></div>
-    <div class="calc-row"><span class="calc-lbl">LP Tokens Est.</span><span class="calc-val cd">${lpEst>0?lpEst.toExponential(4):'—'}</span></div>
-    <div class="calc-row"><span class="calc-lbl">Lock Duration</span><span class="calc-val cg">${calcLockDays}d</span></div>
+    <div class="calc-row"><span class="calc-lbl">LP Tokens Est.</span><span class="calc-val cd"><span class="spin"></span> quoting…</span></div>
+    <div class="calc-row"><span class="calc-lbl">Lock Duration</span><span class="calc-val cg">${calcLockDays==='stake'?'Stake (flexible)':calcLockDays+'d lock'}</span></div>
     <div class="calc-row"><span class="calc-lbl">Points Multiplier</span><span class="calc-val cr">${mult}×</span></div>
-    <div class="calc-row" style="border-top:1px solid var(--bor);padding-top:.55rem;margin-top:.2rem">
-      <span class="calc-lbl" style="color:var(--txt)">Est. Fort Score Share</span>
-      <span class="calc-val cgn" style="font-size:1.25rem">${fortPct}%</span>
-    </div>
-    <div class="mono" style="font-size:1.25rem;color:var(--mut);margin-top:.55rem">
-      ⚠ LP token estimate is approximate and depends on pool ratio at time of deposit.<br>
-      Points estimate is rough. Actual points depend on LP contract implementation.
-    </div>
+    <div class="calc-row"><span class="calc-lbl">Est. Moat Points</span><span class="calc-val cr">…</span></div>
   </div>`;
+
+  // Fetch LP from Pharaoh quoteAddLiquidity (same as What If page uses for poolData)
+  (async () => {
+    let lpEst = 0;
+    try {
+      const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+      const hcashAddr = await resolveHcashToken();
+      // Detect stable flag
+      const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR), PHARAOH_FACTORY_ABI, prov);
+      const [pF, pT] = await Promise.allSettled([
+        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, false),
+        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, true),
+      ]);
+      let stable = false;
+      if (pT.status==='fulfilled' && pT.value && pT.value !== ethers.ZeroAddress) {
+        try {
+          const pc = new ethers.Contract(pT.value, ['function getReserves() view returns (uint256,uint256,uint256)'], prov);
+          const res = await pc.getReserves();
+          stable = Number(res[0]) > 0 && Number(res[1]) > 0;
+        } catch(e) { stable = false; }
+      }
+      // avaxAmt is the AVAX side (halfUsd / avaxPrice)
+      const avaxWei = ethers.parseEther(safeNum(avaxAmt));
+      const hcashDec = Number(await new ethers.Contract(hcashAddr, ERC20_ABI, prov).decimals().catch(()=>18));
+      // Use a very large hCASH desired so router returns the actual required hCASH
+      const bigHcash = ethers.parseUnits('999999999', hcashDec);
+      const router = new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR), PHARAOH_ROUTER_ABI, prov);
+      const q = await router.quoteAddLiquidity(ethers.getAddress(WAVAX_ADDR), hcashAddr, stable, avaxWei, bigHcash);
+      // q[2] = liquidity (LP tokens) as bigint in 18 decimals
+      lpEst = parseFloat(ethers.formatEther(q[2]));
+    } catch(e) {
+      // Fallback to proportional estimate from pool data
+      if (poolData?.lpSupply && poolData?.avaxReserve && avaxPrice > 0) {
+        const lpFrac = halfUsd / (poolData.avaxReserve * avaxPrice * 2);
+        lpEst = lpFrac * poolData.lpSupply;
+      }
+      console.warn('runCalc LP quote fallback:', e.message?.slice(0,60));
+    }
+
+    const estPts = lpEst > 0 ? calcMoatPoints(lpEst, calcLockDays, lpTotalSupply) : 0;
+    const fortPct = estPts > 0 ? (estPts / (totalPts + estPts) * 100).toFixed(5) : '—';
+
+    el.innerHTML=`<div style="background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:.85rem">
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.55rem;color:var(--red);margin-bottom:.6rem">📊 Projection for $${usdc} USDC</div>
+      <div class="calc-row"><span class="calc-lbl">Budget Split (50/50)</span><span class="calc-val">${fmtK(halfUsd)} each</span></div>
+      <div class="calc-row"><span class="calc-lbl">hCASH to buy</span><span class="calc-val cg">${hcashPrice>0?fmtP(hcashTokens):'—'} hCASH</span></div>
+      <div class="calc-row"><span class="calc-lbl">AVAX to pair</span><span class="calc-val cw">${avaxPrice>0?f4(avaxAmt)+' AVAX':'—'}</span></div>
+      <div class="calc-row"><span class="calc-lbl">LP Tokens Est.</span><span class="calc-val cd">${lpEst>0?fmtLP(lpEst):'—'}</span></div>
+      <div class="calc-row"><span class="calc-lbl">Lock Duration</span><span class="calc-val cg">${calcLockDays==='stake'?'Stake (flexible)':calcLockDays+'d lock'}</span></div>
+      <div class="calc-row"><span class="calc-lbl">Points Multiplier</span><span class="calc-val cr">${mult}×</span></div>
+      <div class="calc-row"><span class="calc-lbl">Est. Moat Points</span><span class="calc-val cr">${estPts>0?fmtP(estPts)+' pts':'—'}</span></div>
+      <div class="calc-row" style="border-top:1px solid var(--bor);padding-top:.55rem;margin-top:.2rem">
+        <span class="calc-lbl" style="color:var(--txt)">Est. Fort Score Share</span>
+        <span class="calc-val cgn" style="font-size:1.25rem">${fortPct}%</span>
+      </div>
+      <div class="mono" style="font-size:1.25rem;color:var(--mut);margin-top:.55rem">
+        ⚠ LP token estimate is sourced from Pharaoh's quoteAddLiquidity. Actual LP depends on pool ratio at deposit time.
+      </div>
+    </div>`;
+  })();
 }
 // EEL Calculator
 function runEel() {
@@ -5064,7 +4780,75 @@ async function loadFortScoreOptimizer() {
 //  BOOT
 // ══════════════════════════════════════════════════════
 async function loadAll() {
-  await Promise.allSettled([loadPriceData(),loadMoatPoints()]);
+  await Promise.allSettled([loadPriceData(), loadMoatPoints(), loadChainStats()]);
+}
+
+async function loadChainStats() {
+  try {
+    const MAIN_CONTRACT = '0x105fecae0c48d683dA63620De1f2d1582De9e98a';
+    const MAIN_ABI = [
+      'function totalHashrate() view returns (uint256)',
+      'function getBigcoinPerBlock() view returns (uint256)',
+      'function blocksUntilNextHalving() view returns (uint256)',
+      'function HALVING_INTERVAL() view returns (uint256)',
+      'function facilityCount() view returns (uint256)',
+    ];
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
+
+    // Fetch block number and chain stats in parallel
+    const [blockHex, hashRaw, bpbRaw, halvRaw, halvIntRaw, facRaw] = await Promise.all([
+      prov.send('eth_blockNumber', []),
+      game.totalHashrate().catch(() => 0n),
+      game.getBigcoinPerBlock().catch(() => 0n),
+      game.blocksUntilNextHalving().catch(() => 0n),
+      game.HALVING_INTERVAL().catch(() => 0n),
+      game.facilityCount().catch(() => 0n),
+    ]);
+
+    // Current block
+    const curBlock = parseInt(blockHex, 16);
+    if (curBlock > 0) {
+      setTxt('d_block', curBlock.toLocaleString());
+      setTxt('d_blockTime', '~1s avg · live');
+    }
+
+    // Network hashrate (in MH/s)
+    const hashMhs = Number(hashRaw);
+    if (hashMhs > 0) {
+      const hashGhs = hashMhs / 1000;
+      setTxt('d_netHash', hashGhs.toFixed(3) + ' GH/s');
+    }
+
+    // Emission per block + per day
+    const bpb = parseFloat(ethers.formatEther(bpbRaw || 0n));
+    if (bpb > 0) {
+      const blocksPerDay = 83802; // live average from chain data
+      const emitDay = bpb * blocksPerDay;
+      setTxt('d_emitBlock', bpb.toFixed(4) + ' hCASH');
+      setTxt('d_emitDay', fmtP(emitDay) + ' hCASH/day');
+      // Update wiCalc emission too
+      _wiDailyEmission = emitDay;
+      if (!_wiNetHashMhs && hashMhs > 0) _wiNetHashMhs = hashMhs;
+    }
+
+    // Halving countdown
+    const halvBlocks = Number(halvRaw);
+    if (halvBlocks > 0) {
+      const secsLeft = halvBlocks * 1; // ~1s/block on Avalanche
+      const daysLeft = secsLeft / 86400;
+      const hrsLeft  = (secsLeft % 86400) / 3600;
+      const minsLeft = (secsLeft % 3600)  / 60;
+      setTxt('d_halving', `${Math.floor(daysLeft)}d ${Math.floor(hrsLeft)}h ${Math.floor(minsLeft)}m`);
+      setTxt('d_halvingBlocks', halvBlocks.toLocaleString() + ' blocks');
+      window._wiBlocksToHalving = halvBlocks;
+    }
+
+    // Facility count
+    const facCount = Number(facRaw);
+    if (facCount > 0) setTxt('d_facilities', facCount.toLocaleString());
+
+  } catch(e) { console.warn('loadChainStats:', e.message); }
 }
 
 // ══════════════════════════════════════════════════════
@@ -5731,24 +5515,26 @@ document.addEventListener('click', function(e) {
   const ctx = canvas.getContext('2d');
   let W, H, animId;
 
+  function rnd(a,b){ return a + Math.random()*(b-a); }
+
+  // Declare arrays before resize() so initOrbs/initEmbers can reference them
+  const ORBS = [];
+  const EMBERS = [];
+
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
     initOrbs();
-    if (typeof initEmbers === 'function') initEmbers();
+    initEmbers();
   }
   window.addEventListener('resize', resize);
   resize();
 
-  function rnd(a,b){ return a + Math.random()*(b-a); }
-
-  // ── Glowing orbs ──
-  const ORBS = [];
   function initOrbs() {
     ORBS.length = 0;
     const count = Math.min(6, Math.floor(W / 260));
     // Theme: red-dominant with faint gold accent — no blues/greens
-    const colors = ['232,0,14','200,0,8','232,0,14','232,60,60','240,165,0'];
+    const colors = ['232,53,53','200,30,30','212,100,40','232,53,53','212,168,67'];
     for (let i = 0; i < count; i++) {
       ORBS.push({
         x: rnd(0.05,0.95), y: rnd(0.05,0.95),
@@ -5761,8 +5547,6 @@ document.addEventListener('click', function(e) {
     }
   }
 
-  // ── Floating ember particles ──
-  const EMBERS = [];
   function initEmbers() {
     EMBERS.length = 0;
     const count = Math.min(40, Math.floor(W / 28));
@@ -5779,7 +5563,7 @@ document.addEventListener('click', function(e) {
       r: rnd(1, 2.8),
       alpha: rnd(0.15, 0.55),
       fade: rnd(0.003, 0.008),
-      col: Math.random() < 0.7 ? '232,0,14' : Math.random() < 0.5 ? '240,165,0' : '255,80,60',
+      col: Math.random() < 0.65 ? '232,53,53' : Math.random() < 0.5 ? '212,168,67' : '249,115,22',
       life: 1,
     };
   }
@@ -5842,7 +5626,7 @@ document.addEventListener('click', function(e) {
       scanY = (scanY + 0.5) % H;
       const scanGrad = ctx.createLinearGradient(0, scanY - 2, 0, scanY + 2);
       scanGrad.addColorStop(0,   'rgba(232,0,14,0)');
-      scanGrad.addColorStop(0.5, 'rgba(232,0,14,0.025)');
+      scanGrad.addColorStop(0.5, 'rgba(232,53,53,0.02)');
       scanGrad.addColorStop(1,   'rgba(232,0,14,0)');
       ctx.fillStyle = scanGrad;
       ctx.fillRect(0, scanY - 2, W, 4);
@@ -5851,9 +5635,7 @@ document.addEventListener('click', function(e) {
     animId = requestAnimationFrame(draw);
   }
 
-  initOrbs();
-  initEmbers();
-  draw();
+  draw(); // resize() already populated ORBS/EMBERS via initOrbs/initEmbers
 
   window._miningAnim = {
     pause()  { cancelAnimationFrame(animId); canvas.classList.add('hidden'); },
@@ -5972,6 +5754,8 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
   const minerByAddr = {};
   miners.forEach(m => { if(m.address) minerByAddr[m.address.toLowerCase()] = m; });
   _wiMiners.forEach(m => { if(m.address) minerByAddr[m.address.toLowerCase()] = m; });
+  // Include all pre-registered external NFTs from _minerData (e.g. Jarmer Jorn)
+  Object.values(_minerData).forEach(m => { if(m.address) minerByAddr[m.address.toLowerCase()] = m; });
 
   function parseCurrencyPriceWi(rawWei, currencyAddr) {
     const ca = (currencyAddr||'').toLowerCase();
@@ -6132,11 +5916,15 @@ function renderWiMarket() {
   for (const l of listings) {
     const key = l.nftContract || (l.minerName||'unknown').toLowerCase().replace(/\s+/g,'_');
     if (!minerGroups.has(key)) {
+      // Try resolving unknown contracts against _minerData (catches Jarmer Jorn + any others pre-registered)
+      const knownEntry = l.nftContract ? (_minerData[l.nftContract] || _minerData[l.nftContract.toLowerCase()]) : null;
+      const resolvedName = l.minerName || knownEntry?.name || (l.nftContract ? shortA(l.nftContract) : 'Unknown NFT');
+      const resolvedImg  = l.minerImg  || knownEntry?.imageUrl || '';
       minerGroups.set(key, {
         key,
-        minerName: l.minerName || 'Miner NFT',
-        minerImg:  l.minerImg  || '',
-        minerStats: l.minerStats || null,
+        minerName: resolvedName,
+        minerImg:  resolvedImg,
+        minerStats: l.minerStats || knownEntry?.minerStats || null,
         listings: [],
       });
     }
@@ -6187,7 +5975,7 @@ function renderWiMarket() {
         <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--t-md);color:var(--gold)">${group.minerName} — ${group.listings.length} active deal${group.listings.length!==1?'s':''}</div>
         <button onclick="wiToggleMinerGroup(null)" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:.9rem;padding:0;line-height:1" title="Close">✕</button>
       </div>
-      <div style="padding:.5rem .65rem;display:flex;flex-direction:column;gap:.35rem">
+      <div style="padding:.5rem .65rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.4rem">
         ${group.listings.map(l => {
           const s = l.minerStats || {};
           const mhs = s.hashrateMhps || s.hashrateRaw || 0;
@@ -6475,17 +6263,17 @@ async function wiFetchFacilityRatesOnChain() {
         game.facilityCount().catch(() => 6n),
       ]);
 
-    // totalHashrate: raw value IS already in GH/s (verified: 200148 = 200,148 GH/s)
-    const hashGhs = Number(totalHashRaw);
-    if (hashGhs > 0) {
-      _wiNetHashMhs = hashGhs * 1000; // store as MH/s internally
-      console.log('[Chain] totalHashrate:', hashGhs.toFixed(0), 'GH/s ✓');
+    // totalHashrate: raw value is in MH/s (verified: 200148 MH/s = 200.148 GH/s)
+    const hashMhs = Number(totalHashRaw);
+    if (hashMhs > 0) {
+      _wiNetHashMhs = hashMhs; // already MH/s — do NOT multiply by 1000
+      console.log('[Chain] totalHashrate:', hashMhs.toFixed(0), 'MH/s (' + (hashMhs/1000).toFixed(1) + ' GH/s) ✓');
     }
 
     // getBigcoinPerBlock: 18-decimal token amount — use ethers.formatEther for precision
     const bpb = parseFloat(ethers.formatEther(bigcoinPerBlockRaw || 0n));
     if (bpb > 0) {
-      _wiDailyEmission = bpb * 85460; // 85,460 Avalanche blocks/day
+      _wiDailyEmission = bpb * 87500; // 87,500 blocks/day — from docs: 4,200,000 halving interval / 48 days
       console.log('[Chain] getBigcoinPerBlock:', bpb.toFixed(4), 'hCASH/block → daily:', _wiDailyEmission.toFixed(0), '✓');
     }
 
@@ -7031,20 +6819,46 @@ function wiOnMinerSelect() {}
 function wiBuildLockGrid() {
   const g = document.getElementById('wi-lockGrid');
   if (!g || g.children.length > 0) return;
-  const durs = [[1,'2.04×'],[30,'2.31×'],[90,'2.73×'],[180,'3.23×'],[365,'4.00×'],[540,'4.57×'],[730,'5.00×']];
+  const durs = [['stake','1×'],['1','2.04×'],['30','2.31×'],['90','2.73×'],['180','3.23×'],['365','4.00×'],['730','5.00×']];
   g.innerHTML = durs.map(([d, m], i) => `
-    <div class="dur-btn${i===3?' active':''}" onclick="wiSelectLock(${d},this)" data-days="${d}" style="text-align:center">
-      <div class="dur-days">${d}d</div>
+    <div class="dur-btn${d==='180'?' active':''}" onclick="wiSelectLock(${d==='stake'?"'stake'":d},this)" data-days="${d}" style="text-align:center">
+      <div class="dur-days">${d==='stake'?'Stake':d+'d'}</div>
       <div class="dur-mult">${m}</div>
     </div>`).join('');
+  // Inject custom days input row below grid
+  const wrap = g.parentElement;
+  if (wrap && !document.getElementById('wi-customLockRow')) {
+    const row = document.createElement('div');
+    row.id = 'wi-customLockRow';
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px';
+    row.innerHTML = `
+      <span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut);white-space:nowrap">Custom days:</span>
+      <input id="wi-customLockDays" type="number" min="1" max="730" placeholder="e.g. 60"
+        class="inp" style="width:90px;padding:3px 7px;font-size:var(--t-xs)"
+        oninput="wiSelectLock(parseInt(this.value)||0,null)">
+      <span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut)" id="wi-customLockMult"></span>`;
+    wrap.appendChild(row);
+  }
 }
 
 function wiSelectLock(d, el) {
+  // d can be 'stake', a number of days, or 0 (from custom input before typed)
   document.querySelectorAll('#wi-lockGrid .dur-btn').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
-  _wiLockDaysVal = d;
+  // If a preset button was clicked, clear custom input
+  if (el) {
+    const customInp = document.getElementById('wi-customLockDays');
+    if (customInp) customInp.value = '';
+  }
+  _wiLockDaysVal = d === 'stake' ? 'stake' : (parseInt(d) || 0);
   const inp = document.getElementById('wi-lockDays');
-  if (inp) inp.value = d;
+  if (inp) inp.value = _wiLockDaysVal;
+  // Show multiplier next to custom input
+  const multLabel = document.getElementById('wi-customLockMult');
+  if (multLabel) {
+    const m = lockMultiplier(_wiLockDaysVal);
+    multLabel.textContent = m + '×';
+  }
   wiCalc();
 }
 
@@ -7120,6 +6934,83 @@ async function wiEnsureLiveData() {
   wiCalc();
 }
 
+// ── Async LP quote from Pharaoh — updates wi-lpTokens, wi-lpPoolShare, wi-lpPoints after sync calc ──
+let _wiLpQuoteTimer = null;
+async function wiQuoteLpFromPharaoh(avaxSide, hcashSide, lpTotalSupply, lockDaysVal, poolLiq, vol24h, hcashUsd) {
+  clearTimeout(_wiLpQuoteTimer);
+  _wiLpQuoteTimer = setTimeout(async () => {
+    try {
+      const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+      const hcashAddr = await resolveHcashToken();
+      // Detect stable flag
+      const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR), PHARAOH_FACTORY_ABI, prov);
+      const [pF, pT] = await Promise.allSettled([
+        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, false),
+        factory.getPair(ethers.getAddress(WAVAX_ADDR), hcashAddr, true),
+      ]);
+      let stable = false;
+      if (pT.status === 'fulfilled' && pT.value && pT.value !== ethers.ZeroAddress) {
+        try {
+          const pc = new ethers.Contract(pT.value, ['function getReserves() view returns (uint256,uint256,uint256)'], prov);
+          const res = await pc.getReserves();
+          stable = Number(res[0]) > 0 && Number(res[1]) > 0;
+        } catch(e) { stable = false; }
+      }
+      const avaxWei = ethers.parseEther(safeNum(avaxSide));
+      const hcashDec = Number(await new ethers.Contract(hcashAddr, ERC20_ABI, prov).decimals().catch(() => 18));
+      const bigHcash = ethers.parseUnits('999999999', hcashDec);
+      const router = new ethers.Contract(ethers.getAddress(PHARAOH_ROUTER_ADDR), PHARAOH_ROUTER_ABI, prov);
+      const q = await router.quoteAddLiquidity(ethers.getAddress(WAVAX_ADDR), hcashAddr, stable, avaxWei, bigHcash);
+      const lpTokenEst = parseFloat(ethers.formatEther(q[2]));
+      if (lpTokenEst <= 0) return;
+
+      const lpPoolSharePct = lpTotalSupply > 0 ? (lpTokenEst / lpTotalSupply) * 100 : 0;
+      const myFeeUsdDay = vol24h > 0 && lpPoolSharePct > 0 ? vol24h * 0.003 * (lpPoolSharePct / 100) : 0;
+      const mult = lockMultiplier(lockDaysVal);
+      const totalMoatPts = moatPoints.reduce((s, p) => s + Number(p.points || 0), 0);
+      const lpPtsTotal = calcMoatPoints(lpTokenEst, lockDaysVal, lpTotalSupply);
+      const lpPtsSharePct = totalMoatPts > 0 && lpPtsTotal > 0
+        ? (lpPtsTotal / (totalMoatPts + lpPtsTotal)) * 100 : 0;
+
+      const fmtH = n => n.toFixed(2);
+      const fmtU = n => '$' + n.toFixed(2);
+      const fmtP2 = n => {
+        if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+        if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+        return Math.round(n).toLocaleString();
+      };
+
+      // Update LP-related fields with accurate Pharaoh quote
+      const lpTokensEl = document.getElementById('wi-lpTokens');
+      if (lpTokensEl) lpTokensEl.textContent = fmtLP(lpTokenEst) + ' LP ✓';
+      const lpShareEl = document.getElementById('wi-lpPoolShare');
+      if (lpShareEl) lpShareEl.textContent = lpPoolSharePct > 0 ? lpPoolSharePct.toFixed(4) + '%' : '—';
+      const lpPtsEl = document.getElementById('wi-lpPoints');
+      if (lpPtsEl) lpPtsEl.textContent = lpPtsTotal > 0 ? fmtP2(lpPtsTotal) + ' pts total' : '—';
+      const lpFeesEl = document.getElementById('wi-lpFees');
+      if (lpFeesEl) lpFeesEl.textContent = myFeeUsdDay > 0 ? fmtU(myFeeUsdDay) + '/day' : '—';
+
+      // Path B results
+      const myFeeHcashDay = hcashUsd > 0 ? myFeeUsdDay / hcashUsd : 0;
+      const lpFee30 = myFeeHcashDay * 30;
+      const lpFeeUsd30 = myFeeUsdDay * 30;
+      const lpFee365 = myFeeHcashDay * 365;
+      const lpFeeUsd365 = myFeeUsdDay * 365;
+      const el_fd = document.getElementById('wi-lpFeeDay'); if (el_fd) el_fd.textContent = fmtH(myFeeHcashDay) + ' hCASH';
+      const el_f30 = document.getElementById('wi-lpFee30'); if (el_f30) el_f30.textContent = fmtH(lpFee30) + ' hCASH';
+      const el_fu30 = document.getElementById('wi-lpFeeUsd30'); if (el_fu30) el_fu30.textContent = fmtU(lpFeeUsd30);
+      const el_f365 = document.getElementById('wi-lpFee365'); if (el_f365) el_f365.textContent = fmtH(lpFee365) + ' hCASH';
+      const el_fu365 = document.getElementById('wi-lpFeeUsd365'); if (el_fu365) el_fu365.textContent = fmtU(lpFeeUsd365);
+      const el_pts = document.getElementById('wi-lpPtsDay');
+      if (el_pts) el_pts.textContent = lpPtsTotal > 0
+        ? `${fmtP2(lpPtsTotal)} pts (${lpPtsSharePct.toFixed(3)}% of moat)` : '—';
+    } catch(e) {
+      console.warn('[wiQuoteLpFromPharaoh] fallback to proportional:', e.message?.slice(0, 80));
+      // Silently keep the proportional estimate already displayed
+    }
+  }, 400);
+}
+
 // Core calculation
 function wiCalc() {
   const priceRaw  = parseFloat(document.getElementById('wi-price')?.value) || 0;
@@ -7135,18 +7026,26 @@ function wiCalc() {
   const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 5.77 : 5.77;
 
   // Convert miner price to USD
-  // Total budget = primary miner price (from input) + ALL "buy" slot miner prices combined
-  let primaryUsd = 0;
-  if (priceRaw > 0) {
-    primaryUsd = currency === 'hcash' ? priceRaw * hcashUsd : priceRaw * avaxUsd;
+  // When miners come from the cart (_wiCart), ALL prices are already in _wiSlots — use those directly.
+  // Only fall back to the manual wi-price input when there's no cart (manual search mode).
+  let minerUsd = 0;
+  if (_wiSlots.length > 0 && _wiCart.length > 0) {
+    // Cart mode: sum every slot's individual price in hCASH, convert to USD
+    const totalCartHcash = _wiSlots.reduce((s, sl) => s + (sl.price || 0), 0);
+    minerUsd = totalCartHcash * (hcashUsd || 0);
+  } else {
+    // Manual search mode: use the price input for the single selected miner
+    let primaryUsd = 0;
+    if (priceRaw > 0) {
+      primaryUsd = currency === 'hcash' ? priceRaw * hcashUsd : priceRaw * avaxUsd;
+    }
+    const extraSlotBuyTotal = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
+      .filter(sl => sl.source === 'buy')
+      .reduce((s, sl) => s + (sl.price || 0), 0);
+    const extraSlotUsd = extraSlotBuyTotal * (hcashUsd || 0);
+    minerUsd = primaryUsd + extraSlotUsd;
   }
-  // Extra slot miners (index 1+ if primary selected, or all if no primary)
-  const extraSlotBuyTotal = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
-    .filter(sl => sl.source === 'buy')
-    .reduce((s, sl) => s + (sl.price || 0), 0);
-  const extraSlotUsd = extraSlotBuyTotal * (hcashUsd || 0);
-  let minerUsd = primaryUsd + extraSlotUsd;
-  // Fallback: if no primary price typed yet but slot miners have prices
+  // Fallback: if still zero but slots have prices, compute from slots
   if (minerUsd === 0 && _wiSlots.length > 0) {
     const allBuyTotal = _wiSlots.filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
     minerUsd = allBuyTotal * (hcashUsd || 0);
@@ -7154,8 +7053,7 @@ function wiCalc() {
 
   // Update USD display
   const priceUsdEl = document.getElementById('wi-priceUsdDisplay');
-  const extraLabel = extraSlotUsd > 0 ? ` + $${extraSlotUsd.toFixed(2)} extra slots` : '';
-  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD total${extraLabel}` : '≈ $— USD';
+  if (priceUsdEl) priceUsdEl.textContent = minerUsd > 0 ? `≈ $${minerUsd.toFixed(2)} USD total (${_wiSlots.length} miner${_wiSlots.length!==1?'s':''})` : '≈ $— USD';
 
   // Get miner stats
   const s = _wiSelectedMiner?.minerStats || {};
@@ -7210,12 +7108,9 @@ function wiCalc() {
   const totalMhs   = slotTotalMhs   > 0 ? slotTotalMhs   : mhs;
   const totalWatts = slotTotalWatts > 0 ? slotTotalWatts : watts;
   // totalCostHcash = primary miner price in hCASH + all extra "buy" slot prices
-  const primaryCostHcash = priceRaw > 0
-    ? (currency === 'hcash' ? priceRaw : (priceRaw * avaxUsd / Math.max(hcashUsd, 0.000001)))
-    : 0;
-  const extraSlotsCostHcash = _wiSlots.slice(_wiSelectedMiner ? 1 : 0)
-    .filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0);
-  const totalCostHcash = primaryCostHcash + extraSlotsCostHcash || slotTotalBuyCost || priceRaw;
+  // Total cost in hCASH for break-even calculation — sum ALL slot prices directly
+  const totalCostHcash = _wiSlots.filter(sl => sl.source === 'buy').reduce((s, sl) => s + (sl.price || 0), 0)
+    || (currency === 'hcash' ? priceRaw : (priceRaw * avaxUsd / Math.max(hcashUsd, 0.000001)));
 
   // ── PATH A: MINER ──
   const minerShare     = totalMhs / liveNetHash;
@@ -7242,14 +7137,18 @@ function wiCalc() {
     : (priceData.liq || 0);
   const poolLiq     = poolTvlUsd;
 
-  // LP tokens proportional to share of pool TVL contributed
-  // lpTokenEst = (myUsd / poolTvl) × totalLpSupply
+  // LP tokens — show proportional estimate immediately, then update with Pharaoh quote async
   const lpTokenEst = poolData?.lpSupply > 0 && poolLiq > 0
     ? (minerUsd / poolLiq) * poolData.lpSupply
     : 0;
   const lpPoolSharePct = poolData?.lpSupply > 0 && lpTokenEst > 0
     ? (lpTokenEst / poolData.lpSupply) * 100
     : 0;
+
+  // Kick off an async Pharaoh quoteAddLiquidity to get accurate LP amount
+  if (avaxSide > 0) {
+    wiQuoteLpFromPharaoh(avaxSide, hcashSide, poolData?.lpSupply || LIL_TOTAL_SUPPLY, _wiLockDaysVal, poolLiq, vol24h, hcashUsd);
+  }
 
   // LP swap fees: 24h pool volume × 0.3% fee × my share of pool
   const vol24h        = priceData.vol24 || 0;
@@ -7286,7 +7185,7 @@ function wiCalc() {
   };
 
   document.getElementById('wi-mGrossDay').textContent     = fmtH(grossHcashDay) + ' hCASH';
-  document.getElementById('wi-mElecDay').textContent      = watts > 0 ? '-' + fmtH(elecHcashDay) + ' hCASH' : '0 (free power)';
+  document.getElementById('wi-mElecDay').textContent      = totalWatts > 0 ? '-' + fmtH(elecHcashDay) + ' hCASH' : '0 (free power)';
   document.getElementById('wi-mNetDay').textContent       = fmtH(netHcashDay) + ' hCASH';
   document.getElementById('wi-mNetUsdDay').textContent    = fmtU(netUsdDay);
   document.getElementById('wi-mNet30').textContent        = fmtH(net30) + ' hCASH';
@@ -7300,7 +7199,7 @@ function wiCalc() {
   document.getElementById('wi-lpTotalUsd').textContent    = fmtU(minerUsd);
   document.getElementById('wi-lpAvaxAmt').textContent     = avaxSide.toFixed(4) + ' AVAX';
   document.getElementById('wi-lpHcashAmt').textContent    = fmtP(hcashSide) + ' hCASH';
-  document.getElementById('wi-lpTokens').textContent      = lpTokenEst > 0 ? lpTokenEst.toExponential(4) + ' LP' : '—';
+  document.getElementById('wi-lpTokens').textContent      = lpTokenEst > 0 ? fmtLP(lpTokenEst) + ' LP' : '—';
   document.getElementById('wi-lpPoolShare').textContent   = lpPoolSharePct > 0 ? lpPoolSharePct.toFixed(4) + '%' : '—';
   document.getElementById('wi-lpMult').textContent        = mult + '×';
   document.getElementById('wi-lpPoints').textContent      = lpPtsTotal > 0 ? fmtP(lpPtsTotal) + ' pts total' : '—';
@@ -7312,7 +7211,9 @@ function wiCalc() {
   document.getElementById('wi-lpPtsDay').textContent      = lpPtsTotal > 0
     ? `${fmtP(lpPtsTotal)} pts (${lpPtsSharePct.toFixed(3)}% of moat)`
     : '—';
-  document.getElementById('wi-lpMultDisplay').textContent = `${mult}× (${_wiLockDaysVal}d lock)`;
+  document.getElementById('wi-lpMultDisplay').textContent = _wiLockDaysVal === 'stake'
+    ? `${mult}× (stake, no lock)`
+    : `${mult}× (${_wiLockDaysVal}d lock)`;
   document.getElementById('wi-lpFee30').textContent       = fmtH(lpFee30) + ' hCASH';
   document.getElementById('wi-lpFeeUsd30').textContent    = fmtU(lpFeeUsd30);
   document.getElementById('wi-lpFee365').textContent      = fmtH(lpFee365) + ' hCASH';
@@ -7631,6 +7532,72 @@ async function wiSyncLiveData() {
 }
 
 // Initialize What If page when navigated to
+// ── Fetch Jarmer Jorn external NFT miner ──
+async function fetchJarmerJorn() {
+  const JARMER_ADDR = '0x71666cBe9FA350792d6C906e2Fc26f3F7aB46107';
+  const extNftGrid = document.getElementById('extNftGrid');
+  const extNftHead = document.getElementById('extNftSectionHead');
+  if (!extNftGrid) return;
+
+  try {
+    // Try HashCash API first
+    const resp = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY } }).then(r => r.json());
+    const contracts = Array.isArray(resp) ? resp : (resp?.contracts || []);
+    const found = contracts.filter(c =>
+      (c.address||'').toLowerCase() === JARMER_ADDR.toLowerCase() ||
+      (c.name||'').toLowerCase().includes('jarmer') ||
+      c.category === 'external_nft'
+    );
+
+    if (found.length) {
+      if (extNftHead) extNftHead.style.display = '';
+      extNftGrid.innerHTML = found.map(m => {
+        const s = m.minerStats || {};
+        const img = m.imageUrl || '';
+        const mid = m.id || m.name || '';
+        const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+        const pw  = s.powerWatts  || s.powerRaw    || 0;
+        const eff = mhs && pw ? `${(mhs/pw*100).toFixed(1)} MH/W` : '';
+        return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
+          ${img ? `<img class="miner-img" src="${img}" alt="${m.name||'NFT'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">` : ''}
+          <div class="miner-img-fb" style="${img?'display:none':''}">🌐</div>
+          <div class="miner-info">
+            <div class="miner-name">${m.name || 'Jarmer Jorn'}</div>
+            ${mhs ? `<div class="miner-stat"><span class="miner-stat-k">Hashrate</span><span class="miner-stat-v" style="color:var(--red)">${mhs >= 1000 ? (mhs/1000).toFixed(1)+'GH/s' : mhs+'MH/s'}</span></div>` : ''}
+            ${pw  ? `<div class="miner-stat"><span class="miner-stat-k">Power</span><span class="miner-stat-v" style="color:var(--gold)">${pw}W</span></div>` : ''}
+            ${eff ? `<div class="miner-stat"><span class="miner-stat-k">Efficiency</span><span class="miner-stat-v" style="color:var(--grn)">${eff}</span></div>` : ''}
+            <div class="miner-stat"><span class="miner-stat-k">Type</span><span class="miner-stat-v" style="color:var(--pur)">External NFT</span></div>
+            <div class="miner-stat" style="margin-top:.25rem"><span class="mono" style="font-size:.7rem;color:var(--mut)">${shortA(m.address||JARMER_ADDR)}</span></div>
+          </div>
+        </div>`;
+      }).join('');
+      // Update _minerData with fresh API data (including imageUrl if available)
+      found.forEach(m => {
+        const key1 = m.id || m.name || 'jarmer_jorn';
+        const key2 = (m.address || JARMER_ADDR).toLowerCase();
+        _minerData[key1] = m;
+        _minerData[key2] = m;
+        // Also update the jarmer_jorn key explicitly
+        _minerData['jarmer_jorn'] = m;
+      });
+      return;
+    }
+  } catch(e) { console.warn('fetchJarmerJorn API:', e.message); }
+
+  // Fallback: show placeholder card — name is already in _minerData from pre-registration
+  if (extNftHead) extNftHead.style.display = '';
+  extNftGrid.innerHTML = `<div class="miner-card" onclick="showMinerDetail('jarmer_jorn')">
+    <div class="miner-img-fb">🌐</div>
+    <div class="miner-info">
+      <div class="miner-name">Jarmer Jorn</div>
+      <div class="miner-stat"><span class="miner-stat-k">Type</span><span class="miner-stat-v" style="color:var(--pur)">External NFT</span></div>
+      <div class="miner-stat" style="margin-top:.25rem">
+        <a href="https://snowtrace.io/address/${JARMER_ADDR}" target="_blank" class="mono" style="font-size:.7rem;color:var(--red);text-decoration:none">${shortA(JARMER_ADDR)} ↗</a>
+      </div>
+    </div>
+  </div>`;
+}
+
 function initWhatIf() {
   wiBuildLockGrid();
   wiRenderSlotTable();    // show empty slot grid immediately
