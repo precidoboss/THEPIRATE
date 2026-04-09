@@ -929,6 +929,14 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
 <!-- MINING BACKGROUND CANVAS -->
 <canvas id="miningCanvas"></canvas>
 
+<!-- STARTUP LOADING OVERLAY — hidden once _appReady is set -->
+<div id="appLoadingOverlay" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;transition:opacity .4s">
+  <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.4rem;color:var(--red);letter-spacing:.1em">hCASH MOAT</div>
+  <div style="display:flex;align-items:center;gap:8px;color:var(--mut);font-family:'DM Mono',monospace;font-size:.75rem">
+    <div style="width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.2s ease-in-out infinite"></div>
+    Loading live data…
+  </div>
+</div>
 
 <!-- NOTIF -->
 <div id="notif"></div>
@@ -2423,8 +2431,10 @@ function notif(msg, type='info', dur=4500) {
 }
 
 // ── NAV ──
+let _appReady = false; // set to true after init() completes
 function nav(el) {
   if(!el||!el.dataset)return;
+  if(!_appReady) { console.warn('nav: app not ready yet'); return; }
   const v = el.dataset.v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
@@ -4843,78 +4853,104 @@ async function loadChainStats() {
   } catch(e) { console.warn('loadChainStats:', e.message); }
 }
 
-// Count active player-owned facilities using the verified contract ABI
-// InitialFacilityPurchased(address indexed player) = every player who started
-// FacilityBought(address indexed player, uint256 facilityIndex, uint256 cost) = upgrades
+// Count active player-owned facilities from the chain
+// Logic: FacilityBought(address indexed player, uint256 indexed facilityIndex, uint256 cost)
+// For each unique player, track their LATEST facilityIndex → count unique players per level → sum = total
+// This matches the accurate dashboard: 92+123+65+20+8 = 308
 async function loadActiveFacilityCount(MAIN_CONTRACT) {
+  // Topic hashes computed from ABI signatures
+  const TOPIC_INITIAL = ethers.id('InitialFacilityPurchased(address)');
+  const TOPIC_BOUGHT  = ethers.id('FacilityBought(address,uint256,uint256)');
+
   try {
-    // 1. Try HashCash API networkStats first
-    const resp = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
-    const contracts = Array.isArray(resp) ? resp : (resp?.contracts || []);
-    const game = contracts.find(c => c.category === 'game_main');
-    const ns = game?.networkStats || game?.stats || {};
-    const apiCount = Number(
-      ns.activeFacilities ?? ns.totalFacilities ?? ns.facilitiesOnline ??
-      ns.playerFacilities ?? ns.active_facilities ?? ns.players ?? ns.totalPlayers ?? 0
-    );
-    if (apiCount > 0) { setTxt('d_facilities', apiCount.toLocaleString()); return; }
-  } catch(e) { /* fall through */ }
-
-  // 2. Count unique players from InitialFacilityPurchased events via Snowtrace
-  // Topic0 for InitialFacilityPurchased(address indexed player)
-  // keccak256("InitialFacilityPurchased(address)") = known value
-  try {
-    const INITIAL_FAC_TOPIC = '0x5c2a6e6d2b7a7e6b2e7c3a5e8f4b1d3c9a7e2f6b8c4d5e1f3a7b2c6d8e0f4a1b';
-    // Fetch all InitialFacilityPurchased events — one per player
-    const logsRes = await fetch(
-      `${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=0x5e7e5555a5c0bca80c1d7a3b92fee38d862cf4c8c9a2a7b6e0d4f1b3c5a8e2d7&fromBlock=0&toBlock=99999999&offset=1000`,
-      { signal: AbortSignal.timeout(8000) }
-    ).then(r => r.json());
-
-    if (logsRes?.status === '1' && logsRes.result?.length > 0) {
-      // Count unique player addresses from topic1
-      const unique = new Set(logsRes.result.map(l => l.topics?.[1] ? '0x' + l.topics[1].slice(26).toLowerCase() : '').filter(Boolean));
-      const count = unique.size;
-      if (count > 0) { setTxt('d_facilities', count.toLocaleString()); return; }
-    }
-  } catch(e) { /* fall through */ }
-
-  // 3. Try on-chain: read InitialFacilityPurchased + FacilityBought event count via eth_getLogs
-  try {
-    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
-    // InitialFacilityPurchased(address indexed player) — topic0
-    const TOPIC_INITIAL = ethers.id('InitialFacilityPurchased(address)');
-    const TOPIC_BOUGHT  = ethers.id('FacilityBought(address,uint256,uint256)');
-
-    const [initialLogs, boughtLogs] = await Promise.allSettled([
-      prov.getLogs({ address: MAIN_CONTRACT, topics: [TOPIC_INITIAL], fromBlock: 0, toBlock: 'latest' }),
-      prov.getLogs({ address: MAIN_CONTRACT, topics: [TOPIC_BOUGHT],  fromBlock: 0, toBlock: 'latest' }),
+    // Use Snowtrace getLogs API — handles full range without block limit issues
+    const [initialRes, boughtRes] = await Promise.allSettled([
+      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`, { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
+      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`,  { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
     ]);
 
-    // Unique players who initialized starter facility = total player count
-    const initialPlayers = new Set();
-    if (initialLogs.status === 'fulfilled') {
-      initialLogs.value.forEach(log => {
-        if (log.topics?.[1]) initialPlayers.add('0x' + log.topics[1].slice(26).toLowerCase());
-      });
+    // Players who purchased a paid facility (Lv1-Lv5) via FacilityBought
+    // Track latest facilityIndex per player (they can only go up)
+    const playerLevel = new Map(); // player address → latest facilityIndex
+    if (boughtRes.status === 'fulfilled' && boughtRes.value?.status === '1') {
+      for (const log of (boughtRes.value.result || [])) {
+        const player  = log.topics?.[1] ? '0x' + log.topics[1].slice(26).toLowerCase() : null;
+        const lvRaw   = log.topics?.[2] ? Number(BigInt(log.topics[2])) : 0;
+        if (!player || lvRaw < 1 || lvRaw > 5) continue;
+        // Keep the highest level seen per player
+        if (!playerLevel.has(player) || lvRaw > playerLevel.get(player)) {
+          playerLevel.set(player, lvRaw);
+        }
+      }
     }
 
-    // Players who also bought upgraded facilities (counted separately for accuracy)
-    const upgradedPlayers = new Set();
-    if (boughtLogs.status === 'fulfilled') {
-      boughtLogs.value.forEach(log => {
-        if (log.topics?.[1]) upgradedPlayers.add('0x' + log.topics[1].slice(26).toLowerCase());
-      });
+    // Per-level breakdown (unique players at that level)
+    const perLevel = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const lv of playerLevel.values()) {
+      if (lv >= 1 && lv <= 5) perLevel[lv]++;
+    }
+    const totalPaidFacilities = playerLevel.size; // unique players with Lv1+ facility
+
+    // Also count players with only the starter facility (InitialFacilityPurchased but no FacilityBought)
+    let starterOnly = 0;
+    if (initialRes.status === 'fulfilled' && initialRes.value?.status === '1') {
+      for (const log of (initialRes.value.result || [])) {
+        const player = log.topics?.[1] ? '0x' + log.topics[1].slice(26).toLowerCase() : null;
+        if (player && !playerLevel.has(player)) starterOnly++;
+      }
     }
 
-    // Total unique players = InitialFacilityPurchased count (every player gets one)
-    const totalPlayers = initialPlayers.size;
-    if (totalPlayers > 0) {
-      setTxt('d_facilities', totalPlayers.toLocaleString());
-      console.log('[Facilities] Total players:', totalPlayers, '| Upgraded:', upgradedPlayers.size);
+    const total = totalPaidFacilities + starterOnly;
+    console.log('[Facilities] Lv1-5 players:', perLevel, '| Starter-only:', starterOnly, '| Total:', total);
+
+    if (total > 0) {
+      setTxt('d_facilities', total.toLocaleString());
       return;
     }
-  } catch(e) { console.warn('[Facilities] on-chain getLogs failed:', e.message); }
+    // Fallback if Snowtrace returned nothing — try ethers getLogs in chunks
+    throw new Error('Snowtrace returned 0 results');
+  } catch(e) {
+    console.warn('[Facilities] Snowtrace failed, trying ethers RPC in chunks:', e.message);
+  }
+
+  // Fallback: ethers getLogs in block chunks (Avalanche limits range to ~2048 blocks per call)
+  try {
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const latestBlock = Number(await prov.getBlockNumber());
+    const CHUNK = 100000; // large chunks, RPC may return partial
+    const playerLevel = new Map();
+    let starterPlayers = new Set();
+
+    for (let from = 0; from <= latestBlock; from += CHUNK) {
+      const to = Math.min(from + CHUNK - 1, latestBlock);
+      const [bl, il] = await Promise.allSettled([
+        prov.getLogs({ address: MAIN_CONTRACT, topics: [TOPIC_BOUGHT],  fromBlock: from, toBlock: to }),
+        prov.getLogs({ address: MAIN_CONTRACT, topics: [TOPIC_INITIAL], fromBlock: from, toBlock: to }),
+      ]);
+      if (bl.status === 'fulfilled') {
+        bl.value.forEach(log => {
+          const player = log.topics?.[1] ? '0x' + log.topics[1].slice(26).toLowerCase() : null;
+          const lv = log.topics?.[2] ? Number(BigInt(log.topics[2])) : 0;
+          if (player && lv >= 1 && lv <= 5) {
+            if (!playerLevel.has(player) || lv > playerLevel.get(player)) playerLevel.set(player, lv);
+          }
+        });
+      }
+      if (il.status === 'fulfilled') {
+        il.value.forEach(log => {
+          const player = log.topics?.[1] ? '0x' + log.topics[1].slice(26).toLowerCase() : null;
+          if (player) starterPlayers.add(player);
+        });
+      }
+    }
+
+    let starterOnly = 0;
+    for (const p of starterPlayers) { if (!playerLevel.has(p)) starterOnly++; }
+    const total = playerLevel.size + starterOnly;
+    if (total > 0) { setTxt('d_facilities', total.toLocaleString()); return; }
+  } catch(e2) {
+    console.warn('[Facilities] ethers getLogs fallback failed:', e2.message);
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -5470,6 +5506,14 @@ async function showMinerDetail(id) {
   // Fetch Jarmer Jorn image from NFT contract immediately so marketplace shows it
   fetchJarmerJornImage();
   await loadAll();
+  _appReady = true; // unlock nav() — app is fully initialized
+  // Hide loading overlay
+  const overlay = document.getElementById('appLoadingOverlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    setTimeout(() => overlay.remove(), 450);
+  }
   setInterval(loadAll, 45000);
 })();
 
@@ -6149,11 +6193,23 @@ function wiToggleCartListing(listing) {
   if (idx >= 0) {
     _wiCart.splice(idx, 1);
   } else {
-    // Check facility capacity
+    // Check slot capacity
     const fac = wiGetFacility();
     const totalSlots = fac.slots || 9;
+    const maxWatts   = fac.watts || 2000;
     if (_wiCart.length >= totalSlots) {
       notif(`Facility only has ${totalSlots} slots — remove one first`, 'warn'); return;
+    }
+    // Check power capacity
+    const s = listing.minerStats || listing._miner?.minerStats || {};
+    const minerWatts = s.powerWatts || s.powerRaw || 0;
+    const usedWatts = _wiSlots.reduce((acc, sl) => acc + (sl.watts || 0), 0);
+    const freeWatts = maxWatts - usedWatts;
+    if (minerWatts > 0 && usedWatts >= maxWatts) {
+      notif(`⚡ No power left in this facility (${maxWatts}W max)`, 'warn'); return;
+    }
+    if (minerWatts > 0 && usedWatts + minerWatts > maxWatts) {
+      notif(`⚡ Power overload: miner needs ${minerWatts}W, only ${freeWatts}W free`, 'warn'); return;
     }
     _wiCart.push(listing);
   }
@@ -6510,16 +6566,22 @@ function wiFacilityRatesUpdateUI() {
   wiCalc();
 }
 
-// Called when facility level changes — reset slots and re-render
+// Called when facility level changes — fully reset everything
 function wiOnFacilityChange() {
+  // Clear ALL slots and selected miner — user must re-add for the new facility
   _wiSlots = [];
-  // If primary miner already selected, put it in slot 1
-  if (_wiSelectedMiner) {
-    const s = _wiSelectedMiner.minerStats || {};
-    const watts = s.powerWatts || s.powerRaw || 0;
-    const price = parseFloat(document.getElementById('wi-price')?.value) || 0;
-    _wiSlots.push({ miner: _wiSelectedMiner, source: 'buy', price, watts });
-  }
+  _wiCart = [];
+  _wiSlotSelectedMiner = null;
+  // Clear the slot search input
+  const slotSearch = document.getElementById('wi-slotMinerSearch');
+  if (slotSearch) slotSearch.value = '';
+  const slotPrice = document.getElementById('wi-slotMinerPrice');
+  if (slotPrice) slotPrice.value = '';
+  const slotDrop = document.getElementById('wi-slotDropdown');
+  if (slotDrop) slotDrop.style.display = 'none';
+  // Re-render market and cart
+  renderWiMarket();
+  renderWiCart();
   wiRenderSlotTable();
   wiCalc();
 }
@@ -6541,29 +6603,37 @@ function wiRenderSlotTable() {
   const powerBar = document.getElementById('wi-slotPowerBar');
   if (!grid) return;
 
-  // Ensure _wiSlots doesn't exceed slot count
+  // Clamp slots to capacity
   while (_wiSlots.length > totalSlots) _wiSlots.pop();
 
-  // Compute used power
   const usedWatts = _wiSlots.reduce((s, sl) => s + (sl.watts || 0), 0);
   const powerPct  = maxWatts > 0 ? Math.min(100, (usedWatts / maxWatts) * 100) : 0;
+  const powerFull = usedWatts >= maxWatts;
+
   if (powerBar) {
     powerBar.style.width = powerPct + '%';
-    powerBar.style.background = powerPct > 90
+    powerBar.style.background = powerPct >= 100
       ? 'linear-gradient(90deg,var(--red),var(--red2))'
-      : powerPct > 70
+      : powerPct > 75
         ? 'linear-gradient(90deg,var(--gold),#fbbf24)'
         : 'linear-gradient(90deg,var(--grn),#4ade80)';
   }
 
   if (summary) {
-    summary.textContent = `${_wiSlots.length}/${totalSlots} slots · ${usedWatts}W / ${maxWatts}W`;
-    summary.style.color = powerPct > 90 ? 'var(--red)' : powerPct > 70 ? 'var(--gold)' : 'var(--grn)';
+    const freeW = Math.max(0, maxWatts - usedWatts);
+    const freeSlots = totalSlots - _wiSlots.length;
+    summary.innerHTML = `
+      <span style="color:${powerPct>=100?'var(--red)':powerPct>75?'var(--gold)':'var(--grn)'}">${_wiSlots.length}/${totalSlots} slots</span>
+      <span style="color:var(--mut)">·</span>
+      <span style="color:${powerPct>=100?'var(--red)':powerPct>75?'var(--gold)':'var(--txt)'}">${usedWatts}W / ${maxWatts}W</span>
+      ${powerFull ? '<span style="background:rgba(232,53,53,.15);color:var(--red);border:1px solid rgba(232,53,53,.3);border-radius:4px;padding:1px 6px;font-size:9px;margin-left:4px">⚡ POWER FULL</span>' : `<span style="color:var(--mut);font-size:9px">${freeW}W free · ${freeSlots} slot${freeSlots!==1?'s':''} open</span>`}
+    `;
   }
 
-  // Build slot cells
-  const cols = fac.dims?.split('×')[1] || Math.ceil(Math.sqrt(totalSlots));
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  // Determine grid columns from facility dimensions
+  const dimY = fac.dims ? parseInt(fac.dims.split('×')[1]) : Math.ceil(Math.sqrt(totalSlots));
+  grid.style.gridTemplateColumns = `repeat(${dimY}, 1fr)`;
+  grid.style.gap = '6px';
 
   let html = '';
   for (let i = 0; i < totalSlots; i++) {
@@ -6572,26 +6642,72 @@ function wiRenderSlotTable() {
       const m = sl.miner;
       const s = m.minerStats || {};
       const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+      const mhsStr = mhs >= 1000 ? (mhs/1000).toFixed(1)+'GH/s' : mhs ? mhs+'MH/s' : '?';
       const imgUrl = m.imageUrl || '';
-      const imgTag = imgUrl ? `<img src="${imgUrl}" style="width:22px;height:22px;object-fit:cover;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'" alt="">` : '<span style="font-size:.9rem;flex-shrink:0">⛏</span>';
-      const srcBadge = sl.source === 'own'
-        ? `<span style="font-size:8px;background:rgba(74,222,128,.12);color:var(--grn);border:1px solid rgba(74,222,128,.3);border-radius:3px;padding:1px 4px">OWNED</span>`
-        : `<span style="font-size:8px;background:rgba(229,62,62,.12);color:var(--red2);border:1px solid rgba(229,62,62,.3);border-radius:3px;padding:1px 4px">${sl.price ? sl.price.toLocaleString()+' hC' : 'BUY'}</span>`;
-      html += `<div style="background:rgba(229,62,62,.06);border:1px solid rgba(229,62,62,.2);border-radius:7px;padding:5px 7px;font-size:10px;position:relative;min-height:52px">
-        <button onclick="wiRemoveSlot(${i})" style="position:absolute;top:3px;right:4px;background:none;border:none;color:var(--mut);cursor:pointer;font-size:9px;padding:0;line-height:1">✕</button>
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">${imgTag}<span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-xs);color:var(--txt);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</span></div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--grn)">${mhs >= 1000 ? (mhs/1000).toFixed(1)+'GH/s' : mhs+'MH/s'} · ${sl.watts||0}W</div>
-        ${srcBadge}
-      </div>`;
+      const imgTag = imgUrl
+        ? `<img src="${imgUrl}" style="width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid rgba(229,62,62,.2)" onerror="this.style.display='none'" alt="">`
+        : `<div style="width:28px;height:28px;border-radius:4px;background:rgba(229,62,62,.1);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">⛏</div>`;
+      const isOwned = sl.source === 'own';
+      const priceLbl = isOwned ? 'OWNED'
+        : sl.priceHcash > 0 ? sl.priceHcash.toLocaleString(undefined,{maximumFractionDigits:0})+' hC'
+        : sl.priceAvax  > 0 ? f4(sl.priceAvax)+' AVAX'
+        : sl.price > 0 ? sl.price.toLocaleString()+' hC' : 'BUY';
+      const badgeStyle = isOwned
+        ? 'background:rgba(74,222,128,.12);color:var(--grn);border:1px solid rgba(74,222,128,.3)'
+        : 'background:rgba(229,62,62,.1);color:var(--red2);border:1px solid rgba(229,62,62,.25)';
+      html += `
+        <div style="background:var(--card);border:1px solid rgba(229,62,62,.25);border-radius:8px;padding:6px 7px;position:relative;transition:border-color .15s"
+          onmouseover="this.style.borderColor='rgba(229,62,62,.5)'" onmouseout="this.style.borderColor='rgba(229,62,62,.25)'">
+          <button onclick="wiRemoveSlot(${i})" title="Remove"
+            style="position:absolute;top:4px;right:5px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.25);border-radius:4px;color:var(--red);cursor:pointer;font-size:9px;padding:1px 5px;line-height:1.4;transition:background .1s"
+            onmouseover="this.style.background='rgba(229,62,62,.25)'" onmouseout="this.style.background='rgba(229,62,62,.1)'">✕</button>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;padding-right:18px">
+            ${imgTag}
+            <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-xs);color:var(--txt);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${m.name}">${m.name}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:4px">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--grn)">${mhsStr}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:${sl.watts>0?'var(--gold)':'var(--mut)'}">${sl.watts||0}W</div>
+          </div>
+          <div style="margin-top:4px">
+            <span style="font-size:8px;border-radius:3px;padding:1px 5px;${badgeStyle}">${priceLbl}</span>
+          </div>
+        </div>`;
     } else {
-      html += `<div style="background:var(--sur);border:1px dashed var(--bor);border-radius:7px;padding:5px 7px;min-height:52px;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:10px;font-family:'Share Tech Mono',monospace">EMPTY</div>`;
+      const slotNum = i + 1;
+      html += `
+        <div style="background:var(--sur);border:1px dashed var(--bor);border-radius:8px;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:default;opacity:${powerFull?'.4':'1'}">
+          <div style="font-size:1.1rem;opacity:.3">⛏</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--mut)">SLOT ${slotNum}</div>
+          ${powerFull ? '<div style="font-size:8px;color:var(--red)">no power</div>' : ''}
+        </div>`;
     }
   }
   grid.innerHTML = html;
 }
 
 function wiRemoveSlot(idx) {
+  const removed = _wiSlots[idx];
   _wiSlots.splice(idx, 1);
+  // If the removed miner was the selected slot miner, clear that too
+  if (removed && _wiSlotSelectedMiner && removed.miner === _wiSlotSelectedMiner) {
+    _wiSlotSelectedMiner = null;
+    const inp = document.getElementById('wi-slotMinerSearch');
+    if (inp) inp.value = '';
+    const dd = document.getElementById('wi-slotDropdown');
+    if (dd) dd.style.display = 'none';
+  }
+  // Also sync cart: if this slot came from cart, remove from cart too
+  if (removed && _wiCart.length > 0) {
+    const cartIdx = _wiCart.findIndex(c =>
+      c.nftContract === (removed.miner?.address||'').toLowerCase() ||
+      c.minerName === removed.miner?.name
+    );
+    if (cartIdx >= 0) {
+      _wiCart.splice(cartIdx, 1);
+      renderWiMarket(); // refresh checkmarks
+    }
+  }
   wiRenderSlotTable();
   wiCalc();
 }
@@ -6603,14 +6719,18 @@ function wiAddSlotMiner() {
   const totalSlots = fac.slots || 9;
 
   if (!_wiSlotSelectedMiner) { notif('Select a miner first', 'warn'); return; }
-  if (_wiSlots.length >= totalSlots) { notif('All slots filled for this facility', 'warn'); return; }
+  if (_wiSlots.length >= totalSlots) { notif(`All ${totalSlots} slots filled for this facility`, 'warn'); return; }
 
   const s = _wiSlotSelectedMiner.minerStats || {};
   const watts = s.powerWatts || s.powerRaw || 0;
   const usedWatts = _wiSlots.reduce((acc, sl) => acc + (sl.watts || 0), 0);
+  const freeWatts = maxWatts - usedWatts;
+
+  if (watts > 0 && usedWatts >= maxWatts) {
+    notif(`⚡ No power left in this facility (${maxWatts}W max, all used)`, 'warn'); return;
+  }
   if (watts > 0 && usedWatts + watts > maxWatts) {
-    notif(`Not enough power: ${watts}W needed, ${maxWatts - usedWatts}W free`, 'warn');
-    return;
+    notif(`⚡ Power overload: miner needs ${watts}W but only ${freeWatts}W free in this facility`, 'warn'); return;
   }
 
   const source = document.getElementById('wi-slotSource')?.value || 'buy';
