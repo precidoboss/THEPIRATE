@@ -1350,7 +1350,9 @@
         }
         const mx = targetPlat ? targetPlat.x + targetPlat.w * 0.4 : player.x + 350;
         const my = targetPlat ? targetPlat.y - 120 : player.y - 130;
-        STORY_MODE.market = { x: mx, y: my, width: 100, height: 120 };
+        const mktObj = { x: mx, y: my, width: 100, height: 120 };
+        STORY_MODE.market = mktObj;
+        if(CH2.active) CH2.market = mktObj; // also store on CH2 so F-key finds it
         STORY_MODE.marketOpen = false;
         STORY_MODE.marketPage = 0;
         dmgNumbers.push({ x: mx + 50, y: my - 30, val: '🏪 A marketplace has appeared!', life: 240, color: '#ffdd44', isText: true });
@@ -3071,6 +3073,54 @@
         ],
     };
 
+    // Generates CH2 open-world decorations placed ON top of actual platforms
+    function generateCh2Decorations() {
+        CH2.arenaDecorations = [];
+        // Ground-sitting small props (sit on platform surface)
+        const groundProps = [
+            { key:'arena_rock1',  w:64,  h:50  },
+            { key:'arena_rock2',  w:70,  h:46  },
+            { key:'arena_skulls', w:60,  h:36  },
+            { key:'arena_spikes', w:56,  h:30  },
+            { key:'arena_crate',  w:52,  h:52  },
+            { key:'arena_bush',   w:60,  h:36  },
+            { key:'arena_sign',   w:44,  h:54  },
+        ];
+        // Tall background props (behind platforms — placed at platform Y minus their height)
+        const tallProps = [
+            { key:'arena_palm',      w:80,  h:180 },
+            { key:'arena_tree',      w:120, h:190 },
+            { key:'arena_treehouse', w:180, h:230 },
+        ];
+        let groundPropIdx = 0;
+        let tallPropIdx = 0;
+        // Pre-seed with some world-0 background trees at fixed screen positions
+        const bgTreeXs = [80, 350, 650, 950, 1250, 1600, 1950, 2300, 2700, 3100, 3500, 3900, 4300, 4700];
+        bgTreeXs.forEach((bx, i) => {
+            const tp = tallProps[i % tallProps.length];
+            // Place so feet land at ~y=440 (default ground level)
+            CH2.arenaDecorations.push({ key: tp.key, x: bx, y: 440 - tp.h, w: tp.w, h: tp.h, isBg: true });
+        });
+        // Place ground props on each platform's surface
+        platforms.forEach((p, pi) => {
+            if (p.x < 200) return; // skip spawn platform
+            // 1-2 ground props per platform, positioned near edges (not center where enemies/player walk)
+            const numProps = p.w > 300 ? 2 : 1;
+            for (let n = 0; n < numProps; n++) {
+                const gp = groundProps[groundPropIdx % groundProps.length];
+                groundPropIdx++;
+                // Left edge or right edge — not center (leave combat space)
+                const xOffset = n === 0 ? 10 : p.w - gp.w - 10;
+                CH2.arenaDecorations.push({
+                    key: gp.key,
+                    x: p.x + xOffset,
+                    y: p.y - gp.h,   // sits exactly on top of platform
+                    w: gp.w, h: gp.h
+                });
+            }
+        });
+    }
+
     function initChapter2() {
         CH2.active = true;
         CH2.timer = 0;
@@ -3087,31 +3137,11 @@
         CH2.boardOpen = false;
         CH2.marketShown = false; CH2.market = null; CH2.marketOpen = false;
         CH2.knightDefending = false; CH2.knightDefendTimer = 0;
+        CH2.shieldCooldown = 0; CH2.shieldActiveTimer = 0;
         CH2.knightAttackVariant = 1;
         CH2.objectives.forEach(o => { o.current = 0; o.done = false; });
-        // Procedural arena decorations that scroll with the CH2 open world
-        CH2.arenaDecorations = [
-            { key:'arena_palm',      x: 300,  y: 255, w: 80,  h: 180 },
-            { key:'arena_tree',      x: 580,  y: 245, w: 120, h: 190 },
-            { key:'arena_rock1',     x: 820,  y: 395, w: 64,  h: 50  },
-            { key:'arena_skulls',    x: 1050, y: 405, w: 60,  h: 36  },
-            { key:'arena_spikes',    x: 1260, y: 404, w: 56,  h: 30  },
-            { key:'arena_tree',      x: 1500, y: 240, w: 130, h: 200 },
-            { key:'arena_treehouse', x: 1800, y: 205, w: 180, h: 230 },
-            { key:'arena_rock2',     x: 2100, y: 400, w: 70,  h: 46  },
-            { key:'arena_bush',      x: 2350, y: 410, w: 60,  h: 36  },
-            { key:'arena_crate',     x: 2580, y: 393, w: 52,  h: 52  },
-            { key:'arena_palm',      x: 2820, y: 250, w: 80,  h: 180 },
-            { key:'arena_skulls',    x: 3060, y: 405, w: 60,  h: 36  },
-            { key:'arena_rock1',     x: 3300, y: 396, w: 64,  h: 50  },
-            { key:'arena_tree',      x: 3540, y: 242, w: 120, h: 190 },
-            { key:'arena_spikes',    x: 3780, y: 404, w: 56,  h: 30  },
-            { key:'arena_sign',      x: 4000, y: 385, w: 44,  h: 54  },
-            { key:'arena_bush',      x: 4200, y: 410, w: 60,  h: 36  },
-            { key:'arena_treehouse', x: 4450, y: 200, w: 180, h: 230 },
-            { key:'arena_rock2',     x: 4700, y: 400, w: 70,  h: 46  },
-            { key:'arena_crate',     x: 4950, y: 393, w: 52,  h: 52  },
-        ];
+        // Decorations will be generated after resetGame() populates the first platforms
+        CH2.arenaDecorations = [];
         // Reset dragon pet
         dragonPet.owned = false; dragonPet.fireProjs = [];
 
@@ -3125,6 +3155,8 @@
 
         // Reset world
         resetGame();
+        // Now platforms exist — place decorations on their surfaces
+        generateCh2Decorations();
 
         // Record run in supabase
         if(window.AQ && AQ.getSession()) {
@@ -3946,14 +3978,14 @@
     function spawnCloneEnemy(x,y) {
         enemies.push({
             x:x||200, y:y||370,
-            width:40, height:55,
-            drawWidth:200, drawHeight:200,
+            width:50, height:70,
+            drawWidth:180, drawHeight:180,
             hp:50, maxHp:50,
             vx:0, vy:0, grounded:false,
             facing:'left', state:'idle',
             frame:0, frameTimer:0,
             hurtTimer:0, dying:false, alpha:1,
-            isClone:true, // flag to use ninja sprites
+            isClone:true,
             attackCooldown:0
         });
     }
@@ -3967,18 +3999,18 @@
             const totalF=frMap[e.dying?'hurt':e.state]||8;
             const img=images[key];
             const destX=e.x-(e.drawWidth-e.width)/2;
-            const destY=e.y+e.height-e.drawHeight;
+            // feetOffset pulls sprite down so visual feet align with hitbox bottom
+            const feetOffset = e.drawHeight * 0.08;
+            const destY=e.y+e.height-e.drawHeight + feetOffset;
             ctx.save();
-            ctx.globalAlpha=e.dying?(e.alpha||1):0.85;
+            ctx.globalAlpha=e.dying?(e.alpha||1):1;
             if(e.hurtTimer>0&&!e.dying) ctx.filter='brightness(3) saturate(0) hue-rotate(30deg)';
-            // Orange tint to distinguish clones
-            if(!e.dying) ctx.filter=(ctx.filter||'')+' hue-rotate(15deg)';
             drawSprite(img,totalF,e.frame,e.facing==='left',destX,destY,e.drawWidth,e.drawHeight);
             ctx.filter='none';ctx.restore();
             if(!e.dying){
                 const barW=50,barH=4,barX=e.x-(barW-e.width)/2,barY=destY-8;
                 ctx.fillStyle='#333';ctx.fillRect(barX,barY,barW,barH);
-                ctx.fillStyle='#ff6600';ctx.fillRect(barX,barY,barW*(e.hp/e.maxHp),barH);
+                ctx.fillStyle='#ff8800';ctx.fillRect(barX,barY,barW*(e.hp/e.maxHp),barH);
             }
         });
     }
@@ -3986,9 +4018,32 @@
     // Knight defend mechanic
     function updateKnightDefend() {
         if(!CH2.active) return;
-        CH2.knightDefending = keys['ShiftLeft']||keys['ShiftRight']||keys['KeyZ'];
+        const wantsDefend = keys['ShiftLeft']||keys['ShiftRight']||keys['KeyZ'];
+        // Cooldown countdown (600 frames = 10 seconds at 60fps)
+        if(CH2.shieldCooldown > 0) CH2.shieldCooldown--;
+        // Can only activate if cooldown is 0
+        if(wantsDefend && CH2.shieldCooldown === 0) {
+            if(!CH2.knightDefending) {
+                // Just started defending — will drain shield timer
+                CH2.knightDefending = true;
+            }
+            // While holding: drain active shield time (max 180 frames = 3s active window)
+            CH2.shieldActiveTimer = (CH2.shieldActiveTimer || 0) + 1;
+            if(CH2.shieldActiveTimer >= 180) {
+                // Shield exhausted mid-hold — force cooldown
+                CH2.knightDefending = false;
+                CH2.shieldCooldown = 600;
+                CH2.shieldActiveTimer = 0;
+            }
+        } else {
+            if(CH2.knightDefending && CH2.shieldActiveTimer > 0) {
+                // Released shield — start cooldown proportional to how long it was used
+                CH2.shieldCooldown = Math.max(120, CH2.shieldActiveTimer * 4);
+                CH2.shieldActiveTimer = 0;
+            }
+            CH2.knightDefending = false;
+        }
         if(CH2.knightDefending){
-            // Slow player while defending
             if(player.vx>0) player.vx=Math.min(player.vx,1.5);
             if(player.vx<0) player.vx=Math.max(player.vx,-1.5);
         }
@@ -4021,8 +4076,27 @@
 
         // Defend glow
         if(CH2.knightDefending){
-            ctx.save();ctx.globalAlpha=0.4;ctx.strokeStyle='#4488ff';ctx.lineWidth=3;
-            ctx.beginPath();ctx.arc(player.x+player.width/2,player.y+player.height/2,36,0,Math.PI*2);ctx.stroke();
+            ctx.save();ctx.globalAlpha=0.5;ctx.strokeStyle='#4488ff';ctx.lineWidth=3;
+            ctx.beginPath();ctx.arc(player.x+player.width/2,player.y+player.height/2,38,0,Math.PI*2);ctx.stroke();
+            ctx.restore();
+        }
+        // Shield cooldown bar above player
+        if(CH2.shieldCooldown > 0) {
+            const barW=50, barH=4;
+            const bx=player.x+player.width/2-barW/2, by=destY-14;
+            const pct=1-(CH2.shieldCooldown/600);
+            ctx.save();
+            ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(bx,by,barW,barH);
+            ctx.fillStyle= pct>0.7?'#44aaff':'#ff8844';
+            ctx.fillRect(bx,by,barW*pct,barH);
+            ctx.font='bold 8px Arial'; ctx.fillStyle='#88ccff'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+            ctx.fillText('SHIELD CD',player.x+player.width/2,by-1);
+            ctx.restore();
+        } else if(!CH2.knightDefending) {
+            // Show READY hint briefly
+            ctx.save();
+            ctx.font='bold 8px Arial'; ctx.fillStyle='rgba(68,170,255,0.7)'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+            ctx.fillText('SHIELD RDY',player.x+player.width/2,destY-14);
             ctx.restore();
         }
         ctx.save();ctx.imageSmoothingEnabled=false;
@@ -4638,7 +4712,7 @@
     }
 
     function drawMarketHouse() {
-        const m = STORY_MODE.market;
+        const m = (CH2.active ? (CH2.market || STORY_MODE.market) : STORY_MODE.market);
         if (!m) return;
         const img = images['market_house'];
         const W = 110, H = 130;
@@ -5109,7 +5183,8 @@
             if(CH2.npc1&&!CH2.npc1Talked&&Math.abs(CH2.npc1.x-player.x)<120) { openCh2Dialogue('ch2_npc1'); CH2.npc1Talked=true; return; }
             if(CH2.npc2&&!CH2.npc2Talked&&Math.abs(CH2.npc2.x-player.x)<120) { openCh2Dialogue('ch2_npc2'); return; }
             if(CH2.portal&&!CH2.bossArena&&Math.abs(CH2.portal.x+48-player.x)<130) { startCh2Cinematic('ch2_portal'); return; }
-            if(STORY_MODE.market&&Math.abs(STORY_MODE.market.x+50-player.x)<130) { openMarket(); return; }
+            const ch2mkt = CH2.market || STORY_MODE.market;
+            if(ch2mkt&&Math.abs(ch2mkt.x+50-player.x)<130) { openMarket(); return; }
         }
         // Story dialogue advance
         if(STORY_MODE.dialogue && !STORY_MODE.dialogue.inputMode) {
@@ -5299,8 +5374,8 @@
                 x: p.x + p.w * 0.6,
                 y: p.y - 70,
                 width: 50, height: 70,
-                drawWidth: isClone ? 130 : 160,
-                drawHeight: isClone ? 130 : 160,
+                drawWidth: isClone ? 180 : 160,
+                drawHeight: isClone ? 180 : 160,
                 hp: 50, maxHp: 50,
                 vx: 0, vy: 0,
                 grounded: true,
@@ -5346,6 +5421,34 @@
                 type: 'arrow', frame: 0, frameTimer: 0,
                 shootTimer: 280, arrows: [] // offset timer so first shot comes after a delay
             });
+        }
+        // CH2: add platform-anchored decorations on new platforms as they generate
+        if (CH2.active && !CH2.bossArena && p.x > 200) {
+            const groundProps = [
+                { key:'arena_rock1',  w:64,  h:50  },
+                { key:'arena_rock2',  w:70,  h:46  },
+                { key:'arena_skulls', w:60,  h:36  },
+                { key:'arena_bush',   w:60,  h:36  },
+                { key:'arena_crate',  w:52,  h:52  },
+                { key:'arena_sign',   w:44,  h:54  },
+            ];
+            const tallProps = [
+                { key:'arena_palm',      w:80,  h:180 },
+                { key:'arena_tree',      w:120, h:190 },
+                { key:'arena_treehouse', w:180, h:230 },
+            ];
+            // One background tall prop to the left of platform
+            const tp = tallProps[Math.floor(Math.random() * tallProps.length)];
+            if (CH2.arenaDecorations) {
+                CH2.arenaDecorations.push({ key: tp.key, x: p.x - tp.w * 0.3, y: p.y - tp.h, w: tp.w, h: tp.h });
+                // One or two ground props at platform edges
+                const gp1 = groundProps[Math.floor(Math.random() * groundProps.length)];
+                CH2.arenaDecorations.push({ key: gp1.key, x: p.x + 8, y: p.y - gp1.h, w: gp1.w, h: gp1.h });
+                if (p.w > 280) {
+                    const gp2 = groundProps[Math.floor(Math.random() * groundProps.length)];
+                    CH2.arenaDecorations.push({ key: gp2.key, x: p.x + p.w - gp2.w - 8, y: p.y - gp2.h, w: gp2.w, h: gp2.h });
+                }
+            }
         }
     }
 
@@ -5584,48 +5687,53 @@
                 const samePlatform = e.currentPlatform &&
                     player.x > e.currentPlatform.x && player.x < e.currentPlatform.x + e.currentPlatform.w;
 
-                // Clones are smarter — larger detection range, faster, can jump to reach player
                 const detectionRange = e.isClone ? 600 : 450;
-                const chaseSpeed = e.isClone ? 4.5 : 3.5;
+                const chaseSpeed = e.isClone ? 4.2 : 3.5;
                 const attackRange = e.isClone ? 70 : 65;
                 const cooldown = e.isClone ? 48 : 65;
+
+                // Edge safety: would next step walk off the platform?
+                const moveDir = dx > 0 ? 1 : -1;
+                let wouldFallOff = false;
+                if (e.currentPlatform && e.grounded) {
+                    const nextX = e.x + moveDir * chaseSpeed;
+                    wouldFallOff = nextX < e.currentPlatform.x + 8 ||
+                                   nextX + e.width > e.currentPlatform.x + e.currentPlatform.w - 8;
+                }
 
                 if (dist < detectionRange) {
                     e.facing = dx < 0 ? 'left' : 'right';
 
-                    // Clones: jump toward player if they're on a different platform level
-                    if (e.isClone && e.grounded && !samePlatform && Math.random() < 0.015) {
-                        e.vy = -12; // jump
+                    // Clones: jump toward player if on same platform and player is above
+                    if (e.isClone && e.grounded && samePlatform && player.y < e.y - 40 && Math.random() < 0.02) {
+                        e.vy = -13;
                     }
 
                     if (dist > 110) {
-                        // Chase — but stop at platform edge (clones are willing to jump off edges)
-                        const nextX = e.x + (dx > 0 ? 1 : -1) * 2.5;
-                        let onEdge = false;
-                        if (e.currentPlatform && !e.isClone) {
-                            onEdge = nextX < e.currentPlatform.x + 10 || nextX + e.width > e.currentPlatform.x + e.currentPlatform.w - 10;
-                        }
-                        if (!onEdge) {
+                        if (!wouldFallOff) {
                             e.state = 'run';
-                            e.vx = (dx > 0 ? 1 : -1) * chaseSpeed;
+                            e.vx = moveDir * chaseSpeed;
                         } else {
+                            // At edge — stop and wait, clones never chase off platform
                             e.state = 'idle';
                             e.vx = 0;
                         }
                     } else if (dist > attackRange) {
-                        // Strafe — clones are more aggressive
                         e.vx *= e.isClone ? 0.6 : 0.7;
                         e.state = e.attackCooldown > 20 ? 'idle' : 'run';
-                        if (e.attackCooldown > 50 && Math.random() < (e.isClone ? 0.025 : 0.015)) {
-                            e.vx = (dx > 0 ? 1 : -1) * (e.isClone ? 5 : 3); // aggressive lunge
+                        // Lunge in only if safe
+                        if (!wouldFallOff && e.attackCooldown > 50 && Math.random() < (e.isClone ? 0.025 : 0.015)) {
+                            e.vx = moveDir * (e.isClone ? 5 : 3);
                         } else if (e.attackCooldown > 40 && Math.random() < (e.isClone ? 0.01 : 0.02)) {
-                            e.vx = (dx > 0 ? -1 : 1) * 1.8; // step away to bait
+                            // Step away only if safe on the other side
+                            const retreatX = e.x + (-moveDir) * 1.8;
+                            const retreatSafe = !e.currentPlatform || (retreatX > e.currentPlatform.x + 8 && retreatX + e.width < e.currentPlatform.x + e.currentPlatform.w - 8);
+                            if (retreatSafe) e.vx = (-moveDir) * 1.8;
                         }
-                        if (e.attackCooldown <= 0 && dist < 100 && Math.random() < (e.isClone ? 0.018 : 0.008)) {
-                            e.vx = (dx > 0 ? 1 : -1) * (e.isClone ? 8 : 6); // dash attack
+                        if (!wouldFallOff && e.attackCooldown <= 0 && dist < 100 && Math.random() < (e.isClone ? 0.018 : 0.008)) {
+                            e.vx = moveDir * (e.isClone ? 8 : 6);
                         }
                     } else {
-                        // In range — attack
                         e.vx = 0;
                         e.state = 'idle';
                         if (e.attackCooldown <= 0) {
@@ -5994,9 +6102,9 @@
         if (player.invincible > 0 || player.dead) return;
         // Fire shield blocks fire/spike damage entirely
         if (player.fireShield > 0 && typeof dmg === 'number' && dmg <= 7) return; // blocks trap damage
-        // Knight defend blocks full melee damage in CH2
-        if (CH2.active && CH2.knightDefending && dmg >= 10) {
-            dmg = Math.floor(dmg * 0.15); // only 15% damage gets through block
+        // Knight defend blocks melee damage in CH2 (any amount)
+        if (CH2.active && CH2.knightDefending) {
+            dmg = Math.max(1, Math.floor(dmg * 0.12)); // only 12% gets through
             dmgNumbers.push({ x: player.x, y: player.y-30, val: 'BLOCKED!', life: 60, color: '#44aaff', isText: true });
         }
         player.hp = Math.max(0, player.hp - dmg);
@@ -6086,7 +6194,7 @@
 
         // Market house drawn right after background — always behind platforms & characters
         if(STORY_MODE.active && STORY_MODE.market && !STORY_MODE.bossArena) drawMarketHouse();
-        if(CH2.active && STORY_MODE.market && !CH2.bossArena) drawMarketHouse();
+        if(CH2.active && (STORY_MODE.market || CH2.market) && !CH2.bossArena) drawMarketHouse();
 
         // Platforms
         platforms.forEach(p => {
