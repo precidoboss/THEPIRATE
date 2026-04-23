@@ -599,6 +599,12 @@
                         </div>
                         <div class="ctrl-row">
                             <div class="ctrl-keys">
+                                <img src="https://raw.githubusercontent.com/precidoboss/adventurer/main/HotkeyBox_34x34.png" class="ctrl-key-img"><span class="ctrl-key-lbl">Shift/Z</span>
+                            </div>
+                            <span class="ctrl-desc">Block / Shield (Chapter 2 Knight only — reduces damage by 85%)</span>
+                        </div>
+                        <div class="ctrl-row">
+                            <div class="ctrl-keys">
                                 <img src="https://raw.githubusercontent.com/precidoboss/adventurer/main/HotkeyBox_34x34.png" class="ctrl-key-img"><span class="ctrl-key-lbl">Esc</span>
                             </div>
                             <span class="ctrl-desc">Pause / Resume</span>
@@ -686,7 +692,7 @@
 
 <div id="game-container">
     <!-- UI drawn on canvas -->
-    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | 1–5 Use Artifact</div>
+    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | 1–5 Use Artifact | Shift / Z to Block (CH2)</div>
     <!-- HP drawn on canvas -->
     <div id="game-over">
         <h1>YOU DIED</h1>
@@ -986,12 +992,9 @@
         objectives: [
             { id:'ch2_kill10',    label:'Eliminate 10 Ember Clones',  target:10,  current:0, done:false },
             { id:'ch2_coins30',   label:'Collect 30 Ash Embers',      target:30,  current:0, done:false },
-            { id:'ch2_kill25',    label:'Destroy 25 Clones Total',    target:25,  current:0, done:false },
             { id:'ch2_chests4',   label:'Open 4 Ash Caches',          target:4,   current:0, done:false },
             { id:'ch2_survive120',label:'Survive 2 Minutes',          target:120, current:0, done:false },
             { id:'ch2_run600',    label:'Cross 600m of Ash Fields',   target:600, current:0, done:false },
-            { id:'ch2_kill40',    label:'Purge 40 Clones Total',      target:40,  current:0, done:false },
-            { id:'ch2_artifacts2',label:'Reclaim 2 Ash Relics',       target:2,   current:0, done:false },
         ],
         totalKills:0, totalChests:0, totalArtifacts:0,
         objectivePct:0,
@@ -1354,8 +1357,10 @@
     }
 
     function openMarket() {
-        if (!STORY_MODE.market) return;
+        const mkt = STORY_MODE.market || CH2.market;
+        if (!mkt) return;
         STORY_MODE.marketOpen = true;
+        CH2.marketOpen = true;
         STORY_MODE.marketPage = 0;
         STORY_MODE._marketBtns = [];
         STORY_MODE._marketHover = undefined;
@@ -1365,6 +1370,7 @@
 
     function closeMarket() {
         STORY_MODE.marketOpen = false;
+        CH2.marketOpen = false;
         STORY_MODE._marketFreezePlayer = false;
         STORY_MODE._marketBtns = [];
         STORY_MODE._marketHover = undefined;
@@ -3678,10 +3684,6 @@
         const objs=CH2.objectives;
         objs.find(o=>o.id==='ch2_kill10').current=Math.min(CH2.totalKills,10);
         if(CH2.totalKills>=10) objs.find(o=>o.id==='ch2_kill10').done=true;
-        objs.find(o=>o.id==='ch2_kill25').current=Math.min(CH2.totalKills,25);
-        if(CH2.totalKills>=25) objs.find(o=>o.id==='ch2_kill25').done=true;
-        objs.find(o=>o.id==='ch2_kill40').current=Math.min(CH2.totalKills,40);
-        if(CH2.totalKills>=40) objs.find(o=>o.id==='ch2_kill40').done=true;
         objs.find(o=>o.id==='ch2_coins30').current=Math.min(player.coins,30);
         if(player.coins>=30) objs.find(o=>o.id==='ch2_coins30').done=true;
         objs.find(o=>o.id==='ch2_chests4').current=Math.min(CH2.totalChests,4);
@@ -3691,8 +3693,6 @@
         if(secs>=120) objs.find(o=>o.id==='ch2_survive120').done=true;
         objs.find(o=>o.id==='ch2_run600').current=Math.min(score,600);
         if(score>=600) objs.find(o=>o.id==='ch2_run600').done=true;
-        objs.find(o=>o.id==='ch2_artifacts2').current=Math.min(CH2.totalArtifacts,2);
-        if(CH2.totalArtifacts>=2) objs.find(o=>o.id==='ch2_artifacts2').done=true;
 
         const pct=calcCh2ObjectivePct();
         CH2.objectivePct=pct;
@@ -4014,7 +4014,7 @@
         const img=images[key];
         if(!img||!img.complete||!img.naturalWidth) return;
         const fw=img.naturalWidth/totalFrames, fh=img.naturalHeight;
-        const scale=2.8;
+        const scale=2.2;
         const dw=fw*scale, dh=fh*scale;
         const destX=player.x-(dw-player.width)/2;
         const destY=player.y+player.height-dh;
@@ -4035,9 +4035,9 @@
         const mins=Math.floor(CH2.timer/3600),secs=Math.floor((CH2.timer%3600)/60);
         const timeStr=`${mins}m ${secs<10?'0'+secs:secs}s`;
         const doneObjs=CH2.objectives.filter(o=>o.done).length;
-        const rating=CH2.totalKills>=30&&doneObjs===8?'S':CH2.totalKills>=20?'A':CH2.totalKills>=10?'B':'C';
+        const rating=CH2.totalKills>=30&&doneObjs===5?'S':CH2.totalKills>=20?'A':CH2.totalKills>=10?'B':'C';
         const stats={time:timeStr,kills:CH2.totalKills,coins:player.coins,chests:CH2.totalChests,
-            distance:score,objectives:`${doneObjs}/8`,rating};
+            distance:score,objectives:`${doneObjs}/5`,rating};
         CH2.gameEndStats=stats;
 
         // Save to supabase
@@ -5299,8 +5299,8 @@
                 x: p.x + p.w * 0.6,
                 y: p.y - 70,
                 width: 50, height: 70,
-                drawWidth: isClone ? 200 : 160,
-                drawHeight: isClone ? 200 : 160,
+                drawWidth: isClone ? 130 : 160,
+                drawHeight: isClone ? 130 : 160,
                 hp: 50, maxHp: 50,
                 vx: 0, vy: 0,
                 grounded: true,
@@ -5584,37 +5584,45 @@
                 const samePlatform = e.currentPlatform &&
                     player.x > e.currentPlatform.x && player.x < e.currentPlatform.x + e.currentPlatform.w;
 
-                if (dist < 450) {
+                // Clones are smarter — larger detection range, faster, can jump to reach player
+                const detectionRange = e.isClone ? 600 : 450;
+                const chaseSpeed = e.isClone ? 4.5 : 3.5;
+                const attackRange = e.isClone ? 70 : 65;
+                const cooldown = e.isClone ? 48 : 65;
+
+                if (dist < detectionRange) {
                     e.facing = dx < 0 ? 'left' : 'right';
 
-                    // Smarter: strafe/circle at medium range, attack at close range
+                    // Clones: jump toward player if they're on a different platform level
+                    if (e.isClone && e.grounded && !samePlatform && Math.random() < 0.015) {
+                        e.vy = -12; // jump
+                    }
+
                     if (dist > 110) {
-                        // Chase — but stop at platform edge
+                        // Chase — but stop at platform edge (clones are willing to jump off edges)
                         const nextX = e.x + (dx > 0 ? 1 : -1) * 2.5;
                         let onEdge = false;
-                        if (e.currentPlatform) {
+                        if (e.currentPlatform && !e.isClone) {
                             onEdge = nextX < e.currentPlatform.x + 10 || nextX + e.width > e.currentPlatform.x + e.currentPlatform.w - 10;
                         }
                         if (!onEdge) {
                             e.state = 'run';
-                            e.vx = (dx > 0 ? 1 : -1) * 3.5;
+                            e.vx = (dx > 0 ? 1 : -1) * chaseSpeed;
                         } else {
                             e.state = 'idle';
                             e.vx = 0;
                         }
-                    } else if (dist > 65) {
-                        // Circle/strafe — stop and wait for opening
-                        e.vx *= 0.7;
+                    } else if (dist > attackRange) {
+                        // Strafe — clones are more aggressive
+                        e.vx *= e.isClone ? 0.6 : 0.7;
                         e.state = e.attackCooldown > 20 ? 'idle' : 'run';
-                        // Feint: sometimes lunge in or step back
-                        if (e.attackCooldown > 50 && Math.random() < 0.015) {
-                            e.vx = (dx > 0 ? 1 : -1) * 3; // lunge toward player
-                        } else if (e.attackCooldown > 40 && Math.random() < 0.02) {
-                            e.vx = (dx > 0 ? -1 : 1) * 1.8; // step away
+                        if (e.attackCooldown > 50 && Math.random() < (e.isClone ? 0.025 : 0.015)) {
+                            e.vx = (dx > 0 ? 1 : -1) * (e.isClone ? 5 : 3); // aggressive lunge
+                        } else if (e.attackCooldown > 40 && Math.random() < (e.isClone ? 0.01 : 0.02)) {
+                            e.vx = (dx > 0 ? -1 : 1) * 1.8; // step away to bait
                         }
-                        // Occasionally do quick dash attack
-                        if (e.attackCooldown <= 0 && dist < 100 && Math.random() < 0.008) {
-                            e.vx = (dx > 0 ? 1 : -1) * 6; // dash
+                        if (e.attackCooldown <= 0 && dist < 100 && Math.random() < (e.isClone ? 0.018 : 0.008)) {
+                            e.vx = (dx > 0 ? 1 : -1) * (e.isClone ? 8 : 6); // dash attack
                         }
                     } else {
                         // In range — attack
@@ -5625,7 +5633,7 @@
                             e.state = 'attack';
                             e.frame = 0;
                             e.frameTimer = 0;
-                            e.attackCooldown = 65;
+                            e.attackCooldown = cooldown;
                             playSound('sword');
                         }
                     }
@@ -6052,8 +6060,8 @@
                 // Parallax scrolling for open world; static for boss arena
                 if (!STORY_MODE.bossArena && !CH2.bossArena && CH2.active) {
                     const bgScroll = (scrollX * 0.25) % GAME_WIDTH;
-                    ctx.drawImage(arenaBack, -bgScroll, 0, GAME_WIDTH, GAME_HEIGHT);
-                    ctx.drawImage(arenaBack, GAME_WIDTH - bgScroll, 0, GAME_WIDTH, GAME_HEIGHT);
+                    ctx.drawImage(arenaBack, -bgScroll, 0, GAME_WIDTH + 2, GAME_HEIGHT);
+                    ctx.drawImage(arenaBack, GAME_WIDTH - bgScroll, 0, GAME_WIDTH + 2, GAME_HEIGHT);
                 } else {
                     ctx.drawImage(arenaBack, 0, 0, GAME_WIDTH, GAME_HEIGHT);
                 }
