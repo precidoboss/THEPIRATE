@@ -3748,8 +3748,8 @@
     let collectables = [];
 
     // How many px below p.y the visual rock surface actually starts.
-    // Tweak these values if characters still float or sink.
-    const PLAT_SURFACE_OFFSET = [12, 12, 16]; // indexed by platform type
+    // Calibrated from screenshot: characters were floating ~22px above the visible stone top.
+    const PLAT_SURFACE_OFFSET = [22, 22, 26]; // indexed by platform type
 
     const platformSlices = [
         { sx: 30, sy: 20, sw: 180, sh: 180 },
