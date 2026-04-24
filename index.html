@@ -535,11 +535,6 @@
                     <div class="stone-btn-inner">HOW TO PLAY</div>
                 </div>
             </div>
-            <div class="home-btns-row" style="margin-top:8px;">
-                <div class="stone-btn primary" style="background:linear-gradient(160deg,#0a1a08,#050e04);opacity:0.95;" onclick="tryStartChapter2()">
-                    <div class="stone-btn-inner" style="color:#88ff44;border-color:#44aa22;font-size:12px;">🔥 EMBERS OF REBIRTH — CH.2 <span style="font-size:9px;color:#aaa;">(Login required)</span></div>
-                </div>
-            </div>
 
             <div id="aq-home-auth">
                 <div class="stone-btn secondary" onclick="AQ.showAuth('login')">
@@ -596,12 +591,6 @@
                                 <img src="https://raw.githubusercontent.com/precidoboss/adventurer/main/HotkeyBox_34x34.png" class="ctrl-key-img"><span class="ctrl-key-lbl">1–5</span>
                             </div>
                             <span class="ctrl-desc">Use Artifact (if owned)</span>
-                        </div>
-                        <div class="ctrl-row">
-                            <div class="ctrl-keys">
-                                <img src="https://raw.githubusercontent.com/precidoboss/adventurer/main/HotkeyBox_34x34.png" class="ctrl-key-img"><span class="ctrl-key-lbl">Shift/Z</span>
-                            </div>
-                            <span class="ctrl-desc">Block / Shield (Chapter 2 Knight only — reduces damage by 85%)</span>
                         </div>
                         <div class="ctrl-row">
                             <div class="ctrl-keys">
@@ -692,7 +681,7 @@
 
 <div id="game-container">
     <!-- UI drawn on canvas -->
-    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | 1–5 Use Artifact | Shift / Z to Block (CH2)</div>
+    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | 1–5 Use Artifact</div>
     <!-- HP drawn on canvas -->
     <div id="game-over">
         <h1>YOU DIED</h1>
@@ -812,22 +801,6 @@
         dragon_fly:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/FLYING.png',
         dragon_attack:  'https://raw.githubusercontent.com/precidoboss/adventurer/main/ATTACK.png',
         dragon_fire:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/projectile.png',
-        // Chapter 2: Knight (player) sprites
-        knight_idle:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTIDLE.png',
-        knight_walk:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTWALK.png',
-        knight_run:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTRUN.png',
-        knight_jump:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTJUMP.png',
-        knight_atk1:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK1.png',
-        knight_atk2:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK2.png',
-        knight_atk3:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK3.png',
-        knight_defend:  'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTDEFEND.png',
-        // Chapter 2: Yellow Ninja (new boss) sprites
-        ninja_idle:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20idle.png',
-        ninja_walk:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20walk.png',
-        ninja_attack:   'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20attack.png',
-        ninja_death:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20Death.png',
-        ninja_hit:      'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20hit.png',
-        ninja_whitehit: 'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20Whitehit.png',
     };
     // Sounds (loaded separately, not counted in asset load)
     const SFX = {};
@@ -983,55 +956,6 @@
         marketPage: 0,        // current page (0=artifacts 1=dragon)
         // TTS
         ttsSupported: 'speechSynthesis' in window
-    };
-
-    // ===== CHAPTER 2 STATE =====
-    const CH2 = {
-        active: false,
-        timer: 0,
-        objectives: [
-            { id:'ch2_kill10',    label:'Eliminate 10 Ember Clones',  target:10,  current:0, done:false },
-            { id:'ch2_coins30',   label:'Collect 30 Ash Embers',      target:30,  current:0, done:false },
-            { id:'ch2_chests4',   label:'Open 4 Ash Caches',          target:4,   current:0, done:false },
-            { id:'ch2_survive120',label:'Survive 2 Minutes',          target:120, current:0, done:false },
-            { id:'ch2_run600',    label:'Cross 600m of Ash Fields',   target:600, current:0, done:false },
-        ],
-        totalKills:0, totalChests:0, totalArtifacts:0,
-        objectivePct:0,
-        npc1Shown:false, npc1Talked:false,
-        npc2Shown:false, npc2Talked:false,
-        portalShown:false,
-        bossUnlocked:false,
-        npc1:null, npc2:null, portal:null,
-        dialogue:null, cinematic:null,
-        bossArena:false, boss:null, bossDefeated:false,
-        gameEndStats:null, showingEndStats:false,
-        boardOpen:false,
-        marketShown:false, market:null, marketOpen:false, marketPage:0,
-        knightDefending:false, knightDefendTimer:0,
-        knightAttackVariant:1,
-        _run_id:null,
-        ttsSupported:'speechSynthesis' in window
-    };
-
-    // Knight animation config: 96×83 cells
-    const KNIGHT_ANIMS = {
-        idle:    { frames:7, speed:10 },
-        walk:    { frames:8, speed:7  },
-        run:     { frames:8, speed:6  },
-        jump:    { frames:5, speed:7  },
-        attack1: { frames:6, speed:5  },
-        attack2: { frames:5, speed:5  },
-        attack3: { frames:6, speed:5  },
-        defend:  { frames:6, speed:8  },
-    };
-    // Yellow Ninja boss config: 128×128 cells
-    const NINJA_ANIMS = {
-        idle:   { frames:8,  speed:8 },
-        walk:   { frames:10, speed:7 },
-        attack: { frames:20, speed:4 },
-        death:  { frames:14, speed:6 },
-        hit:    { frames:4,  speed:5 },
     };
 
     // NPC/BOSS frame configs
@@ -1350,19 +1274,15 @@
         }
         const mx = targetPlat ? targetPlat.x + targetPlat.w * 0.4 : player.x + 350;
         const my = targetPlat ? targetPlat.y - 120 : player.y - 130;
-        const mktObj = { x: mx, y: my, width: 100, height: 120 };
-        STORY_MODE.market = mktObj;
-        if(CH2.active) CH2.market = mktObj; // also store on CH2 so F-key finds it
+        STORY_MODE.market = { x: mx, y: my, width: 100, height: 120 };
         STORY_MODE.marketOpen = false;
         STORY_MODE.marketPage = 0;
         dmgNumbers.push({ x: mx + 50, y: my - 30, val: '🏪 A marketplace has appeared!', life: 240, color: '#ffdd44', isText: true });
     }
 
     function openMarket() {
-        const mkt = STORY_MODE.market || CH2.market;
-        if (!mkt) return;
+        if (!STORY_MODE.market) return;
         STORY_MODE.marketOpen = true;
-        CH2.marketOpen = true;
         STORY_MODE.marketPage = 0;
         STORY_MODE._marketBtns = [];
         STORY_MODE._marketHover = undefined;
@@ -1372,7 +1292,6 @@
 
     function closeMarket() {
         STORY_MODE.marketOpen = false;
-        CH2.marketOpen = false;
         STORY_MODE._marketFreezePlayer = false;
         STORY_MODE._marketBtns = [];
         STORY_MODE._marketHover = undefined;
@@ -2724,32 +2643,6 @@
         }
     }
 
-    // ---- CH2 Boss player melee hit ----
-    function updateCh2BossPlayerHit() {
-        const b = CH2.boss;
-        if(!b||!CH2.bossUnlocked||b.dying) return;
-        if(player.isAttacking && !player.attackHit && player.frame>=3 && player.frame<=5) {
-            const bdx=b.x-player.x;
-            const bdy=Math.abs((player.y+player.height)-(b.y+b.height));
-            const inFront=player.facing==='right'?(bdx>-20&&bdx<170):(bdx<20&&bdx>-170);
-            if(inFront && bdy<80) {
-                player.attackHit=true;
-                const dmg=player.attackDmg||25;
-                b.hp-=dmg; b.hurtTimer=18; b.state='hit'; b.frame=0; b.frameTimer=0;
-                dmgNumbers.push({x:b.x+30,y:b.y-10,val:dmg,life:50,color:'#ff6600'});
-                shakeTimer=10; shakeMag=6;
-                for(let i=0;i<8;i++){
-                    const ang=(Math.PI*2/8)*i;
-                    particles.push({x:b.x+b.width/2,y:b.y+b.height/2,vx:Math.cos(ang)*3,vy:Math.sin(ang)*3-1,life:25,color:'#ff4400'});
-                }
-                if(b.hp<=0&&!b.dying){
-                    b.dying=true; b.state='death'; b.frame=0; b.frameTimer=0; b.alpha=1;
-                    shakeTimer=30; shakeMag=12; playBossRoar();
-                }
-            }
-        }
-    }
-
     // ===== BOSS DEATH ARENA DESTRUCTION CINEMATIC =====
     function startBossDeathCinematic() {
         if(STORY_MODE.bossDefeated) return;
@@ -3043,1227 +2936,6 @@
         }
 
         bossDeathLoop();
-    }
-
-    // =============================================
-    // ===== CHAPTER 2: EMBERS OF REBIRTH ==========
-    // =============================================
-
-    const CH2_DIALOGUES = {
-        // NPC 1 — Zephira (same NPC from Ch1, now scarred/urgent)
-        ch2_npc1: [
-            { speaker:'Zephira the Wanderer', text:'You... you came back. Thank the gods. The arena — it was not just a battle, it was a ritual.', voice:0.9 },
-            { speaker:'Zephira the Wanderer', text:'When you slew her, Seraphex did not truly die. Her essence scattered into the ash — and she ROSE.', voice:0.85 },
-            { speaker:'Zephira the Wanderer', text:'Worse — she fractured herself into CLONES. Ember-born replicas. Each one carries her fury. Each one hungers.', voice:0.8 },
-            { speaker:'Zephira the Wanderer', text:'You are the only one who can end this. But your old sword is gone. A knight\'s steel was forged in her arena flames.', voice:0.85 },
-            { speaker:'Zephira the Wanderer', text:'Find Sentinel Kael. He carries the Ashen Seal — the only thing that can lock her back in the void for good.', voice:0.9 },
-        ],
-        ch2_npc2: [
-            { speaker:'Sentinel Kael', text:'I watched the arena burn. I felt her rise. Zephira told you the truth — Seraphex cloned herself across the ashfields.', voice:0.8 },
-            { speaker:'Sentinel Kael', text:'But know this: she is saving her REAL body for last. The clones are real enough to kill you.', voice:0.75 },
-            { speaker:'Sentinel Kael', text:'The Ashen Seal I carry will weaken her when she manifests. But you must first scatter her clones — exhaust her reserve energy.', voice:0.8 },
-            { speaker:'Sentinel Kael', text:'Your new armor responds to intent. Block when she strikes — the shield holds true. Vary your attacks — she learns patterns quickly.', voice:0.8 },
-            { speaker:'Sentinel Kael', text:'You were a Warrior. Now you are a Knight. The realm needs you to be more. Go, Sir Champion — end the Ember Reign.', voice:0.9 },
-        ],
-        ch2_boss_intro: [
-            { speaker:'SERAPHEX, REBORN', text:'*a sound like fire turning to glass fills the air* Did you think ash could hold me?', voice:0.55, bossLine:true },
-            { speaker:'SERAPHEX, REBORN', text:'I am every ember you ever feared. I am the scar your blade left. And now I wear that scar as a CROWN.', voice:0.5, bossLine:true },
-            { speaker:'Player (The Knight)', text:'Your clones are scattered. Your reign is over. I am done running from shadows.', voice:1.05, heroLine:true },
-            { speaker:'SERAPHEX, REBORN', text:'*SCREAMS* Then burn with me, KNIGHT! The arena remembers your blood!', voice:0.45, bossLine:true },
-        ],
-    };
-
-    // Generates CH2 open-world decorations placed ON top of actual platforms
-    function generateCh2Decorations() {
-        CH2.arenaDecorations = [];
-        // Ground-sitting small props (sit on platform surface)
-        const groundProps = [
-            { key:'arena_rock1',  w:64,  h:50  },
-            { key:'arena_rock2',  w:70,  h:46  },
-            { key:'arena_skulls', w:60,  h:36  },
-            { key:'arena_spikes', w:56,  h:30  },
-            { key:'arena_crate',  w:52,  h:52  },
-            { key:'arena_bush',   w:60,  h:36  },
-            { key:'arena_sign',   w:44,  h:54  },
-        ];
-        // Tall background props (behind platforms — placed at platform Y minus their height)
-        const tallProps = [
-            { key:'arena_palm',      w:80,  h:180 },
-            { key:'arena_tree',      w:120, h:190 },
-            { key:'arena_treehouse', w:180, h:230 },
-        ];
-        let groundPropIdx = 0;
-        let tallPropIdx = 0;
-        // Pre-seed with some world-0 background trees at fixed screen positions
-        const bgTreeXs = [80, 350, 650, 950, 1250, 1600, 1950, 2300, 2700, 3100, 3500, 3900, 4300, 4700];
-        bgTreeXs.forEach((bx, i) => {
-            const tp = tallProps[i % tallProps.length];
-            // Place so feet land at ~y=440 (default ground level)
-            CH2.arenaDecorations.push({ key: tp.key, x: bx, y: 440 - tp.h, w: tp.w, h: tp.h, isBg: true });
-        });
-        // Place ground props on each platform's surface
-        platforms.forEach((p, pi) => {
-            if (p.x < 200) return; // skip spawn platform
-            // 1-2 ground props per platform, positioned near edges (not center where enemies/player walk)
-            const numProps = p.w > 300 ? 2 : 1;
-            for (let n = 0; n < numProps; n++) {
-                const gp = groundProps[groundPropIdx % groundProps.length];
-                groundPropIdx++;
-                // Left edge or right edge — not center (leave combat space)
-                const xOffset = n === 0 ? 10 : p.w - gp.w - 10;
-                CH2.arenaDecorations.push({
-                    key: gp.key,
-                    x: p.x + xOffset,
-                    y: p.y - gp.h,   // sits exactly on top of platform
-                    w: gp.w, h: gp.h
-                });
-            }
-        });
-    }
-
-    function initChapter2() {
-        CH2.active = true;
-        CH2.timer = 0;
-        CH2.totalKills = 0; CH2.totalChests = 0; CH2.totalArtifacts = 0;
-        CH2.objectivePct = 0;
-        CH2.npc1Shown = false; CH2.npc1Talked = false;
-        CH2.npc2Shown = false; CH2.npc2Talked = false;
-        CH2.portalShown = false;
-        CH2.bossUnlocked = false;
-        CH2.npc1 = null; CH2.npc2 = null; CH2.portal = null;
-        CH2.dialogue = null; CH2.cinematic = null;
-        CH2.bossArena = false; CH2.boss = null; CH2.bossDefeated = false;
-        CH2.gameEndStats = null; CH2.showingEndStats = false;
-        CH2.boardOpen = false;
-        CH2.marketShown = false; CH2.market = null; CH2.marketOpen = false;
-        CH2.knightDefending = false; CH2.knightDefendTimer = 0;
-        CH2.shieldCooldown = 0; CH2.shieldActiveTimer = 0;
-        CH2.knightAttackVariant = 1;
-        CH2.objectives.forEach(o => { o.current = 0; o.done = false; });
-        // Decorations will be generated after resetGame() populates the first platforms
-        CH2.arenaDecorations = [];
-        // Reset dragon pet
-        dragonPet.owned = false; dragonPet.fireProjs = [];
-
-        // Use knight sprites for player
-        window._ch2KnightMode = true;
-
-        // Override player stats for Chapter 2 (Knight is beefier)
-        player.hp = 220; player.maxHp = 220;
-        player.attackDmg = 25;
-        player.speed = 5;
-
-        // Reset world
-        resetGame();
-        // Now platforms exist — place decorations on their surfaces
-        generateCh2Decorations();
-
-        // Record run in supabase
-        if(window.AQ && AQ.getSession()) {
-            window._ch2RunStartTime = Date.now();
-            (async () => {
-                try {
-                    const sess = AQ.getSession();
-                    const { data } = await db.from('chapter2_runs').insert({
-                        user_id: sess.id, completed: false,
-                        enemies_killed:0, coins_earned:0, distance:0
-                    }).select('id').single();
-                    if(data) CH2._run_id = data.id;
-                } catch(e){}
-            })();
-        }
-
-        // Show Chapter 2 cinematic intro
-        startCh2Cinematic('ch2_intro');
-    }
-
-    // ---- CH2 Cinematic ----
-    function startCh2Cinematic(type, statsPayload) {
-        let slides = [];
-        if(type === 'ch2_intro') {
-            slides = [
-                { duration:180, scene:'ch2_title' },
-                { duration:260, scene:'ch2_revival', caption:'From the ashes of defeat... she rises.' },
-                { duration:260, scene:'ch2_clones',  caption:'Seraphex, the Void-Warden, fractures her essence into countless ember clones.' },
-                { duration:240, scene:'ch2_zephira', caption:'Zephira watches in horror as the arena transforms into an ashfield of war.' },
-                { duration:240, scene:'ch2_knight',  caption:'A new soul dons the arena-forged armor. The Warrior becomes the Knight.' },
-                { duration:240, scene:'ch2_mission', caption:'Scatter the clones. Drain her power. Then face her one final time.' },
-                { duration:200, scene:'ch2_begin',   caption:'The Ember Reign begins. End it.' },
-            ];
-        } else if(type === 'ch2_portal') {
-            slides = [
-                { duration:160, scene:'ch2_rift_title', caption:'✦ SERAPHEX AWAITS ✦' },
-                { duration:200, scene:'ch2_rift_enter', caption:'Her clones are gone. Her true form burns with fury.' },
-                { duration:200, scene:'ch2_boss_tease',  caption:'One last battle. One final seal. Finish this.' },
-            ];
-        } else if(type === 'ch2_victory') {
-            slides = [
-                { duration:200, scene:'ch2_victory_flash', caption:'' },
-                { duration:280, scene:'ch2_victory_seal',  caption:'The Ashen Seal closes around Seraphex. She screams as the void reclaims her.' },
-                { duration:260, scene:'ch2_victory_realm', caption:'The ashfields cool. The ember clones crumble to dust. Ardenmoor breathes once more.' },
-                { duration:260, scene:'ch2_victory_npc',   caption:'Zephira and Sentinel Kael bow before the Knight. The realm is saved — for now.' },
-                { duration:280, scene:'ch2_victory_stats', caption:'', stats: statsPayload },
-            ];
-        }
-
-        // Inject overlay canvas (reuse same cinematic infrastructure)
-        if(!_cinCanvas) {
-            _cinCanvas = document.createElement('canvas');
-            _cinCanvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:999;pointer-events:auto;image-rendering:pixelated;';
-            document.getElementById('game-container').appendChild(_cinCanvas);
-        }
-        const gameRect = canvas.getBoundingClientRect();
-        _cinCanvas.width = GAME_WIDTH; _cinCanvas.height = GAME_HEIGHT;
-        _cinCanvas.style.width = gameRect.width+'px'; _cinCanvas.style.height = gameRect.height+'px';
-        _cinCanvas.style.left = gameRect.left+'px'; _cinCanvas.style.top = gameRect.top+'px';
-        _cinCanvas.style.position = 'fixed'; _cinCanvas.style.display = 'block';
-        _cinCtx = _cinCanvas.getContext('2d');
-
-        const state = {
-            type, slides, slideIdx:0, t:0, globalT:0, done:false,
-            heroFrame:0, heroFrameTimer:0,
-            npcFrame:0, npcFrameTimer:0,
-            bossFrame:0, bossFrameTimer:0,
-            particles:[],
-            embers: Array.from({length:60},()=>({
-                x:Math.random()*GAME_WIDTH, y:Math.random()*GAME_HEIGHT,
-                vx:(Math.random()-0.5)*1.2, vy:-0.8-Math.random()*1.5,
-                life:80+Math.random()*80, maxLife:160,
-                r:1+Math.random()*3,
-                color:['#ff4400','#ff8800','#ffcc00','#ff2200','#ffaa44'][Math.floor(Math.random()*5)]
-            }))
-        };
-
-        const skipHandler = (e) => {
-            if(e.type==='keydown' && e.code!=='Space' && e.code!=='Enter') return;
-            e.preventDefault();
-            finishCh2Cinematic(state, type);
-            window.removeEventListener('keydown', skipHandler);
-            _cinCanvas.removeEventListener('click', skipHandler);
-        };
-        window.addEventListener('keydown', skipHandler);
-        _cinCanvas.addEventListener('click', skipHandler);
-
-        if(_cinAnimId) cancelAnimationFrame(_cinAnimId);
-
-        function ch2CinLoop() {
-            if(state.done) return;
-            _cinAnimId = requestAnimationFrame(ch2CinLoop);
-            renderCh2Cinematic(state);
-            tickCh2Cinematic(state);
-        }
-        ch2CinLoop();
-    }
-
-    function tickCh2Cinematic(state) {
-        state.t++; state.globalT++;
-        const slide = state.slides[state.slideIdx];
-        if(!slide) { finishCh2Cinematic(state, state.type); return; }
-        state.heroFrameTimer++; if(state.heroFrameTimer>=10){state.heroFrame=(state.heroFrame+1)%7;state.heroFrameTimer=0;}
-        state.npcFrameTimer++; if(state.npcFrameTimer>=12){state.npcFrame=(state.npcFrame+1)%10;state.npcFrameTimer=0;}
-        state.bossFrameTimer++; if(state.bossFrameTimer>=8){state.bossFrame=(state.bossFrame+1)%8;state.bossFrameTimer=0;}
-        // Update embers
-        state.embers.forEach(e=>{
-            e.x+=e.vx; e.y+=e.vy; e.life--;
-            if(e.life<=0){e.life=e.maxLife;e.x=Math.random()*GAME_WIDTH;e.y=GAME_HEIGHT+10;}
-        });
-        if(state.t >= slide.duration) { state.slideIdx++; state.t=0; }
-    }
-
-    function renderCh2Cinematic(state) {
-        const C=_cinCtx, W=GAME_WIDTH, H=GAME_HEIGHT;
-        const slide = state.slides[state.slideIdx];
-        if(!slide){return;}
-        const t=state.globalT*0.06, st=state.t;
-        const fadeIn = Math.min(1, st/25), fadeOut = st > slide.duration-25 ? Math.max(0,(slide.duration-st)/25) : 1;
-        const alpha = fadeIn * fadeOut;
-
-        // Background
-        C.clearRect(0,0,W,H);
-        const bg = C.createLinearGradient(0,0,0,H);
-        bg.addColorStop(0,'#0a0300'); bg.addColorStop(0.5,'#1a0600'); bg.addColorStop(1,'#050100');
-        C.fillStyle=bg; C.fillRect(0,0,W,H);
-
-        // Draw embers
-        state.embers.forEach(e=>{
-            C.save(); C.globalAlpha=(e.life/e.maxLife)*0.6;
-            C.fillStyle=e.color;
-            C.beginPath(); C.arc(e.x,e.y,e.r,0,Math.PI*2); C.fill();
-            C.restore();
-        });
-
-        C.save(); C.globalAlpha=alpha;
-
-        switch(slide.scene) {
-            case 'ch2_title':     _ch2DrawTitle(C,W,H,t,st); break;
-            case 'ch2_revival':   _ch2DrawRevival(C,W,H,t,state); break;
-            case 'ch2_clones':    _ch2DrawClones(C,W,H,t,state); break;
-            case 'ch2_zephira':   _ch2DrawZephira(C,W,H,t,state); break;
-            case 'ch2_knight':    _ch2DrawKnight(C,W,H,t,state); break;
-            case 'ch2_mission':   _ch2DrawMission(C,W,H,t); break;
-            case 'ch2_begin':     _ch2DrawBegin(C,W,H,t,state); break;
-            case 'ch2_rift_title':_ch2DrawRiftTitle(C,W,H,t,st); break;
-            case 'ch2_rift_enter':_ch2DrawRiftEnter(C,W,H,t,state); break;
-            case 'ch2_boss_tease':_ch2DrawBossTease(C,W,H,t,state); break;
-            case 'ch2_victory_flash': _ch2DrawVFlash(C,W,H,st,slide.duration); break;
-            case 'ch2_victory_seal':  _ch2DrawVSeal(C,W,H,t,state); break;
-            case 'ch2_victory_realm': _ch2DrawVRealm(C,W,H,t); break;
-            case 'ch2_victory_npc':   _ch2DrawVNpc(C,W,H,t,state); break;
-            case 'ch2_victory_stats': _ch2DrawVStats(C,W,H,t,st,slide.stats||state.statsPayload); break;
-        }
-        C.restore();
-
-        // Caption
-        if(slide.caption) _cinDrawCaption(C,W,H,t,slide.caption,st,slide.duration);
-        // Skip hint
-        C.save(); C.globalAlpha=0.35+0.15*Math.sin(t*4);
-        C.font='11px Arial'; C.fillStyle='#ff8844'; C.textAlign='center'; C.textBaseline='bottom';
-        C.fillText('SPACE / CLICK to skip', W/2, H-6); C.restore();
-    }
-
-    function _ch2DrawTitle(C,W,H,t,st) {
-        // Burning title card
-        const titleAlpha=Math.min(1,st/40);
-        // Fire glow behind
-        for(let r=5;r>=1;r--){
-            C.save();C.globalAlpha=0.06*r;
-            const g=C.createRadialGradient(W/2,H/2,0,W/2,H/2,80+r*60);
-            g.addColorStop(0,'#ff6600');g.addColorStop(1,'transparent');
-            C.fillStyle=g;C.fillRect(0,0,W,H);C.restore();
-        }
-        C.save();C.globalAlpha=titleAlpha;
-        // Chapter badge
-        C.font='bold 13px "Cinzel",serif';C.fillStyle='#ff8800';
-        C.textAlign='center';C.textBaseline='middle';C.letterSpacing='6px';
-        C.fillText('C H A P T E R  I I', W/2, H/2-80);
-        // Main title
-        C.font='bold 52px "Cinzel Decorative",cursive';
-        const tg=C.createLinearGradient(W/2-250,0,W/2+250,0);
-        tg.addColorStop(0,'#ff4400');tg.addColorStop(0.4,'#ff8800');tg.addColorStop(0.7,'#ffcc44');tg.addColorStop(1,'#ff4400');
-        C.fillStyle=tg; C.shadowColor='#ff4400'; C.shadowBlur=30+10*Math.sin(t*3);
-        C.textAlign='center'; C.textBaseline='middle';
-        C.fillText('EMBERS OF', W/2, H/2-16);
-        C.fillText('REBIRTH', W/2, H/2+42);
-        // Divider
-        const lineG=C.createLinearGradient(W/2-200,0,W/2+200,0);
-        lineG.addColorStop(0,'transparent');lineG.addColorStop(0.5,'#ff6600');lineG.addColorStop(1,'transparent');
-        C.strokeStyle=lineG;C.lineWidth=1.5;
-        C.beginPath();C.moveTo(W/2-200,H/2+80);C.lineTo(W/2+200,H/2+80);C.stroke();
-        C.shadowBlur=0;C.font='13px "Cinzel",serif';C.fillStyle='rgba(255,136,0,0.7)';
-        C.fillText('T H E  A S H  F I E L D S  A W A K E', W/2, H/2+100);
-        C.restore();
-    }
-
-    function _ch2DrawRevival(C,W,H,t,state) {
-        // Show the boss arena background with rising fire effect
-        const bg=images['arena_back'];
-        if(bg&&bg.complete&&bg.naturalWidth){
-            C.save();C.globalAlpha=0.4;C.drawImage(bg,0,0,W,H);C.restore();
-        }
-        // Dark overlay
-        C.fillStyle='rgba(20,0,0,0.6)';C.fillRect(0,0,W,H);
-        // Rising flame pillar
-        for(let i=0;i<8;i++){
-            const flameX=W/2+(Math.sin(t*2+i)*30);
-            const flameH=60+i*40+Math.sin(t*3+i)*20;
-            C.save();C.globalAlpha=0.08*(8-i);
-            const fg=C.createLinearGradient(0,H*0.7-flameH,0,H*0.7);
-            fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'#ff6600');fg.addColorStop(1,'#ff0000');
-            C.fillStyle=fg;C.fillRect(flameX-20,H*0.7-flameH,40,flameH);C.restore();
-        }
-        // Draw ninja boss rising
-        const ninjaImg=images['ninja_idle'];
-        if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
-            const fw=ninjaImg.naturalWidth/8, scale=3.8;
-            const dw=fw*scale,dh=ninjaImg.naturalHeight*scale;
-            const riseY=H*0.65-dh+Math.max(0,(100-state.t)*2); // rises into frame
-            C.save();
-            C.shadowColor='#ff4400';C.shadowBlur=40+20*Math.sin(t*2);
-            C.imageSmoothingEnabled=false;
-            C.drawImage(ninjaImg,state.bossFrame*fw,0,fw,ninjaImg.naturalHeight,W/2-dw/2,riseY,dw,dh);
-            C.restore();
-        }
-        // Her name
-        const nameAlpha=Math.min(1,(state.t-40)/30);
-        if(nameAlpha>0){
-            C.save();C.globalAlpha=nameAlpha;
-            C.font='bold 28px "Cinzel Decorative",cursive';
-            const ng=C.createLinearGradient(W/2-160,0,W/2+160,0);
-            ng.addColorStop(0,'#ff4400');ng.addColorStop(0.5,'#ffcc00');ng.addColorStop(1,'#ff4400');
-            C.fillStyle=ng;C.textAlign='center';C.shadowColor='#ff4400';C.shadowBlur=20;
-            C.fillText('SERAPHEX  REBORN', W/2, H*0.18);
-            C.restore();
-        }
-    }
-
-    function _ch2DrawClones(C,W,H,t,state) {
-        // Show 5 clones spread across the screen
-        const ninjaImg=images['ninja_idle'];
-        if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
-            const fw=ninjaImg.naturalWidth/8;
-            const positions=[0.15,0.3,0.5,0.7,0.85];
-            const scales=[1.8,2.2,2.8,2.2,1.8];
-            positions.forEach((xp,i)=>{
-                const scale=scales[i];
-                const dw=fw*scale,dh=ninjaImg.naturalHeight*scale;
-                const bob=Math.sin(t*2+i*1.3)*8;
-                C.save();
-                C.globalAlpha=0.7+0.2*Math.sin(t+i);
-                C.shadowColor='#ff4400';C.shadowBlur=20;
-                C.imageSmoothingEnabled=false;
-                C.drawImage(ninjaImg,(state.bossFrame+i)%8*fw,0,fw,ninjaImg.naturalHeight,W*xp-dw/2,H*0.65-dh+bob,dw,dh);
-                C.restore();
-            });
-        }
-        // Ember particles rising between them
-        C.save();C.font='bold 22px "Cinzel Decorative",cursive';
-        C.fillStyle='#ff8800';C.textAlign='center';C.shadowColor='#ff4400';C.shadowBlur=20;
-        C.fillText('THE CLONES AWAKEN', W/2,H*0.2);C.restore();
-    }
-
-    function _ch2DrawZephira(C,W,H,t,state) {
-        const npcImg=images['npc_idle'];
-        if(npcImg&&npcImg.complete&&npcImg.naturalWidth){
-            const fw=npcImg.naturalWidth/10, scale=3;
-            const dw=fw*scale,dh=npcImg.naturalHeight*scale;
-            C.save();C.imageSmoothingEnabled=false;
-            C.shadowColor='#aa44ff';C.shadowBlur=20;
-            C.drawImage(npcImg,state.npcFrame*fw,0,fw,npcImg.naturalHeight,W*0.3-dw/2,H*0.65-dh,dw,dh);
-            C.restore();
-        }
-        // Horror expression with dialog text box
-        C.save();
-        C.fillStyle='rgba(0,0,0,0.75)';roundRect2(C,W*0.42,H*0.3,W*0.52,100,6);C.fill();
-        C.strokeStyle='#8844ff';C.lineWidth=1.5;roundRect2(C,W*0.42,H*0.3,W*0.52,100,6);C.stroke();
-        C.font='bold 12px "Cinzel",serif';C.fillStyle='#cc88ff';C.textAlign='left';C.textBaseline='top';
-        C.fillText('ZEPHIRA THE WANDERER', W*0.44, H*0.3+10);
-        C.font='14px "AntiquityPrint",serif';C.fillStyle='#f0e8ff';C.textBaseline='middle';
-        C.fillText('"She fractured herself. The arena is', W*0.44, H*0.3+42);
-        C.fillText(' crawling with her copies..."', W*0.44, H*0.3+62);
-        C.restore();
-    }
-
-    function _ch2DrawKnight(C,W,H,t,state) {
-        const knightImg=images['knight_idle'];
-        if(knightImg&&knightImg.complete&&knightImg.naturalWidth){
-            const fw=knightImg.naturalWidth/7,fh=knightImg.naturalHeight;
-            const scale=4.5;
-            const dw=fw*scale,dh=fh*scale;
-            C.save();C.imageSmoothingEnabled=false;
-            C.shadowColor='#44aaff';C.shadowBlur=30+10*Math.sin(t*2);
-            C.drawImage(knightImg,state.heroFrame%7*fw,0,fw,fh,W*0.4-dw/2,H*0.65-dh,dw,dh);
-            C.restore();
-        }
-        C.save();
-        C.font='bold 26px "Cinzel Decorative",cursive';
-        const kg=C.createLinearGradient(W/2-180,0,W/2+180,0);
-        kg.addColorStop(0,'#4488ff');kg.addColorStop(0.5,'#ffffff');kg.addColorStop(1,'#44aaff');
-        C.fillStyle=kg;C.textAlign='center';C.shadowColor='#4488ff';C.shadowBlur=20;
-        C.fillText('THE WARRIOR BECOMES THE KNIGHT', W/2, H*0.2);
-        // Stats
-        const stats=[['⚔','25 ATK','#ffaa00'],['🛡','Shield Block','#4488ff'],['❤','220 HP','#ff4444'],['⚡','3 Attack Styles','#44ffcc']];
-        stats.forEach((s,i)=>{
-            const sx=W*0.55+(i%2)*200,sy=H*0.38+Math.floor(i/2)*52;
-            C.fillStyle='rgba(0,20,60,0.7)';roundRect2(C,sx,sy,180,40,6);C.fill();
-            C.strokeStyle='#2244aa';C.lineWidth=1;roundRect2(C,sx,sy,180,40,6);C.stroke();
-            C.font='bold 18px Arial';C.fillStyle=s[2];C.textAlign='left';C.textBaseline='middle';
-            C.fillText(s[0],sx+10,sy+20);
-            C.font='bold 13px "Cinzel",serif';C.fillStyle='#cceeff';C.fillText(s[1],sx+38,sy+20);
-        });
-        C.restore();
-    }
-
-    function _ch2DrawMission(C,W,H,t) {
-        const objectives=['Scatter the Ember Clones','Reclaim lost relics','Find Zephira & Kael','Open the Ashen Portal','Face Seraphex — end the Ember Reign'];
-        C.save();
-        C.font='bold 24px "Cinzel Decorative",cursive';
-        C.fillStyle='#ff8800';C.textAlign='center';C.shadowColor='#ff4400';C.shadowBlur=15;
-        C.fillText('YOUR MISSION', W/2, H*0.18);
-        objectives.forEach((o,i)=>{
-            C.globalAlpha=0.9;
-            C.fillStyle='rgba(40,10,0,0.7)';
-            roundRect2(C,W/2-240,H*0.28+i*52,480,40,6);C.fill();
-            C.strokeStyle='rgba(255,100,0,0.4)';C.lineWidth=1;
-            roundRect2(C,W/2-240,H*0.28+i*52,480,40,6);C.stroke();
-            C.font='14px "AntiquityPrint",serif';C.fillStyle='#ffcc88';
-            C.textAlign='left';C.textBaseline='middle';
-            C.fillText('◆  '+o, W/2-220, H*0.28+i*52+20);
-        });
-        C.restore();
-    }
-
-    function _ch2DrawBegin(C,W,H,t,state) {
-        const knightImg=images['knight_run']||images['knight_idle'];
-        if(knightImg&&knightImg.complete&&knightImg.naturalWidth){
-            const frames=(knightImg===images['knight_run'])?8:7;
-            const fw=knightImg.naturalWidth/frames,fh=knightImg.naturalHeight;
-            const scale=4.2;
-            const dw=fw*scale,dh=fh*scale;
-            C.save();C.imageSmoothingEnabled=false;
-            C.shadowColor='#ffffff';C.shadowBlur=30;
-            C.drawImage(knightImg,state.heroFrame%frames*fw,0,fw,fh,W*0.25-dw/2,H*0.65-dh,dw,dh);
-            C.restore();
-        }
-        // Light ray
-        C.save();C.globalAlpha=0.12+0.08*Math.sin(t*3);
-        const ray=C.createLinearGradient(W*0.25,H/2,W,H/2);
-        ray.addColorStop(0,'#ff8800');ray.addColorStop(1,'transparent');
-        C.fillStyle=ray;C.fillRect(W*0.25,H*0.2,W*0.75,H*0.6);C.restore();
-        C.save();
-        C.font='bold 50px "Cinzel Decorative",cursive';
-        C.textAlign='center';C.textBaseline='middle';
-        for(let g=4;g>=0;g--){
-            C.shadowColor='#ff6600';C.shadowBlur=30+g*15;
-            C.fillStyle=g===0?'#ffffff':`rgba(255,140,0,${0.15+g*0.1})`;
-            C.fillText('THE EMBER', W/2, H/2-16);
-            C.fillText('REIGN BEGINS', W/2, H/2+48);
-        }
-        C.restore();
-    }
-
-    function _ch2DrawRiftTitle(C,W,H,t,st) {
-        C.save();C.globalAlpha=Math.min(1,st/30);
-        for(let r=5;r>=1;r--){
-            C.globalAlpha=0.07*r*Math.min(1,st/30);
-            const g=C.createRadialGradient(W/2,H/2,0,W/2,H/2,60+r*50);
-            g.addColorStop(0,'#ff4400');g.addColorStop(1,'transparent');
-            C.fillStyle=g;C.fillRect(0,0,W,H);
-        }
-        C.globalAlpha=Math.min(1,st/30);
-        C.font='bold 40px "Cinzel Decorative",cursive';
-        const tg=C.createLinearGradient(W/2-200,0,W/2+200,0);
-        tg.addColorStop(0,'#ff4400');tg.addColorStop(0.5,'#ffcc00');tg.addColorStop(1,'#ff4400');
-        C.fillStyle=tg;C.textAlign='center';C.textBaseline='middle';
-        C.shadowColor='#ff4400';C.shadowBlur=30;
-        C.fillText('✦ SERAPHEX AWAITS ✦', W/2, H/2);
-        C.restore();
-    }
-
-    function _ch2DrawRiftEnter(C,W,H,t,state) {
-        // Portal with fire tint
-        const ninjaImg=images['ninja_idle'];
-        if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
-            const fw=ninjaImg.naturalWidth/8,scale=4;
-            const dw=fw*scale,dh=ninjaImg.naturalHeight*scale;
-            C.save();C.imageSmoothingEnabled=false;C.globalAlpha=0.5;
-            C.shadowColor='#ff4400';C.shadowBlur=50;
-            C.drawImage(ninjaImg,state.bossFrame*fw,0,fw,ninjaImg.naturalHeight,W*0.62-dw/2,H*0.65-dh,dw,dh);
-            C.restore();
-        }
-        // Fire portal ring
-        for(let i=0;i<12;i++){
-            const ang=(i/12)*Math.PI*2+t*0.5;
-            const rx=W*0.3+Math.cos(ang)*100, ry=H/2+Math.sin(ang)*60;
-            C.save();C.globalAlpha=0.3+0.2*Math.sin(t*3+i);
-            C.fillStyle=['#ff4400','#ff8800','#ffcc00'][i%3];
-            C.beginPath();C.arc(rx,ry,3+Math.sin(t+i)*2,0,Math.PI*2);C.fill();
-            C.restore();
-        }
-    }
-
-    function _ch2DrawBossTease(C,W,H,t,state) {
-        const ninjaImg=images['ninja_idle'];
-        if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
-            const fw=ninjaImg.naturalWidth/8,scale=5;
-            const dw=fw*scale,dh=ninjaImg.naturalHeight*scale;
-            C.save();C.imageSmoothingEnabled=false;
-            C.shadowColor='#ff4400';C.shadowBlur=60+20*Math.sin(t*2);
-            C.drawImage(ninjaImg,state.bossFrame*fw,0,fw,ninjaImg.naturalHeight,W/2-dw/2,H*0.65-dh,dw,dh);
-            C.restore();
-        }
-        // HP bar preview
-        C.save();C.globalAlpha=0.85;
-        C.fillStyle='rgba(0,0,0,0.7)';roundRect2(C,W*0.1,H*0.12,W*0.8,50,6);C.fill();
-        C.strokeStyle='#880000';C.lineWidth=2;roundRect2(C,W*0.1,H*0.12,W*0.8,50,6);C.stroke();
-        C.font='bold 16px "Cinzel",serif';C.fillStyle='#ff6600';C.textAlign='center';C.textBaseline='middle';
-        C.fillText('🔥  SERAPHEX, REBORN  🔥', W/2, H*0.12+16);
-        const bpct=0.5+0.5*Math.sin(t*0.5);
-        C.fillStyle='#220000';C.fillRect(W*0.12,H*0.12+30,W*0.76,12);
-        const bhg=C.createLinearGradient(W*0.12,0,W*0.88,0);
-        bhg.addColorStop(0,'#ff4400');bhg.addColorStop(1,'#ff8800');
-        C.fillStyle=bhg;C.fillRect(W*0.12,H*0.12+30,W*0.76*bpct,12);
-        C.restore();
-    }
-
-    function _ch2DrawVFlash(C,W,H,st,dur) {
-        const p=st/dur;
-        C.save();C.globalAlpha=p<0.5?p*2:2-p*2;
-        C.fillStyle='#ff8800';C.fillRect(0,0,W,H);C.restore();
-    }
-
-    function _ch2DrawVSeal(C,W,H,t,state) {
-        // Spinning seal ring
-        for(let i=0;i<16;i++){
-            const ang=(i/16)*Math.PI*2+t*2;
-            const r=120+20*Math.sin(t*3+i);
-            C.save();C.globalAlpha=0.5+0.3*Math.sin(t*2+i);
-            C.fillStyle=['#ff4400','#ffcc00','#ff8800'][i%3];
-            C.beginPath();C.arc(W/2+Math.cos(ang)*r,H/2+Math.sin(ang)*r/2,4,0,Math.PI*2);C.fill();
-            C.restore();
-        }
-        const ninjaImg=images['ninja_death'];
-        if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
-            const fw=ninjaImg.naturalWidth/14,scale=4;
-            const dw=fw*scale,dh=ninjaImg.naturalHeight*scale;
-            C.save();C.imageSmoothingEnabled=false;
-            C.globalAlpha=Math.max(0,1-state.t/state.slides[state.slideIdx].duration);
-            C.shadowColor='#ff4400';C.shadowBlur=40;
-            C.drawImage(ninjaImg,Math.min(13,Math.floor(state.t/14))*fw,0,fw,ninjaImg.naturalHeight,W/2-dw/2,H*0.62-dh,dw,dh);
-            C.restore();
-        }
-        C.save();C.font='bold 28px "Cinzel Decorative",cursive';
-        C.fillStyle='#ffcc00';C.textAlign='center';C.shadowColor='#ff8800';C.shadowBlur=20;
-        C.fillText('THE ASHEN SEAL CLOSES', W/2, H*0.2);
-        C.restore();
-    }
-
-    function _ch2DrawVRealm(C,W,H,t) {
-        const bg=images['arena_back'];
-        if(bg&&bg.complete&&bg.naturalWidth){
-            C.save();C.globalAlpha=0.6;C.drawImage(bg,0,0,W,H);C.restore();
-        }
-        // Fade to light overlay — realm healing
-        C.save();C.globalAlpha=0.3+0.15*Math.sin(t*0.5);
-        const healf=C.createRadialGradient(W/2,H/2,0,W/2,H/2,400);
-        healf.addColorStop(0,'rgba(255,200,100,0.5)');healf.addColorStop(1,'transparent');
-        C.fillStyle=healf;C.fillRect(0,0,W,H);C.restore();
-        C.save();C.font='bold 24px "Cinzel Decorative",cursive';
-        C.fillStyle='#ffdd88';C.textAlign='center';C.shadowColor='#ffaa00';C.shadowBlur=20;
-        C.fillText('ARDENMOOR IS FREE', W/2,H*0.2);C.restore();
-    }
-
-    function _ch2DrawVNpc(C,W,H,t,state) {
-        // Draw both NPCs bowing
-        const npcImg=images['npc_idle'];
-        if(npcImg&&npcImg.complete&&npcImg.naturalWidth){
-            const fw=npcImg.naturalWidth/10,scale=2.5,dw=fw*scale,dh=npcImg.naturalHeight*scale;
-            [[W*0.3,1],[W*0.6,2]].forEach(([xp,num])=>{
-                C.save();C.imageSmoothingEnabled=false;
-                if(num===2) C.filter='hue-rotate(160deg) brightness(1.3)';
-                C.drawImage(npcImg,state.npcFrame*fw,0,fw,npcImg.naturalHeight,xp-dw/2,H*0.65-dh,dw,dh);
-                C.filter='none';C.restore();
-            });
-        }
-        const knightImg=images['knight_idle'];
-        if(knightImg&&knightImg.complete&&knightImg.naturalWidth){
-            const fw=knightImg.naturalWidth/7,fh=knightImg.naturalHeight,scale=3.8,dw=fw*scale,dh=fh*scale;
-            C.save();C.imageSmoothingEnabled=false;C.shadowColor='#44aaff';C.shadowBlur=20;
-            C.drawImage(knightImg,state.heroFrame%7*fw,0,fw,fh,W/2-dw/2,H*0.65-dh,dw,dh);C.restore();
-        }
-        C.save();C.font='bold 22px "Cinzel Decorative",cursive';
-        C.fillStyle='#ffe8a0';C.textAlign='center';C.shadowColor='#ffd700';C.shadowBlur=15;
-        C.fillText('THE REALM BOWS TO THE KNIGHT', W/2,H*0.2);C.restore();
-    }
-
-    function _ch2DrawVStats(C,W,H,t,st,stats) {
-        if(!stats) return;
-        const cx=W/2;
-        // Background
-        C.save();C.globalAlpha=0.9;
-        C.fillStyle='rgba(10,3,0,0.85)';roundRect2(C,cx-260,H*0.05,520,H*0.9,12);C.fill();
-        C.strokeStyle='#ff6600';C.lineWidth=2;roundRect2(C,cx-260,H*0.05,520,H*0.9,12);C.stroke();
-        C.restore();
-        // Rating
-        const rc={S:'#ffd700',A:'#ff8844',B:'#88ccff',C:'#aaaaaa'}[stats.rating]||'#fff';
-        C.save();C.font='bold 80px "Cinzel Decorative",cursive';
-        C.textAlign='center';C.textBaseline='middle';
-        C.shadowColor=rc;C.shadowBlur=50+20*Math.sin(t*2);
-        C.fillStyle=rc;C.fillText(stats.rating,cx,H*0.2);C.restore();
-        C.save();C.font='bold 18px "Cinzel Decorative",cursive';
-        C.fillStyle='#ff8800';C.textAlign='center';C.shadowColor='#ff4400';C.shadowBlur=10;
-        C.fillText('EMBERS OF REBIRTH — COMPLETE', cx, H*0.1);C.restore();
-        const rows=[['⏱  Time',stats.time],['💀  Clones Purged',''+stats.kills],['🔥  Embers Collected',''+stats.coins],['📦  Ash Caches Opened',''+stats.chests],['🏃  Distance',stats.distance+'m'],['✔  Objectives',stats.objectives]];
-        rows.forEach((r,i)=>{
-            const revealAt=i*18;if(st<revealAt)return;
-            const rowA=Math.min(1,(st-revealAt)/15),ry=H*0.33+i*34;
-            C.save();C.globalAlpha=rowA;
-            C.fillStyle='rgba(80,30,0,0.45)';C.fillRect(cx-200,ry-11,400,28);
-            C.font='14px "Cinzel",serif';C.fillStyle='#ff8844';C.textAlign='left';C.textBaseline='middle';
-            C.fillText(r[0],cx-188,ry+3);
-            C.fillStyle='#ffffff';C.textAlign='right';C.fillText(r[1],cx+188,ry+3);
-            C.restore();
-        });
-        if(st>120){
-            C.save();C.globalAlpha=0.5+0.5*Math.sin(t*3);
-            C.font='13px Arial';C.fillStyle='#ff8844';C.textAlign='center';C.textBaseline='bottom';
-            C.fillText('SPACE / CLICK to continue',cx,H-20);C.restore();
-        }
-    }
-
-    function finishCh2Cinematic(state, type) {
-        state.done = true;
-        if(_cinCanvas) { _cinCanvas.style.display='none'; }
-        if(_cinAnimId) { cancelAnimationFrame(_cinAnimId); _cinAnimId=null; }
-        speechSynthesis && speechSynthesis.cancel && speechSynthesis.cancel();
-
-        if(type === 'ch2_intro') {
-            gamePaused = false;
-        } else if(type === 'ch2_portal') {
-            ch2EnterBossArena();
-        } else if(type === 'ch2_victory') {
-            // Return to home
-            window._endScreenActive = true;
-            setTimeout(()=>{ returnToHome(); }, 2000);
-        }
-    }
-
-    // ---- CH2 Objectives ----
-    function calcCh2ObjectivePct() {
-        return CH2.objectives.filter(o=>o.done).length / CH2.objectives.length;
-    }
-
-    function updateCh2Objectives() {
-        const objs=CH2.objectives;
-        objs.find(o=>o.id==='ch2_kill10').current=Math.min(CH2.totalKills,10);
-        if(CH2.totalKills>=10) objs.find(o=>o.id==='ch2_kill10').done=true;
-        objs.find(o=>o.id==='ch2_coins30').current=Math.min(player.coins,30);
-        if(player.coins>=30) objs.find(o=>o.id==='ch2_coins30').done=true;
-        objs.find(o=>o.id==='ch2_chests4').current=Math.min(CH2.totalChests,4);
-        if(CH2.totalChests>=4) objs.find(o=>o.id==='ch2_chests4').done=true;
-        const secs=Math.floor(CH2.timer/60);
-        objs.find(o=>o.id==='ch2_survive120').current=Math.min(secs,120);
-        if(secs>=120) objs.find(o=>o.id==='ch2_survive120').done=true;
-        objs.find(o=>o.id==='ch2_run600').current=Math.min(score,600);
-        if(score>=600) objs.find(o=>o.id==='ch2_run600').done=true;
-
-        const pct=calcCh2ObjectivePct();
-        CH2.objectivePct=pct;
-
-        if(pct>=0.5 && !CH2.npc1Shown){ CH2.npc1Shown=true; spawnCh2NPC(1); }
-        if(pct>=0.75 && CH2.npc1Shown && !CH2.npc2Shown){ CH2.npc2Shown=true; spawnCh2NPC(2); }
-        if(pct>=0.8 && !CH2.marketShown){ CH2.marketShown=true; spawnMarket(); }
-        const portalReady=CH2.npc2Talked||(CH2.npc1Shown&&CH2.npc2Shown&&pct>=1.0);
-        if(pct>=1.0 && portalReady && !CH2.portalShown){ CH2.portalShown=true; spawnPortal(); }
-    }
-
-    function spawnCh2NPC(which) {
-        let targetPlat=null;
-        for(let i=platforms.length-1;i>=0;i--){
-            const p=platforms[i];
-            if(p.x>player.x+200&&p.x<player.x+700&&p.w>100){targetPlat=p;break;}
-        }
-        if(!targetPlat) targetPlat=platforms[platforms.length-1];
-        const npcX=targetPlat?targetPlat.x+targetPlat.w*0.5:player.x+400;
-        const npcY=targetPlat?targetPlat.y-80:360;
-        const npc={x:npcX,y:npcY,width:40,height:70,vy:0,grounded:false,which,frame:0,frameTimer:0,platformRef:targetPlat};
-        if(which===1) CH2.npc1=npc; else CH2.npc2=npc;
-        dmgNumbers.push({x:npcX,y:npcY-30,val:which===1?'✦ Zephira calls out...':'✦ Sentinel Kael appears...',life:200,color:'#ff8844',isText:true});
-    }
-
-    function openCh2Dialogue(type) {
-        gamePaused=true;
-        const lines=CH2_DIALOGUES[type]||[];
-        dialogueState={lines,idx:0,type,inputMode:false,inputVal:''};
-        CH2.dialogue=dialogueState;
-        if(lines.length>0) tts(lines[0].text,lines[0].voice);
-    }
-
-    function advanceCh2Dialogue() {
-        const d=dialogueState;
-        if(d.inputMode) return;
-        d.idx++;
-        if(d.idx<d.lines.length){
-            tts(d.lines[d.idx].text,d.lines[d.idx].voice);
-        } else {
-            closeCh2Dialogue();
-            if(d.type==='ch2_npc2'){
-                CH2.bossWeaknessKnown=true;
-                CH2.npc2Talked=true;
-                if(calcCh2ObjectivePct()>=1.0 && !CH2.portalShown){
-                    CH2.portalShown=true; spawnPortal();
-                }
-            } else if(d.type==='ch2_boss_intro'){
-                startCh2BossFight();
-            }
-        }
-    }
-
-    function closeCh2Dialogue() {
-        CH2.dialogue=null; gamePaused=false;
-        speechSynthesis&&speechSynthesis.cancel&&speechSynthesis.cancel();
-    }
-
-    function ch2EnterBossArena() {
-        _portalReturnX=player.x; _portalReturnY=player.y; _portalReturnScrollX=scrollX;
-        CH2.bossArena=true;
-        // Reuse same arena layout
-        platforms=[
-            {x:-100,y:430,w:2600,h:80,type:0,arena:true},
-            {x:200,y:310,w:240,h:40,type:1,arena:true},
-            {x:600,y:280,w:200,h:40,type:1,arena:true},
-            {x:1050,y:300,w:220,h:40,type:1,arena:true},
-            {x:1500,y:270,w:200,h:40,type:1,arena:true},
-            {x:1900,y:310,w:240,h:40,type:1,arena:true},
-        ];
-        STORY_MODE.arenaDecorations=STORY_MODE.arenaDecorations||[];
-        // Reuse arena decorations array from CH1 definition
-        if(!STORY_MODE.arenaDecorations.length) {
-            STORY_MODE.arenaDecorations=[
-                {key:'arena_palm',x:-60,y:250,w:80,h:180},{key:'arena_tree',x:60,y:240,w:120,h:190},
-                {key:'arena_treehouse',x:1150,y:200,w:180,h:230},{key:'arena_palm',x:2200,y:245,w:80,h:180},
-                {key:'arena_tree',x:2350,y:235,w:130,h:200},{key:'arena_rock1',x:380,y:395,w:64,h:50},
-                {key:'arena_rock2',x:820,y:400,w:70,h:46},{key:'arena_skulls',x:500,y:405,w:60,h:36},
-                {key:'arena_spikes',x:720,y:404,w:56,h:30},{key:'arena_crate',x:150,y:393,w:52,h:52},
-            ];
-        }
-        collectables=[]; traps=[]; enemies=[];
-        scrollX=0; player.x=100; player.y=320; player.vx=0; player.vy=0;
-
-        const ninjaMaxHp=300;
-        CH2.boss={
-            x:1400,y:250,width:80,height:100,drawWidth:270,drawHeight:270,
-            hp:ninjaMaxHp,maxHp:ninjaMaxHp,
-            vx:0,vy:0,grounded:true,
-            facing:'left',state:'idle',
-            frame:0,frameTimer:0,
-            isAttacking:false,attackCooldown:0,
-            hurtTimer:0,dying:false,alpha:1,
-            projCooldown:0,projs:[],
-            phase:1,enrageTimer:0,
-            dashCooldown:0,jumpCooldown:0,
-            cloneSpawnCooldown:0,
-        };
-        openCh2Dialogue('ch2_boss_intro');
-    }
-
-    function startCh2BossFight() {
-        gamePaused=false; CH2.bossUnlocked=true;
-    }
-
-    function updateCh2Boss() {
-        const b=CH2.boss;
-        if(!b||!CH2.bossUnlocked) return;
-        if(b.dying){
-            b.frameTimer++;
-            if(b.frameTimer>=6){b.frame++;b.frameTimer=0;}
-            b.alpha=Math.max(0,b.alpha-0.004);
-            if(b.frame>=14&&!CH2.bossDefeated){
-                CH2.bossDefeated=true;
-                playBossRoar();
-                setTimeout(()=>{ch2VictoryCinematic();},2000);
-            }
-            return;
-        }
-        // Gravity
-        if(!b.grounded){ b.vy+=0.5; } b.y+=b.vy;
-        const floor=platforms[0];
-        if(b.y+b.height>=floor.y){ b.y=floor.y-b.height; b.vy=0; b.grounded=true; }
-
-        // Face player
-        b.facing=b.x>player.x?'left':'right';
-
-        // Phase 2 at 50% hp
-        if(b.hp<b.maxHp*0.5&&b.phase===1){ b.phase=2; shakeTimer=30;shakeMag=10;playBossRoar(); }
-
-        // Cooldowns
-        if(b.attackCooldown>0) b.attackCooldown--;
-        if(b.dashCooldown>0) b.dashCooldown--;
-        if(b.jumpCooldown>0) b.jumpCooldown--;
-        if(b.projCooldown>0) b.projCooldown--;
-        if(b.cloneSpawnCooldown>0) b.cloneSpawnCooldown--;
-        if(b.hurtTimer>0){b.hurtTimer--;if(b.hurtTimer===0)b.state='idle';}
-
-        const dist=Math.abs(b.x-player.x);
-        const speed=b.phase===2?4:3;
-
-        // Movement
-        if(!b.isAttacking){
-            if(dist>200){ b.x+=(player.x>b.x?1:-1)*speed; b.state='walk'; }
-            else{ b.state='idle'; }
-        }
-
-        // Attack
-        if(dist<140&&b.attackCooldown===0&&!b.isAttacking&&b.hurtTimer===0){
-            b.isAttacking=true; b.state='attack'; b.frame=0; b.frameTimer=0;
-            b.attackCooldown=b.phase===2?80:110;
-        }
-        if(b.isAttacking){
-            b.frameTimer++;
-            const atkSpeed=NINJA_ANIMS.attack.speed;
-            if(b.frameTimer>=atkSpeed){
-                b.frame=(b.frame+1)%NINJA_ANIMS.attack.frames; b.frameTimer=0;
-                // Hit at frame 10
-                if(b.frame===10&&!CH2.knightDefending){
-                    const dmg=b.phase===2?22:15;
-                    hurtPlayer(dmg);
-                } else if(b.frame===10&&CH2.knightDefending){
-                    dmgNumbers.push({x:player.x,y:player.y-30,val:'BLOCKED!',life:60,color:'#44aaff',isText:true});
-                }
-                if(b.frame===0){ b.isAttacking=false; }
-            }
-        }
-
-        // Phase 2: dash attack
-        if(b.phase===2&&b.dashCooldown===0&&dist>250&&dist<600){
-            b.vx=(player.x>b.x?1:-1)*12; b.dashCooldown=200;
-            setTimeout(()=>{b.vx=0;},400);
-        }
-        b.x+=b.vx; b.vx*=0.88;
-
-        // Projectiles (phase 2)
-        if(b.phase===2&&b.projCooldown===0){
-            const dir=player.x>b.x?1:-1;
-            b.projs.push({x:b.x+b.width/2,y:b.y+b.height/2,vx:dir*7,vy:-3,frame:0,frameTimer:0});
-            b.projCooldown=90;
-        }
-        b.projs.forEach(pr=>{
-            pr.x+=pr.vx; pr.y+=pr.vy; pr.vy+=0.3;
-            pr.frameTimer++; if(pr.frameTimer>=5){pr.frame=(pr.frame+1)%4;pr.frameTimer=0;}
-            if(!CH2.knightDefending&&player.invincible===0&&Math.abs(pr.x-(player.x+player.width/2))<30&&Math.abs(pr.y-(player.y+player.height/2))<35){
-                hurtPlayer(12); pr.hit=true;
-            }
-        });
-        b.projs=b.projs.filter(p=>!p.hit&&p.y<GAME_HEIGHT+100&&p.x>-200&&p.x<GAME_WIDTH+600);
-
-        // Phase 2: spawn ember clone waves
-        if(b.phase===2&&b.cloneSpawnCooldown===0&&enemies.length<4){
-            spawnCloneEnemy(b.x+(Math.random()>0.5?300:-300), platforms[0].y-70);
-            b.cloneSpawnCooldown=240;
-        }
-
-        // Arena bounds
-        b.x=Math.max(-80,Math.min(b.x,2400));
-    }
-
-    function drawCh2BossSprites() {
-        const b=CH2.boss;
-        if(!b) return;
-        const stateToKey={idle:'ninja_idle',walk:'ninja_walk',attack:'ninja_attack',hurt:'ninja_hit',death:'ninja_death'};
-        const stateToFrames={idle:8,walk:10,attack:20,hurt:4,death:14};
-        const key=stateToKey[b.state]||'ninja_idle';
-        const totalF=stateToFrames[b.state]||8;
-        const img=images[key];
-        const destX=b.x-(b.drawWidth-b.width)/2;
-        const destY=b.y+b.height-b.drawHeight;
-        ctx.save();
-        ctx.globalAlpha=b.dying?b.alpha:1;
-        if(b.hurtTimer>0&&!b.dying) ctx.filter='brightness(3) saturate(0)';
-        if(b.phase===2&&!b.dying) ctx.filter='saturate(2.5) brightness(1.2) hue-rotate(-15deg)';
-        drawSprite(img,totalF,b.frame,b.facing==='left',destX,destY,b.drawWidth,b.drawHeight);
-        ctx.filter='none'; ctx.restore();
-        // Projectiles
-        const projImg=images['boss_proj'];
-        if(projImg&&projImg.complete&&projImg.naturalWidth){
-            const pfw=projImg.naturalWidth/4;
-            b.projs.forEach(pr=>{
-                ctx.save();ctx.imageSmoothingEnabled=false;
-                ctx.filter='hue-rotate(-30deg) saturate(2)';
-                ctx.drawImage(projImg,pr.frame*pfw,0,pfw,projImg.naturalHeight,pr.x-16,pr.y-8,32,16);
-                ctx.filter='none';ctx.restore();
-            });
-        }
-        // HP bar
-        if(!b.dying){
-            const bw=GAME_WIDTH*0.7,bh=20,bx=GAME_WIDTH*0.15,by=18;
-            ctx.save();ctx.fillStyle='rgba(0,0,0,0.6)';roundRect2(ctx,bx-4,by-4,bw+8,bh+12,6);ctx.fill();
-            ctx.strokeStyle='#882200';ctx.lineWidth=2;roundRect2(ctx,bx-4,by-4,bw+8,bh+12,6);ctx.stroke();
-            ctx.fillStyle='#220000';ctx.fillRect(bx,by,bw,bh);
-            const hpg=ctx.createLinearGradient(bx,0,bx+bw,0);
-            const hpRat=b.hp/b.maxHp;
-            hpg.addColorStop(0,'#ff2200');hpg.addColorStop(1,'#ff8800');
-            ctx.fillStyle=hpg;ctx.fillRect(bx,by,bw*hpRat,bh);
-            ctx.font='bold 11px "Cinzel",serif';ctx.fillStyle='#ffaa44';ctx.textAlign='center';ctx.textBaseline='middle';
-            ctx.fillText('🔥 SERAPHEX — REBORN  '+Math.ceil(b.hp)+'/'+b.maxHp,bx+bw/2,by+bh/2);
-            // Phase 2 warning
-            if(b.phase===2){
-                ctx.globalAlpha=0.5+0.5*Math.sin(Date.now()*0.01);
-                ctx.font='10px "Cinzel",serif';ctx.fillStyle='#ff4400';
-                ctx.fillText('⚠ ENRAGED — PHASE 2 ⚠',bx+bw/2,by+bh+12);
-            }
-            ctx.restore();
-        }
-    }
-
-    // Clone enemy (ember-born Seraphex replica) spawner
-    function spawnCloneEnemy(x,y) {
-        enemies.push({
-            x:x||200, y:y||370,
-            width:50, height:70,
-            drawWidth:180, drawHeight:180,
-            hp:50, maxHp:50,
-            vx:0, vy:0, grounded:false,
-            facing:'left', state:'idle',
-            frame:0, frameTimer:0,
-            hurtTimer:0, dying:false, alpha:1,
-            isClone:true,
-            attackCooldown:0
-        });
-    }
-
-    function drawCloneEnemies() {
-        enemies.forEach(e=>{
-            if(!e.isClone) return;
-            const stMap={idle:'ninja_idle',run:'ninja_walk',attack:'ninja_attack',hurt:'ninja_hit'};
-            const frMap={idle:8,run:10,attack:20,hurt:4};
-            const key=stMap[e.dying?'hurt':e.state]||'ninja_idle';
-            const totalF=frMap[e.dying?'hurt':e.state]||8;
-            const img=images[key];
-            const destX=e.x-(e.drawWidth-e.width)/2;
-            // feetOffset pulls sprite down so visual feet align with hitbox bottom
-            const feetOffset = e.drawHeight * 0.08;
-            const destY=e.y+e.height-e.drawHeight + feetOffset;
-            ctx.save();
-            ctx.globalAlpha=e.dying?(e.alpha||1):1;
-            if(e.hurtTimer>0&&!e.dying) ctx.filter='brightness(3) saturate(0) hue-rotate(30deg)';
-            drawSprite(img,totalF,e.frame,e.facing==='left',destX,destY,e.drawWidth,e.drawHeight);
-            ctx.filter='none';ctx.restore();
-            if(!e.dying){
-                const barW=50,barH=4,barX=e.x-(barW-e.width)/2,barY=destY-8;
-                ctx.fillStyle='#333';ctx.fillRect(barX,barY,barW,barH);
-                ctx.fillStyle='#ff8800';ctx.fillRect(barX,barY,barW*(e.hp/e.maxHp),barH);
-            }
-        });
-    }
-
-    // Knight defend mechanic
-    function updateKnightDefend() {
-        if(!CH2.active) return;
-        const wantsDefend = keys['ShiftLeft']||keys['ShiftRight']||keys['KeyZ'];
-        // Cooldown countdown (600 frames = 10 seconds at 60fps)
-        if(CH2.shieldCooldown > 0) CH2.shieldCooldown--;
-        // Can only activate if cooldown is 0
-        if(wantsDefend && CH2.shieldCooldown === 0) {
-            if(!CH2.knightDefending) {
-                // Just started defending — will drain shield timer
-                CH2.knightDefending = true;
-            }
-            // While holding: drain active shield time (max 180 frames = 3s active window)
-            CH2.shieldActiveTimer = (CH2.shieldActiveTimer || 0) + 1;
-            if(CH2.shieldActiveTimer >= 180) {
-                // Shield exhausted mid-hold — force cooldown
-                CH2.knightDefending = false;
-                CH2.shieldCooldown = 600;
-                CH2.shieldActiveTimer = 0;
-            }
-        } else {
-            if(CH2.knightDefending && CH2.shieldActiveTimer > 0) {
-                // Released shield — start cooldown proportional to how long it was used
-                CH2.shieldCooldown = Math.max(120, CH2.shieldActiveTimer * 4);
-                CH2.shieldActiveTimer = 0;
-            }
-            CH2.knightDefending = false;
-        }
-        if(CH2.knightDefending){
-            if(player.vx>0) player.vx=Math.min(player.vx,1.5);
-            if(player.vx<0) player.vx=Math.max(player.vx,-1.5);
-        }
-    }
-
-    // Knight attack variant cycling
-    function cycleKnightAttackVariant() {
-        CH2.knightAttackVariant=(CH2.knightAttackVariant%3)+1;
-    }
-
-    function drawKnightPlayer() {
-        const flash=player.invincible>0&&Math.floor(player.invincible/5)%2===0;
-        if(flash) return;
-
-        let key,totalFrames;
-        if(CH2.knightDefending){ key='knight_defend'; totalFrames=KNIGHT_ANIMS.defend.frames; }
-        else if(player.isAttacking){ key='knight_atk'+CH2.knightAttackVariant; totalFrames=KNIGHT_ANIMS['attack'+CH2.knightAttackVariant].frames; }
-        else if(!player.grounded){ key='knight_jump'; totalFrames=KNIGHT_ANIMS.jump.frames; }
-        else if(Math.abs(player.vx)>2){ key='knight_run'; totalFrames=KNIGHT_ANIMS.run.frames; }
-        else if(Math.abs(player.vx)>0.2){ key='knight_walk'; totalFrames=KNIGHT_ANIMS.walk.frames; }
-        else { key='knight_idle'; totalFrames=KNIGHT_ANIMS.idle.frames; }
-
-        const img=images[key];
-        if(!img||!img.complete||!img.naturalWidth) return;
-        const fw=img.naturalWidth/totalFrames, fh=img.naturalHeight;
-        const scale=2.2;
-        const dw=fw*scale, dh=fh*scale;
-        const destX=player.x-(dw-player.width)/2;
-        const destY=player.y+player.height-dh;
-
-        // Defend glow
-        if(CH2.knightDefending){
-            ctx.save();ctx.globalAlpha=0.5;ctx.strokeStyle='#4488ff';ctx.lineWidth=3;
-            ctx.beginPath();ctx.arc(player.x+player.width/2,player.y+player.height/2,38,0,Math.PI*2);ctx.stroke();
-            ctx.restore();
-        }
-        // Shield cooldown bar above player
-        if(CH2.shieldCooldown > 0) {
-            const barW=50, barH=4;
-            const bx=player.x+player.width/2-barW/2, by=destY-14;
-            const pct=1-(CH2.shieldCooldown/600);
-            ctx.save();
-            ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(bx,by,barW,barH);
-            ctx.fillStyle= pct>0.7?'#44aaff':'#ff8844';
-            ctx.fillRect(bx,by,barW*pct,barH);
-            ctx.font='bold 8px Arial'; ctx.fillStyle='#88ccff'; ctx.textAlign='center'; ctx.textBaseline='bottom';
-            ctx.fillText('SHIELD CD',player.x+player.width/2,by-1);
-            ctx.restore();
-        } else if(!CH2.knightDefending) {
-            // Show READY hint briefly
-            ctx.save();
-            ctx.font='bold 8px Arial'; ctx.fillStyle='rgba(68,170,255,0.7)'; ctx.textAlign='center'; ctx.textBaseline='bottom';
-            ctx.fillText('SHIELD RDY',player.x+player.width/2,destY-14);
-            ctx.restore();
-        }
-        ctx.save();ctx.imageSmoothingEnabled=false;
-        drawSprite(img,totalFrames,player.frame,player.facing==='left',destX,destY,dw,dh);
-        ctx.restore();
-    }
-
-    function ch2VictoryCinematic() {
-        CH2.bossArena=false; CH2.boss=null;
-        const mins=Math.floor(CH2.timer/3600),secs=Math.floor((CH2.timer%3600)/60);
-        const timeStr=`${mins}m ${secs<10?'0'+secs:secs}s`;
-        const doneObjs=CH2.objectives.filter(o=>o.done).length;
-        const rating=CH2.totalKills>=30&&doneObjs===5?'S':CH2.totalKills>=20?'A':CH2.totalKills>=10?'B':'C';
-        const stats={time:timeStr,kills:CH2.totalKills,coins:player.coins,chests:CH2.totalChests,
-            distance:score,objectives:`${doneObjs}/5`,rating};
-        CH2.gameEndStats=stats;
-
-        // Save to supabase
-        if(window.AQ&&AQ.getSession()){
-            (async()=>{
-                try{
-                    const sess=AQ.getSession();
-                    const elapsed=Date.now()-(window._ch2RunStartTime||Date.now());
-                    if(CH2._run_id){
-                        await db.from('chapter2_runs').update({
-                            completed:true, time_taken_ms:elapsed,
-                            enemies_killed:CH2.totalKills, coins_earned:player.coins, distance:score
-                        }).eq('id',CH2._run_id);
-                    }
-                    // Upsert leaderboard
-                    const {data:existing}=await db.from('leaderboard_chapter2').select('*').eq('user_id',sess.id).single();
-                    if(existing){
-                        const newBest=existing.best_time_ms?Math.min(existing.best_time_ms,elapsed):elapsed;
-                        await db.from('leaderboard_chapter2').update({
-                            best_time_ms:newBest, total_completions:(existing.total_completions||0)+1, updated_at:new Date().toISOString()
-                        }).eq('user_id',sess.id);
-                    } else {
-                        await db.from('leaderboard_chapter2').insert({
-                            user_id:sess.id, username:sess.username||'Knight',
-                            best_time_ms:elapsed, total_completions:1
-                        });
-                    }
-                }catch(e){}
-            })();
-        }
-
-        startCh2Cinematic('ch2_victory', stats);
-    }
-
-    function drawCh2StoryUI() {
-        if(!CH2.active) return;
-        const W=GAME_WIDTH, H=GAME_HEIGHT;
-
-        // Objective progress bar (top-left area, below HP)
-        const pct=CH2.objectivePct;
-        const barX=10,barY=H-100,barW=200,barH=10;
-        ctx.save();
-        ctx.fillStyle='rgba(0,0,0,0.5)';roundRect2(ctx,barX-2,barY-16,barW+4,barH+20,4);ctx.fill();
-        ctx.fillStyle='#220800';ctx.fillRect(barX,barY,barW,barH);
-        const pg=ctx.createLinearGradient(barX,0,barX+barW,0);
-        pg.addColorStop(0,'#ff4400');pg.addColorStop(1,'#ffcc00');
-        ctx.fillStyle=pg;ctx.fillRect(barX,barY,barW*pct,barH);
-        ctx.font='bold 10px "Cinzel",serif';ctx.fillStyle='#ff8844';ctx.textAlign='left';ctx.textBaseline='bottom';
-        ctx.fillText('EMBER REIGN: '+Math.floor(pct*100)+'%',barX,barY-2);
-        ctx.restore();
-
-        // Objectives board (Tab key)
-        if(CH2.boardOpen){
-            const bx=W/2-220,by=60,bw=440,bh=320;
-            ctx.save();ctx.globalAlpha=0.94;
-            ctx.fillStyle='rgba(10,3,0,0.92)';roundRect2(ctx,bx,by,bw,bh,10);ctx.fill();
-            ctx.strokeStyle='#ff6600';ctx.lineWidth=2;roundRect2(ctx,bx,by,bw,bh,10);ctx.stroke();
-            ctx.font='bold 16px "Cinzel Decorative",cursive';ctx.fillStyle='#ff8800';ctx.textAlign='center';ctx.textBaseline='top';
-            ctx.fillText('✦ EMBER REIGN — OBJECTIVES ✦',W/2,by+14);
-            CH2.objectives.forEach((o,i)=>{
-                const oy=by+44+i*32;
-                ctx.fillStyle=o.done?'rgba(255,100,0,0.2)':'rgba(40,10,0,0.4)';
-                ctx.fillRect(bx+10,oy,bw-20,26);
-                ctx.font='12px "Cinzel",serif';ctx.fillStyle=o.done?'#ffaa44':'#888';
-                ctx.textAlign='left';ctx.textBaseline='middle';
-                ctx.fillText((o.done?'✔ ':'○ ')+o.label,bx+18,oy+13);
-                const pval=o.done?o.target:o.current;
-                ctx.textAlign='right';ctx.fillStyle=o.done?'#ffcc88':'#666';
-                ctx.fillText(pval+'/'+o.target,bx+bw-14,oy+13);
-            });
-            ctx.font='10px Arial';ctx.fillStyle='rgba(255,136,0,0.5)';ctx.textAlign='center';ctx.textBaseline='bottom';
-            ctx.fillText('[TAB] Close',W/2,by+bh-6);
-            ctx.restore();
-        }
-
-        // Boss HP already drawn in drawCh2BossSprites
-        // Chapter 2 mode indicator
-        if(!CH2.bossArena){
-            ctx.save();ctx.font='bold 10px "Cinzel",serif';ctx.fillStyle='rgba(255,136,0,0.65)';
-            ctx.textAlign='right';ctx.textBaseline='top';
-            ctx.fillText('⚔ CH.2 — EMBERS OF REBIRTH',W-12,12);ctx.restore();
-        }
-
-        // Dialogue box
-        const d=CH2.dialogue;
-        if(d&&d.lines&&d.lines.length>0){
-            const line=d.lines[d.idx]||d.lines[0];
-            const dw2=Math.min(640,GAME_WIDTH-60),dh2=90,dx2=(W-dw2)/2,dy2=H-130;
-            ctx.save();ctx.globalAlpha=0.95;
-            ctx.fillStyle=line.bossLine?'rgba(30,0,0,0.9)':'rgba(0,10,30,0.9)';
-            roundRect2(ctx,dx2,dy2,dw2,dh2,8);ctx.fill();
-            ctx.strokeStyle=line.bossLine?'#ff4400':'#4488ff';ctx.lineWidth=2;
-            roundRect2(ctx,dx2,dy2,dw2,dh2,8);ctx.stroke();
-            ctx.font='bold 11px "Cinzel",serif';ctx.textAlign='left';ctx.textBaseline='top';
-            ctx.fillStyle=line.bossLine?'#ff6600':'#44aaff';
-            ctx.fillText(line.speaker,dx2+14,dy2+10);
-            ctx.font='15px "AntiquityPrint",serif';ctx.fillStyle='#fff8f0';ctx.textBaseline='top';
-            ctx.fillText(line.text,dx2+14,dy2+30);
-            ctx.font='10px Arial';ctx.fillStyle='rgba(200,150,100,0.7)';ctx.textAlign='right';ctx.textBaseline='bottom';
-            ctx.fillText('[Space/Click] Continue',dx2+dw2-8,dy2+dh2-6);
-            ctx.restore();
-        }
-    }
-
-    function _drawCh2NPCs() {
-        const npcImg=images['npc_idle'];
-        if(!npcImg||!npcImg.complete||!npcImg.naturalWidth) return;
-        const NPC_TOTAL_FRAMES=10;
-        const fw=npcImg.naturalWidth/NPC_TOTAL_FRAMES, fh=npcImg.naturalHeight;
-        [[CH2.npc1,1],[CH2.npc2,2]].forEach(([npc,num])=>{
-            if(!npc) return;
-            const drawScale=2.5, dw=fw*drawScale, dh=fh*drawScale;
-            const drawX=npc.x-dw/2, drawY=npc.y+npc.height-dh;
-            const talked=num===1?CH2.npc1Talked:CH2.npc2Talked;
-            ctx.save(); ctx.imageSmoothingEnabled=false;
-            if(num===2) ctx.filter='hue-rotate(160deg) brightness(1.3) saturate(1.4)';
-            ctx.drawImage(npcImg,npc.frame*fw,0,fw,fh,drawX,drawY,dw,dh);
-            ctx.filter='none'; ctx.restore();
-            const name=num===1?'Zephira':'Sentinel Kael';
-            const glowColor=num===1?'#ff8844':'#44ffcc';
-            ctx.save();ctx.font='bold 11px "Cinzel",serif';
-            const tw=ctx.measureText(name).width+16;
-            ctx.fillStyle='rgba(0,0,0,0.65)';roundRect2(ctx,npc.x-tw/2,drawY-22,tw,18,4);ctx.fill();
-            ctx.fillStyle=glowColor;ctx.textAlign='center';ctx.textBaseline='middle';
-            ctx.fillText(name,npc.x,drawY-13);ctx.restore();
-            if(Math.abs(npc.x-player.x)<120&&!talked){
-                ctx.save();ctx.font='bold 18px Arial';ctx.fillStyle='#ffdd00';
-                ctx.textAlign='center';ctx.textBaseline='middle';
-                ctx.fillText('!',npc.x,drawY-32);
-                ctx.font='10px Arial';ctx.fillStyle='#ffee66';
-                ctx.fillText('[F] Talk',npc.x,drawY-46);ctx.restore();
-            }
-            if(talked){
-                ctx.save();ctx.font='14px Arial';ctx.fillStyle='#44ff88';
-                ctx.textAlign='center';ctx.textBaseline='middle';
-                ctx.fillText('✔',npc.x,drawY-32);ctx.restore();
-            }
-            // Animate frame
-            npc.frameTimer=(npc.frameTimer||0)+1;
-            if(npc.frameTimer>=12){npc.frame=(npc.frame+1)%10;npc.frameTimer=0;}
-        });
-    }
-
-    function returnToHome() {
-        CH2.active=false; STORY_MODE.active=false;
-        window._gameLoopActive=false;
-        window._ch2KnightMode=false;
-        const homeEl=document.getElementById('home-screen');
-        homeEl.style.display='';homeEl.style.opacity='0';
-        homeEl.classList.remove('fade-out');
-        setTimeout(()=>{homeEl.style.opacity='1';},50);
-        window._endScreenActive=false;
     }
 
     function teleportPlayerBack() {
@@ -4712,7 +3384,7 @@
     }
 
     function drawMarketHouse() {
-        const m = (CH2.active ? (CH2.market || STORY_MODE.market) : STORY_MODE.market);
+        const m = STORY_MODE.market;
         if (!m) return;
         const img = images['market_house'];
         const W = 110, H = 130;
@@ -5075,6 +3747,10 @@
     let platforms = [];
     let collectables = [];
 
+    // How many px below p.y the visual rock surface actually starts.
+    // Tweak these values if characters still float or sink.
+    const PLAT_SURFACE_OFFSET = [12, 12, 16]; // indexed by platform type
+
     const platformSlices = [
         { sx: 30, sy: 20, sw: 180, sh: 180 },
         { sx: 250, sy: 20, sw: 350, sh: 180 },
@@ -5168,8 +3844,6 @@
         if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); togglePause(); return; }
         // Story mode: TAB for objective board
         if(STORY_MODE.active && e.code==='Tab') { e.preventDefault(); STORY_MODE.boardOpen=!STORY_MODE.boardOpen; return; }
-        // CH2 TAB for objective board
-        if(CH2.active && e.code==='Tab') { e.preventDefault(); CH2.boardOpen=!CH2.boardOpen; return; }
         // Story mode: F key to interact
         if(STORY_MODE.active && e.code==='KeyF' && !gamePaused) {
             const SM=STORY_MODE;
@@ -5178,14 +3852,6 @@
             if(SM.portal&&!SM.bossArena&&Math.abs(SM.portal.x+48-player.x)<130) { tryEnterPortal(); return; }
             if(SM.market&&Math.abs(SM.market.x+50-player.x)<130) { openMarket(); return; }
         }
-        // CH2 F key to interact
-        if(CH2.active && e.code==='KeyF' && !gamePaused) {
-            if(CH2.npc1&&!CH2.npc1Talked&&Math.abs(CH2.npc1.x-player.x)<120) { openCh2Dialogue('ch2_npc1'); CH2.npc1Talked=true; return; }
-            if(CH2.npc2&&!CH2.npc2Talked&&Math.abs(CH2.npc2.x-player.x)<120) { openCh2Dialogue('ch2_npc2'); return; }
-            if(CH2.portal&&!CH2.bossArena&&Math.abs(CH2.portal.x+48-player.x)<130) { startCh2Cinematic('ch2_portal'); return; }
-            const ch2mkt = CH2.market || STORY_MODE.market;
-            if(ch2mkt&&Math.abs(ch2mkt.x+50-player.x)<130) { openMarket(); return; }
-        }
         // Story dialogue advance
         if(STORY_MODE.dialogue && !STORY_MODE.dialogue.inputMode) {
             if(e.code==='Space'||e.code==='Enter'||e.code==='KeyF') {
@@ -5193,12 +3859,6 @@
                 if(dialogueState._lineComplete) { advanceDialogue(); dialogueState._lineStart=null; }
                 else dialogueState._lineStart = Date.now()-99999; // skip to end
                 return;
-            }
-        }
-        // CH2 dialogue advance
-        if(CH2.dialogue && !CH2.dialogue.inputMode) {
-            if(e.code==='Space'||e.code==='Enter'||e.code==='KeyF') {
-                e.preventDefault(); advanceCh2Dialogue(); return;
             }
         }
         // Password input
@@ -5217,11 +3877,7 @@
             return;
         }
         keys[e.code] = true;
-        if ((e.code === 'KeyK' || e.code === 'Space') && !player.isAttacking && !gamePaused) {
-            e.preventDefault();
-            if(CH2.active) cycleKnightAttackVariant();
-            startAttack();
-        }
+        if ((e.code === 'KeyK' || e.code === 'Space') && !player.isAttacking && !gamePaused) { e.preventDefault(); startAttack(); }
     });
     window.addEventListener('keyup', e => keys[e.code] = false);
     window.addEventListener('mousedown', () => { startMusic(); if(!player.isAttacking) startAttack(); });
@@ -5265,10 +3921,7 @@
             _lastTime = 0; _accumulator = 0;
             requestAnimationFrame(_gameLoopTick);
         }
-        if (CH2.active) {
-            speechSynthesis && speechSynthesis.cancel && speechSynthesis.cancel();
-            initChapter2();
-        } else if (STORY_MODE.active) {
+        if (STORY_MODE.active) {
             // Story mode death = full fresh restart of story mode
             if(window.AQ) AQ.finishSCRun(false);
             speechSynthesis && speechSynthesis.cancel && speechSynthesis.cancel();
@@ -5294,11 +3947,6 @@
         STORY_MODE.active = false; STORY_MODE.bossArena = false; STORY_MODE.boss = null;
         STORY_MODE.dialogue = null; STORY_MODE.cinematic = null;
         STORY_MODE.showingEndStats = false;
-        // Fully reset CH2
-        CH2.active = false; CH2.bossArena = false; CH2.boss = null;
-        CH2.dialogue = null; CH2.cinematic = null;
-        CH2.showingEndStats = false;
-        window._ch2KnightMode = false;
         window._endScreenActive = false; window._gameMode = 'endless';
         speechSynthesis && speechSynthesis.cancel && speechSynthesis.cancel();
         // Show home screen again
@@ -5369,13 +4017,11 @@
         }
         // Spawn enemy (skip very first platform)
         if (p.x > 500 && Math.random() > 0.45) {
-            const isClone = CH2.active; // In Chapter 2, all enemies are ember clones
             enemies.push({
                 x: p.x + p.w * 0.6,
                 y: p.y - 70,
                 width: 50, height: 70,
-                drawWidth: isClone ? 180 : 160,
-                drawHeight: isClone ? 180 : 160,
+                drawWidth: 160, drawHeight: 160,
                 hp: 50, maxHp: 50,
                 vx: 0, vy: 0,
                 grounded: true,
@@ -5385,7 +4031,6 @@
                 isAttacking: false,
                 attackCooldown: 0,
                 hurtTimer: 0,
-                isClone,
                 platformRef: p
             });
         }
@@ -5422,34 +4067,6 @@
                 shootTimer: 280, arrows: [] // offset timer so first shot comes after a delay
             });
         }
-        // CH2: add platform-anchored decorations on new platforms as they generate
-        if (CH2.active && !CH2.bossArena && p.x > 200) {
-            const groundProps = [
-                { key:'arena_rock1',  w:64,  h:50  },
-                { key:'arena_rock2',  w:70,  h:46  },
-                { key:'arena_skulls', w:60,  h:36  },
-                { key:'arena_bush',   w:60,  h:36  },
-                { key:'arena_crate',  w:52,  h:52  },
-                { key:'arena_sign',   w:44,  h:54  },
-            ];
-            const tallProps = [
-                { key:'arena_palm',      w:80,  h:180 },
-                { key:'arena_tree',      w:120, h:190 },
-                { key:'arena_treehouse', w:180, h:230 },
-            ];
-            // One background tall prop to the left of platform
-            const tp = tallProps[Math.floor(Math.random() * tallProps.length)];
-            if (CH2.arenaDecorations) {
-                CH2.arenaDecorations.push({ key: tp.key, x: p.x - tp.w * 0.3, y: p.y - tp.h, w: tp.w, h: tp.h });
-                // One or two ground props at platform edges
-                const gp1 = groundProps[Math.floor(Math.random() * groundProps.length)];
-                CH2.arenaDecorations.push({ key: gp1.key, x: p.x + 8, y: p.y - gp1.h, w: gp1.w, h: gp1.h });
-                if (p.w > 280) {
-                    const gp2 = groundProps[Math.floor(Math.random() * groundProps.length)];
-                    CH2.arenaDecorations.push({ key: gp2.key, x: p.x + p.w - gp2.w - 8, y: p.y - gp2.h, w: gp2.w, h: gp2.h });
-                }
-            }
-        }
     }
 
     function update() {
@@ -5457,8 +4074,6 @@
         if (player.dead || gamePaused) return;
         if (STORY_MODE.cinematic) return;   // cinematic = full game freeze
         if (STORY_MODE.dialogue) return;    // dialogue = full game freeze
-        if (CH2.cinematic) return;
-        if (CH2.dialogue) return;
 
         // ===== STORY MODE TICK =====
         if(STORY_MODE.active && !STORY_MODE.bossArena) {
@@ -5470,18 +4085,6 @@
             STORY_MODE.timer++;
             updateBoss();
         }
-
-        // ===== CHAPTER 2 TICK =====
-        if(CH2.active && !CH2.bossArena) {
-            CH2.timer++;
-            updateCh2Objectives();
-        }
-        if(CH2.active && CH2.bossArena) {
-            CH2.timer++;
-            updateCh2Boss();
-            updateCh2BossPlayerHit();
-        }
-        updateKnightDefend();
         // Story mode kill tracking
         // ---- PLAYER ANIMATION ----
         if (!player.isAttacking) {
@@ -5517,40 +4120,35 @@
         player.y += player.vy;
 
         // ---- CAMERA ----
-        if (STORY_MODE.bossArena || CH2.bossArena) {
+        if (STORY_MODE.bossArena) {
             // Boss arena: allow bidirectional movement, clamp to arena bounds
             const ARENA_WIDTH = 2400;
-            const arenaScrollRef = CH2.bossArena ? CH2 : STORY_MODE;
             // Scroll right if player goes past center
             if (player.x > GAME_WIDTH / 2 + 50) {
                 let diff = player.x - (GAME_WIDTH / 2 + 50);
                 const maxScroll = ARENA_WIDTH - GAME_WIDTH;
-                if ((arenaScrollRef.bossArenaScrollX||0) < maxScroll) {
-                    const actualDiff = Math.min(diff, maxScroll-(arenaScrollRef.bossArenaScrollX||0));
-                    arenaScrollRef.bossArenaScrollX = (arenaScrollRef.bossArenaScrollX||0) + actualDiff;
+                if ((STORY_MODE.bossArenaScrollX||0) < maxScroll) {
+                    const actualDiff = Math.min(diff, maxScroll-(STORY_MODE.bossArenaScrollX||0));
+                    STORY_MODE.bossArenaScrollX = (STORY_MODE.bossArenaScrollX||0) + actualDiff;
                     player.x -= actualDiff;
                     platforms.forEach(p => p.x -= actualDiff);
                     if(STORY_MODE.boss) STORY_MODE.boss.x -= actualDiff;
-                    if(CH2.boss) CH2.boss.x -= actualDiff;
                     if(STORY_MODE.arenaDecorations) STORY_MODE.arenaDecorations.forEach(d=>d.x-=actualDiff);
-                    enemies.forEach(e => e.x -= actualDiff);
                 }
             }
-            // Scroll left
+            // Scroll left if player goes past left quarter of screen — bidirectional!
             if (player.x < GAME_WIDTH / 4 - 50) {
                 let diff = (GAME_WIDTH / 4 - 50) - player.x;
-                if ((arenaScrollRef.bossArenaScrollX||0) > 0) {
-                    const actualDiff = Math.min(diff, arenaScrollRef.bossArenaScrollX||0);
-                    arenaScrollRef.bossArenaScrollX -= actualDiff;
+                if ((STORY_MODE.bossArenaScrollX||0) > 0) {
+                    const actualDiff = Math.min(diff, STORY_MODE.bossArenaScrollX||0);
+                    STORY_MODE.bossArenaScrollX -= actualDiff;
                     player.x += actualDiff;
                     platforms.forEach(p => p.x += actualDiff);
                     if(STORY_MODE.boss) STORY_MODE.boss.x += actualDiff;
-                    if(CH2.boss) CH2.boss.x += actualDiff;
                     if(STORY_MODE.arenaDecorations) STORY_MODE.arenaDecorations.forEach(d=>d.x+=actualDiff);
-                    enemies.forEach(e => e.x += actualDiff);
                 }
             }
-            // Hard clamp player to screen edges
+            // Hard clamp player to screen edges (no falling off left/right)
             player.x = Math.max(10, Math.min(GAME_WIDTH - player.width - 10, player.x));
         } else if (player.x > GAME_WIDTH / 2) {
             let diff = player.x - GAME_WIDTH / 2;
@@ -5569,10 +4167,6 @@
             if (STORY_MODE.npc2) STORY_MODE.npc2.x -= diff;
             if (STORY_MODE.portal) STORY_MODE.portal.x -= diff;
             if (STORY_MODE.market) STORY_MODE.market.x -= diff;
-            // CH2 NPCs / portal scroll
-            if (CH2.npc1) CH2.npc1.x -= diff;
-            if (CH2.npc2) CH2.npc2.x -= diff;
-            if (CH2.portal) CH2.portal.x -= diff;
             score = Math.floor(scrollX / 8);
             uiScore = score;
             if(window.AQ) { if(STORY_MODE.active) AQ.trackSCDist(score); else AQ.trackEndlessDist(score); }
@@ -5581,10 +4175,11 @@
         // ---- PLAYER PLATFORM COLLISION ----
         player.grounded = false;
         for (let p of platforms) {
+            const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
             if (player.x < p.x + p.w && player.x + player.width > p.x &&
-                player.y + player.height > p.y && player.y + player.height < p.y + p.h + 20 &&
+                player.y + player.height > surfaceY && player.y + player.height < surfaceY + p.h + 20 &&
                 player.vy >= 0) {
-                player.y = p.y - player.height;
+                player.y = surfaceY - player.height;
                 player.vy = 0;
                 player.grounded = true;
             }
@@ -5611,7 +4206,6 @@
                     playSound('chest');
                     // Story tracking
                     if(STORY_MODE.active) STORY_MODE.totalChests++;
-                    if(CH2.active) CH2.totalChests++;
                     // Pick a random artifact to spawn from this chest
                     const artifactPool = ['helm','berries','crystal','feather','core'];
                     const pick = artifactPool[Math.floor(Math.random() * artifactPool.length)];
@@ -5628,7 +4222,7 @@
                 const def = ARTIFACT_DEFS.find(d => d.id === ca.artifactId);
                 if (def) {
                     // ALL artifacts go into inventory (shown in hotbar)
-                    if (player.artifacts.length < 5) { player.artifacts.push(ca.artifactId); if(STORY_MODE.active) STORY_MODE.totalArtifacts++; if(CH2.active) CH2.totalArtifacts++; }
+                    if (player.artifacts.length < 5) { player.artifacts.push(ca.artifactId); if(STORY_MODE.active) STORY_MODE.totalArtifacts++; }
                     // Passive effects apply immediately on pickup
                     if (def.effect === 'maxhp') {
                         player.maxHp = Math.min(181, player.maxHp + 1);
@@ -5670,10 +4264,11 @@
             // Enemy platform collision
             e.grounded = false;
             for (let p of platforms) {
+                const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
                 if (e.x < p.x + p.w && e.x + e.width > p.x &&
-                    e.y + e.height > p.y && e.y + e.height < p.y + p.h + 20 &&
+                    e.y + e.height > surfaceY && e.y + e.height < surfaceY + p.h + 20 &&
                     e.vy >= 0) {
-                    e.y = p.y - e.height;
+                    e.y = surfaceY - e.height;
                     e.vy = 0;
                     e.grounded = true;
                     e.currentPlatform = p;
@@ -5687,53 +4282,40 @@
                 const samePlatform = e.currentPlatform &&
                     player.x > e.currentPlatform.x && player.x < e.currentPlatform.x + e.currentPlatform.w;
 
-                const detectionRange = e.isClone ? 600 : 450;
-                const chaseSpeed = e.isClone ? 4.2 : 3.5;
-                const attackRange = e.isClone ? 70 : 65;
-                const cooldown = e.isClone ? 48 : 65;
-
-                // Edge safety: would next step walk off the platform?
-                const moveDir = dx > 0 ? 1 : -1;
-                let wouldFallOff = false;
-                if (e.currentPlatform && e.grounded) {
-                    const nextX = e.x + moveDir * chaseSpeed;
-                    wouldFallOff = nextX < e.currentPlatform.x + 8 ||
-                                   nextX + e.width > e.currentPlatform.x + e.currentPlatform.w - 8;
-                }
-
-                if (dist < detectionRange) {
+                if (dist < 450) {
                     e.facing = dx < 0 ? 'left' : 'right';
 
-                    // Clones: jump toward player if on same platform and player is above
-                    if (e.isClone && e.grounded && samePlatform && player.y < e.y - 40 && Math.random() < 0.02) {
-                        e.vy = -13;
-                    }
-
+                    // Smarter: strafe/circle at medium range, attack at close range
                     if (dist > 110) {
-                        if (!wouldFallOff) {
+                        // Chase — but stop at platform edge
+                        const nextX = e.x + (dx > 0 ? 1 : -1) * 2.5;
+                        let onEdge = false;
+                        if (e.currentPlatform) {
+                            onEdge = nextX < e.currentPlatform.x + 10 || nextX + e.width > e.currentPlatform.x + e.currentPlatform.w - 10;
+                        }
+                        if (!onEdge) {
                             e.state = 'run';
-                            e.vx = moveDir * chaseSpeed;
+                            e.vx = (dx > 0 ? 1 : -1) * 3.5;
                         } else {
-                            // At edge — stop and wait, clones never chase off platform
                             e.state = 'idle';
                             e.vx = 0;
                         }
-                    } else if (dist > attackRange) {
-                        e.vx *= e.isClone ? 0.6 : 0.7;
+                    } else if (dist > 65) {
+                        // Circle/strafe — stop and wait for opening
+                        e.vx *= 0.7;
                         e.state = e.attackCooldown > 20 ? 'idle' : 'run';
-                        // Lunge in only if safe
-                        if (!wouldFallOff && e.attackCooldown > 50 && Math.random() < (e.isClone ? 0.025 : 0.015)) {
-                            e.vx = moveDir * (e.isClone ? 5 : 3);
-                        } else if (e.attackCooldown > 40 && Math.random() < (e.isClone ? 0.01 : 0.02)) {
-                            // Step away only if safe on the other side
-                            const retreatX = e.x + (-moveDir) * 1.8;
-                            const retreatSafe = !e.currentPlatform || (retreatX > e.currentPlatform.x + 8 && retreatX + e.width < e.currentPlatform.x + e.currentPlatform.w - 8);
-                            if (retreatSafe) e.vx = (-moveDir) * 1.8;
+                        // Feint: sometimes lunge in or step back
+                        if (e.attackCooldown > 50 && Math.random() < 0.015) {
+                            e.vx = (dx > 0 ? 1 : -1) * 3; // lunge toward player
+                        } else if (e.attackCooldown > 40 && Math.random() < 0.02) {
+                            e.vx = (dx > 0 ? -1 : 1) * 1.8; // step away
                         }
-                        if (!wouldFallOff && e.attackCooldown <= 0 && dist < 100 && Math.random() < (e.isClone ? 0.018 : 0.008)) {
-                            e.vx = moveDir * (e.isClone ? 8 : 6);
+                        // Occasionally do quick dash attack
+                        if (e.attackCooldown <= 0 && dist < 100 && Math.random() < 0.008) {
+                            e.vx = (dx > 0 ? 1 : -1) * 6; // dash
                         }
                     } else {
+                        // In range — attack
                         e.vx = 0;
                         e.state = 'idle';
                         if (e.attackCooldown <= 0) {
@@ -5741,7 +4323,7 @@
                             e.state = 'attack';
                             e.frame = 0;
                             e.frameTimer = 0;
-                            e.attackCooldown = cooldown;
+                            e.attackCooldown = 65;
                             playSound('sword');
                         }
                     }
@@ -5808,7 +4390,6 @@
                         e.frameTimer = 0;
                         // Story mode kill tracking
                         if(STORY_MODE.active) { STORY_MODE.totalKills++; if(window.AQ) AQ.trackSCKill(); }
-                        if(CH2.active) { CH2.totalKills++; }
                         // Burst particles
                         for (let i = 0; i < 12; i++) {
                             const angle = (Math.PI * 2 / 12) * i;
@@ -5836,9 +4417,10 @@
                 npc.y += npc.vy;
                 npc.grounded = false;
                 for (let p of platforms) {
+                    const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
                     if (npc.x < p.x + p.w && npc.x + npc.width > p.x &&
-                        npc.y + npc.height > p.y && npc.y + npc.height < p.y + p.h + 20 && npc.vy >= 0) {
-                        npc.y = p.y - npc.height;
+                        npc.y + npc.height > surfaceY && npc.y + npc.height < surfaceY + p.h + 20 && npc.vy >= 0) {
+                        npc.y = surfaceY - npc.height;
                         npc.vy = 0;
                         npc.grounded = true;
                     }
@@ -5847,25 +4429,6 @@
                 npc.frameTimer = (npc.frameTimer || 0) + 1;
                 if (npc.frameTimer >= 8) { npc.frame = (npc.frame + 1) % 9; npc.frameTimer = 0; }
             });
-        }
-
-        // ---- CH2 NPC PHYSICS ----
-        if (CH2.active) {
-            [CH2.npc1, CH2.npc2].forEach(npc => {
-                if (!npc) return;
-                npc.vy = (npc.vy || 0) + 0.7;
-                npc.y += npc.vy;
-                npc.grounded = false;
-                for (let p of platforms) {
-                    if (npc.x < p.x + p.w && npc.x + npc.width > p.x &&
-                        npc.y + npc.height > p.y && npc.y + npc.height < p.y + p.h + 20 && npc.vy >= 0) {
-                        npc.y = p.y - npc.height; npc.vy = 0; npc.grounded = true;
-                    }
-                }
-                npc.frameTimer = (npc.frameTimer || 0) + 1;
-                if (npc.frameTimer >= 8) { npc.frame = (npc.frame + 1) % 9; npc.frameTimer = 0; }
-            });
-            // Scroll CH2 npcs with camera
         }
 
         // ---- DRAGON PET UPDATE ----
@@ -5981,18 +4544,6 @@
                         }
                     }
                 }
-                // Hit CH2 boss
-                if (CH2.bossArena && CH2.boss && !CH2.boss.dying && !fp.hit) {
-                    const b = CH2.boss;
-                    if (Math.abs(fp.x - (b.x + b.width/2)) < 45 && Math.abs(fp.y - (b.y + b.height/2)) < 55) {
-                        fp.hit = true; b.hp -= 2; b.hurtTimer = 10;
-                        dmgNumbers.push({ x: b.x+30, y: b.y-10, val: '🔥2', life: 45, color: '#ff6600' });
-                        if (b.hp <= 0 && !b.dying) {
-                            b.dying = true; b.state = 'death'; b.frame = 0; b.frameTimer = 0; b.alpha = 1;
-                            shakeTimer = 30; shakeMag = 12; playBossRoar();
-                        }
-                    }
-                }
             });
             d.fireProjs = d.fireProjs.filter(fp => !fp.hit && fp.x > -150 && fp.x < GAME_WIDTH+150 && fp.y > -100 && fp.y < GAME_HEIGHT+100);
         }
@@ -6064,7 +4615,7 @@
         }
 
         // ---- PROCEDURAL GEN ---- (skip in boss arena)
-        if(!STORY_MODE.bossArena && !CH2.bossArena) {
+        if(!STORY_MODE.bossArena) {
         const lastPlatform = platforms[platforms.length - 1];
         if (lastPlatform.x + lastPlatform.w < GAME_WIDTH + 400) {
             const gap = 100 + Math.random() * 60; // 100–160px — always jumpable
@@ -6102,11 +4653,6 @@
         if (player.invincible > 0 || player.dead) return;
         // Fire shield blocks fire/spike damage entirely
         if (player.fireShield > 0 && typeof dmg === 'number' && dmg <= 7) return; // blocks trap damage
-        // Knight defend blocks melee damage in CH2 (any amount)
-        if (CH2.active && CH2.knightDefending) {
-            dmg = Math.max(1, Math.floor(dmg * 0.12)); // only 12% gets through
-            dmgNumbers.push({ x: player.x, y: player.y-30, val: 'BLOCKED!', life: 60, color: '#44aaff', isText: true });
-        }
         player.hp = Math.max(0, player.hp - dmg);
         player.invincible = 60;
         if(window.AQ) { if(STORY_MODE.active && !STORY_MODE.bossArena) AQ.trackSCDamageTaken(dmg); }
@@ -6117,11 +4663,9 @@
             player.dead = true;
             if(STORY_MODE.active && STORY_MODE.bossArena) {
                 goScore.textContent = `Slain by the Void-Warden. Kills: ${STORY_MODE.totalKills}  |  Distance: ${score}m`;
-            } else if(CH2.active && CH2.bossArena) {
-                goScore.textContent = `Slain by Seraphex. Clones Destroyed: ${CH2.totalKills}  |  Distance: ${score}m`;
             } else {
                 if(STORY_MODE.active && window.AQ) AQ.trackSCDeath();
-                if(!STORY_MODE.active && !CH2.active && window.AQ) { AQ.trackEndlessDist(score); AQ.finishEndlessRun(); }
+                if(!STORY_MODE.active && window.AQ) { AQ.trackEndlessDist(score); AQ.finishEndlessRun(); }
                 goScore.textContent = `Distance: ${score}m  |  Coins: ${player.coins}`;
             }
             gameOverEl.style.display = 'flex';
@@ -6161,31 +4705,15 @@
         }
 
         // Background
-        if (STORY_MODE.bossArena || CH2.bossArena || CH2.active) {
-            // Arena background used for ALL of CH2 (open world + boss arena)
+        if (STORY_MODE.bossArena) {
             const arenaBack = images['arena_back'];
             if (arenaBack && arenaBack.complete && arenaBack.naturalWidth) {
-                // Parallax scrolling for open world; static for boss arena
-                if (!STORY_MODE.bossArena && !CH2.bossArena && CH2.active) {
-                    const bgScroll = (scrollX * 0.25) % GAME_WIDTH;
-                    ctx.drawImage(arenaBack, -bgScroll, 0, GAME_WIDTH + 2, GAME_HEIGHT);
-                    ctx.drawImage(arenaBack, GAME_WIDTH - bgScroll, 0, GAME_WIDTH + 2, GAME_HEIGHT);
-                } else {
-                    ctx.drawImage(arenaBack, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-                }
+                ctx.drawImage(arenaBack, 0, 0, GAME_WIDTH, GAME_HEIGHT);
             } else {
                 ctx.fillStyle = '#1a0a00'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
             }
-            // Dark overlay (lighter for open world so it reads as different from boss arena)
-            if (STORY_MODE.bossArena || CH2.bossArena) {
-                ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            } else {
-                ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            }
-            // Ember tint — always present in CH2 (open world and boss arena)
-            if (CH2.active || CH2.bossArena) {
-                ctx.fillStyle = 'rgba(40,8,0,0.25)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            }
+            // Static dark overlay — no gradient creation per frame
+            ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         } else {
             let bgScroll = (scrollX * 0.3) % GAME_WIDTH;
             ctx.drawImage(images.background, -bgScroll, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -6194,15 +4722,14 @@
 
         // Market house drawn right after background — always behind platforms & characters
         if(STORY_MODE.active && STORY_MODE.market && !STORY_MODE.bossArena) drawMarketHouse();
-        if(CH2.active && (STORY_MODE.market || CH2.market) && !CH2.bossArena) drawMarketHouse();
 
         // Platforms
         platforms.forEach(p => {
-            if (STORY_MODE.bossArena || CH2.bossArena || CH2.active) {
+            if (STORY_MODE.bossArena) {
                 const platImg = images['arena_platform'];
                 if (platImg && platImg.complete && platImg.naturalWidth) {
                     ctx.save();
-                    ctx.beginPath(); ctx.rect(p.x - scrollX * 0, p.y, p.w, p.h); ctx.clip();
+                    ctx.beginPath(); ctx.rect(p.x, p.y, p.w, p.h); ctx.clip();
                     const pw = platImg.naturalWidth, ph = platImg.naturalHeight;
                     for (let px = p.x; px < p.x + p.w; px += pw) {
                         ctx.drawImage(platImg, px, p.y, pw, p.h || ph);
@@ -6217,27 +4744,14 @@
             }
         });
 
-        // Boss arena decorations (behind enemies/player) — shared by CH1 and CH2
-        if ((STORY_MODE.bossArena || CH2.bossArena) && STORY_MODE.arenaDecorations) {
+        // Boss arena decorations (behind enemies/player)
+        if (STORY_MODE.bossArena && STORY_MODE.arenaDecorations) {
             STORY_MODE.arenaDecorations.forEach(d => {
                 const img = images[d.key];
                 if (img && img.complete && img.naturalWidth) {
-                    ctx.save(); ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(img, d.x, d.y, d.w, d.h); ctx.restore();
-                }
-            });
-        }
-
-        // CH2 open world arena decorations — scroll with the procedural world
-        if (CH2.active && !CH2.bossArena && CH2.arenaDecorations) {
-            CH2.arenaDecorations.forEach(d => {
-                const sx = d.x - scrollX;
-                // Only draw if on screen
-                if (sx + d.w < -60 || sx > GAME_WIDTH + 60) return;
-                const img = images[d.key];
-                if (img && img.complete && img.naturalWidth) {
-                    ctx.save(); ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(img, sx, d.y, d.w, d.h);
+                    ctx.save();
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(img, d.x, d.y, d.w, d.h);
                     ctx.restore();
                 }
             });
@@ -6324,7 +4838,6 @@
 
         // Enemies
         enemies.forEach(e => {
-            if(e.isClone) return; // clone enemies drawn by drawCloneEnemies below
             const stateMap = { idle: 'enemy_idle', run: 'enemy_run', attack: 'enemy_attack', hurt: 'enemy_hurt' };
             const framesMap = { idle: 10, run: 16, attack: 7, hurt: 4 };
             const imgKey = stateMap[e.dying ? 'hurt' : e.state] || 'enemy_idle';
@@ -6351,15 +4864,10 @@
                 ctx.fillRect(barX, barY, barW * (e.hp / e.maxHp), barH);
             }
         });
-        // Draw clone enemies (Chapter 2 — use ninja sprites)
-        if(CH2.active) drawCloneEnemies();
 
         // Player — ground anchored
         const flash = player.invincible > 0 && Math.floor(player.invincible / 5) % 2 === 0;
         if (!flash) {
-            if(window._ch2KnightMode) {
-                drawKnightPlayer();
-            } else {
             const spriteKey = `${player.state}_${player.facing}`;
             const spriteImg = images[spriteKey];
             const totalFrames = anims[player.state].frames;
@@ -6382,7 +4890,6 @@
                 ctx.restore();
             }
             drawSprite(spriteImg, totalFrames, player.frame, false, destX, destY, player.drawWidth, player.drawHeight);
-            }
         }
 
         // Damage numbers (already moved up by update loop)
@@ -6418,21 +4925,11 @@
             if(STORY_MODE.bossArena && STORY_MODE.boss) drawBossSprites();
         }
 
-        // ===== CHAPTER 2 RENDERING =====
-        if(CH2.active) {
-            if(CH2.portal) drawPortal();
-            // Draw ch2 NPCs using same NPC draw system (Zephira + Kael as ch2 NPCs)
-            _drawCh2NPCs();
-            if(CH2.bossArena && CH2.boss) drawCh2BossSprites();
-            // Clone enemies drawn via drawCloneEnemies (called in enemy loop below)
-        }
-
         // ---- CANVAS UI ----
         drawCanvasUI();
 
         // ===== STORY UI (drawn on top of everything) =====
         if(STORY_MODE.active) drawStoryUI();
-        if(CH2.active) drawCh2StoryUI();
 
     }
 
@@ -6863,7 +5360,7 @@
 
         window.startGame = function(mode) {
             window._gameMode = mode || 'endless';
-            if(mode !== 'story' && mode !== 'chapter2' && window.AQ) AQ.startEndlessRun();
+            if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
             const homeEl = document.getElementById('home-screen');
             homeEl.classList.add('fade-out');
             startMusic();
@@ -6875,29 +5372,7 @@
                 _lastTime = 0; _accumulator = 0;
                 requestAnimationFrame(_gameLoopTick);
                 if(window._gameMode==='story') initStoryMode();
-                if(window._gameMode==='chapter2') initChapter2();
             }, 600);
-        };
-
-        window.tryStartChapter2 = function() {
-            if(!window.AQ || !AQ.getSession()) {
-                // Not logged in
-                AQ.showAuth('login');
-                setTimeout(()=>{
-                    const p = document.querySelector('#aq-auth-panel');
-                    if(p) {
-                        const note = document.createElement('div');
-                        note.className='aq-ok';
-                        note.style='margin-bottom:8px;';
-                        note.textContent='⚠ You must complete Shadow Chronicle (Chapter 1) and be logged in to access Embers of Rebirth.';
-                        p.insertBefore(note, p.firstChild);
-                    }
-                }, 100);
-                return;
-            }
-            // Check if SC was completed — if session has completions, allow
-            // For now trust AQ session existence (they are logged in = qualified)
-            startGame('chapter2');
         };
     })();
 
@@ -7281,7 +5756,6 @@ async function renderLB() {
         <div class="aq-lb-tabs">
             <div class="aq-lb-tab ${_lbMode==='shadow'?'active':''}" onclick="AQ._lbMode='shadow';AQ._lbPage=0;AQ.renderLB()">✦ Shadow Chronicle</div>
             <div class="aq-lb-tab ${_lbMode==='endless'?'active':''}" onclick="AQ._lbMode='endless';AQ._lbPage=0;AQ.renderLB()">⚔ Endless Mode</div>
-            <div class="aq-lb-tab ${_lbMode==='chapter2'?'active':''}" onclick="AQ._lbMode='chapter2';AQ._lbPage=0;AQ.renderLB()" style="color:#ff8844;border-color:#882200;">🔥 Embers of Rebirth</div>
         </div>
         <div id="aq-lb-content" style="width:100%;"><div style="color:#7a5830;font-family:Cinzel,serif;font-size:12px;text-align:center;padding:20px;">Loading...</div></div>
         <button class="aq-btn secondary" style="margin-top:8px;" onclick="document.getElementById('aq-lb-overlay').style.display='none'">Close</button>
@@ -7291,10 +5765,6 @@ async function renderLB() {
         let rows, total;
         if (_lbMode === 'shadow') {
             const { data } = await db.from('leaderboard_shadow').select('*');
-            rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
-            total = (data||[]).length;
-        } else if (_lbMode === 'chapter2') {
-            const { data } = await db.from('leaderboard_chapter2').select('*').order('best_time_ms', { ascending: true });
             rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
             total = (data||[]).length;
         } else {
@@ -7316,16 +5786,6 @@ async function renderLB() {
                     <td class="aq-lb-rank">${r.rank}</td>
                     <td>${r.username}</td>
                     <td>${fmtMs(r.best_time_ms)}</td>
-                    <td>${r.total_completions||0}</td>
-                </tr>`).join('')}
-            </table>
-        ` : _lbMode === 'chapter2' ? `
-            <table class="aq-lb-table">
-                <tr><th>#</th><th>Knight</th><th>Best Time</th><th>Completions</th></tr>
-                ${rows.map((r,i)=>`<tr class="${r.username===(_session&&_session.username)?'me':''}">
-                    <td class="aq-lb-rank" style="color:#ff8844;">${i+1+_lbPage*PAGE_SIZE}</td>
-                    <td style="color:#ffaa44;">${r.username}</td>
-                    <td style="color:#ffcc88;">${fmtMs(r.best_time_ms)}</td>
                     <td>${r.total_completions||0}</td>
                 </tr>`).join('')}
             </table>
