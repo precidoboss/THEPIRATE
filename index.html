@@ -5812,31 +5812,31 @@ const CH2_STAGES = [
         name: 'THE FLOOR',
         subtitle: 'Learn the void...',
         platforms: [
-            { x:-100, y:430, w:600,  h:80 }, // generous start ground
-            { x:620,  y:430, w:280,  h:80 }, // first gap crossing
-            { x:1040, y:410, w:240,  h:80 }, // slight rise
-            { x:1420, y:430, w:320,  h:80 }, // mid platform
-            { x:1880, y:430, w:600,  h:80 }, // exit ground
+            { x:-100, y:430, w:700,  h:80 }, // generous start ground
+            { x:740,  y:430, w:360,  h:80 }, // first section after gap
+            { x:1240, y:410, w:320,  h:80 }, // slight rise
+            { x:1700, y:430, w:380,  h:80 }, // mid platform
+            { x:2220, y:430, w:600,  h:80 }, // exit ground
         ],
         moving: [
-            { x:520,  y:370, w:90, h:18, type:'slide', rangeX:90, speed:1.1, phase:0 },
-            { x:920,  y:345, w:90, h:18, type:'bob',   rangeY:45, speed:0.028, phase:0 },
-            { x:1340, y:375, w:70, h:18, type:'slide', rangeX:70, speed:1.3, phase:Math.PI },
-            { x:1790, y:360, w:80, h:18, type:'bob',   rangeY:35, speed:0.032, phase:1.0 },
+            { x:610,  y:375, w:110, h:18, type:'slide', rangeX:90, speed:1.1, phase:0 },
+            { x:1100, y:348, w:110, h:18, type:'bob',   rangeY:45, speed:0.028, phase:0 },
+            { x:1570, y:378, w:100, h:18, type:'slide', rangeX:70, speed:1.3, phase:Math.PI },
+            { x:2110, y:362, w:100, h:18, type:'bob',   rangeY:35, speed:0.032, phase:1.0 },
         ],
         traps: [
-            { type:'fire',  x:200,  y:398, w:28, h:35 },
-            { type:'fire',  x:320,  y:398, w:28, h:35 },
-            { type:'spike', x:700,  y:398, w:32, h:32 },
-            { type:'spike', x:760,  y:398, w:32, h:32 },
-            { type:'fire',  x:1100, y:378, w:28, h:32 },
-            { type:'spike', x:1480, y:398, w:32, h:32 },
-            { type:'spike', x:1560, y:398, w:32, h:32 },
-            { type:'fire',  x:1960, y:398, w:28, h:35 },
-            { type:'fire',  x:2060, y:398, w:28, h:35 },
+            { type:'fire',  x:250,  y:398, w:28, h:35 },
+            { type:'fire',  x:450,  y:398, w:28, h:35 },
+            { type:'spike', x:820,  y:398, w:32, h:32 },
+            { type:'spike', x:920,  y:398, w:32, h:32 },
+            { type:'fire',  x:1310, y:378, w:28, h:32 },
+            { type:'spike', x:1780, y:398, w:32, h:32 },
+            { type:'spike', x:1920, y:398, w:32, h:32 },
+            { type:'fire',  x:2310, y:398, w:28, h:35 },
+            { type:'fire',  x:2480, y:398, w:28, h:35 },
         ],
         voidWardens: [],
-        exit: { x:2300, y:360 },
+        exit: { x:2660, y:360 },
         groundY: 430,
     },
     // STAGE 2 — The Spike Hall — timed spikes, patience
@@ -5844,31 +5844,31 @@ const CH2_STAGES = [
         name: 'THE SPIKE HALL',
         subtitle: 'Patience or perish...',
         platforms: [
-            { x:-100, y:430, w:300,  h:80 },
-            { x:350,  y:390, w:120,  h:80 },
-            { x:600,  y:350, w:100,  h:80 },
-            { x:800,  y:310, w:120,  h:80 },
-            { x:1050, y:340, w:140,  h:80 },
-            { x:1320, y:380, w:120,  h:80 },
-            { x:1580, y:430, w:500,  h:80 },
+            { x:-100, y:430, w:380,  h:80 },
+            { x:440,  y:390, w:180,  h:80 },
+            { x:760,  y:350, w:160,  h:80 },
+            { x:1060, y:310, w:180,  h:80 },
+            { x:1380, y:340, w:200,  h:80 },
+            { x:1720, y:390, w:180,  h:80 },
+            { x:2040, y:430, w:600,  h:80 },
         ],
         moving: [
-            { x:490, y:360, w:90, h:18, type:'bob', rangeY:50, speed:0.035, phase:0 },
-            { x:740, y:290, w:80, h:18, type:'bob', rangeY:35, speed:0.04,  phase:1.5 },
-            { x:970, y:310, w:80, h:18, type:'slide', rangeX:60, speed:1.5, phase:0 },
+            { x:320,  y:365, w:110, h:18, type:'bob',   rangeY:50, speed:0.035, phase:0   },
+            { x:630,  y:295, w:110, h:18, type:'bob',   rangeY:35, speed:0.04,  phase:1.5 },
+            { x:930,  y:315, w:110, h:18, type:'slide', rangeX:70, speed:1.5,   phase:0   },
         ],
         traps: [
-            { type:'spike', x:380,  y:358, w:32, h:32 },
-            { type:'spike', x:430,  y:358, w:32, h:32 },
-            { type:'fire',  x:650,  y:318, w:28, h:32 },
-            { type:'spike', x:860,  y:278, w:32, h:32 },
-            { type:'spike', x:1100, y:308, w:32, h:32 },
-            { type:'spike', x:1150, y:308, w:32, h:32 },
-            { type:'fire',  x:1640, y:398, w:28, h:32 },
-            { type:'fire',  x:1700, y:398, w:28, h:32 },
+            { type:'spike', x:480,  y:358, w:32, h:32 },
+            { type:'spike', x:560,  y:358, w:32, h:32 },
+            { type:'fire',  x:820,  y:318, w:28, h:32 },
+            { type:'spike', x:1120, y:278, w:32, h:32 },
+            { type:'spike', x:1480, y:308, w:32, h:32 },
+            { type:'spike', x:1570, y:308, w:32, h:32 },
+            { type:'fire',  x:2100, y:398, w:28, h:32 },
+            { type:'fire',  x:2220, y:398, w:28, h:32 },
         ],
-        voidWardens: [{ x:1300, y:300, hp:60 }],
-        exit: { x:1900, y:360 },
+        voidWardens: [{ x:1650, y:310, hp:60 }],
+        exit: { x:2460, y:360 },
         groundY: 430,
     },
     // STAGE 3 — The Pendulum Path — timing focus
@@ -5876,65 +5876,65 @@ const CH2_STAGES = [
         name: 'THE PENDULUM PATH',
         subtitle: 'Feel the rhythm...',
         platforms: [
-            { x:-100, y:430, w:250,  h:80 },
-            { x:1700, y:430, w:500,  h:80 },
+            { x:-100, y:430, w:320,  h:80 },
+            { x:1980, y:430, w:600,  h:80 },
         ],
         moving: [
-            { x:280,  y:355, w:120, h:18, type:'pendulum', rangeX:80,  speed:0.018, phase:0      },
-            { x:480,  y:300, w:110, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:1.047  },
-            { x:670,  y:345, w:120, h:18, type:'bob',      rangeY:45,  speed:0.025, phase:0.5    },
-            { x:860,  y:285, w:110, h:18, type:'pendulum', rangeX:85,  speed:0.018, phase:2.094  },
-            { x:1060, y:325, w:120, h:18, type:'slide',    rangeX:90,  speed:1.2,   phase:0      },
-            { x:1270, y:360, w:110, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:3.142  },
-            { x:1470, y:300, w:120, h:18, type:'bob',      rangeY:40,  speed:0.025, phase:1.5    },
+            { x:280,  y:355, w:140, h:18, type:'pendulum', rangeX:80,  speed:0.018, phase:0      },
+            { x:510,  y:300, w:130, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:1.047  },
+            { x:730,  y:345, w:140, h:18, type:'bob',      rangeY:45,  speed:0.025, phase:0.5    },
+            { x:960,  y:285, w:130, h:18, type:'pendulum', rangeX:85,  speed:0.018, phase:2.094  },
+            { x:1190, y:325, w:140, h:18, type:'slide',    rangeX:90,  speed:1.2,   phase:0      },
+            { x:1430, y:360, w:130, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:3.142  },
+            { x:1680, y:300, w:140, h:18, type:'bob',      rangeY:40,  speed:0.025, phase:1.5    },
         ],
         traps: [
-            { type:'fire',  x:180,  y:398, w:28, h:32 },
-            { type:'spike', x:1760, y:398, w:32, h:32 },
-            { type:'spike', x:1820, y:398, w:32, h:32 },
+            { type:'fire',  x:130,  y:398, w:28, h:32 },
+            { type:'spike', x:2040, y:398, w:32, h:32 },
+            { type:'spike', x:2160, y:398, w:32, h:32 },
         ],
-        voidWardens: [{ x:1100, y:200, hp:60 }],
-        exit: { x:2050, y:360 },
+        voidWardens: [{ x:1200, y:200, hp:60 }],
+        exit: { x:2380, y:360 },
         groundY: 430,
     },
-    // STAGE 4 — The Void Corridor — arrows, narrow platforms
+    // STAGE 4 — The Void Corridor — arrows, wider platforms, breathing room
     {
         name: 'THE VOID CORRIDOR',
         subtitle: 'No room for mistakes...',
         platforms: [
-            { x:-100, y:430, w:380,  h:80 }, // wide safe start — player spawns here comfortably
-            { x:420,  y:390, w:130,  h:80 }, // step up
-            { x:680,  y:350, w:110,  h:80 }, // step up
-            { x:920,  y:390, w:130,  h:80 }, // step down
-            { x:1180, y:340, w:110,  h:80 }, // step up
-            { x:1430, y:390, w:130,  h:80 }, // landing before run
-            { x:1700, y:430, w:600,  h:80 }, // final ground with traps
+            { x:-100, y:430, w:440,  h:80 }, // wide safe start
+            { x:510,  y:390, w:180,  h:80 }, // step
+            { x:840,  y:350, w:160,  h:80 }, // step
+            { x:1160, y:390, w:180,  h:80 }, // step
+            { x:1500, y:340, w:160,  h:80 }, // step
+            { x:1830, y:390, w:180,  h:80 }, // landing
+            { x:2180, y:430, w:600,  h:80 }, // final ground
         ],
         moving: [
-            { x:290,  y:370, w:100, h:18, type:'bob',    rangeY:35, speed:0.04,  phase:0   },
-            { x:565,  y:330, w:90,  h:18, type:'crumble', crumbleTimer:0, crumbled:false    },
-            { x:830,  y:370, w:90,  h:18, type:'slide',  rangeX:70, speed:1.8,   phase:0   },
-            { x:1080, y:310, w:80,  h:18, type:'crumble', crumbleTimer:0, crumbled:false    },
-            { x:1330, y:360, w:80,  h:18, type:'bob',    rangeY:45, speed:0.045, phase:1.5 },
+            { x:360,  y:372, w:120, h:18, type:'bob',     rangeY:35, speed:0.04,  phase:0   },
+            { x:700,  y:330, w:110, h:18, type:'crumble', crumbleTimer:0, crumbled:false     },
+            { x:1020, y:372, w:110, h:18, type:'slide',   rangeX:70, speed:1.8,   phase:0   },
+            { x:1350, y:312, w:100, h:18, type:'crumble', crumbleTimer:0, crumbled:false     },
+            { x:1680, y:360, w:110, h:18, type:'bob',     rangeY:45, speed:0.045, phase:1.5 },
         ],
         traps: [
-            { type:'spike', x:100,  y:398, w:32, h:32 },
-            { type:'spike', x:180,  y:398, w:32, h:32 },
-            { type:'fire',  x:470,  y:358, w:28, h:32 },
-            { type:'arrow', x:720,  y:318, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'spike', x:960,  y:358, w:32, h:32 },
-            { type:'spike', x:1010, y:358, w:32, h:32 },
-            { type:'arrow', x:1230, y:308, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'fire',  x:1760, y:398, w:28, h:32 },
-            { type:'fire',  x:1840, y:398, w:28, h:32 },
-            { type:'fire',  x:1920, y:398, w:28, h:32 },
-            { type:'spike', x:2000, y:398, w:32, h:32 },
+            { type:'spike', x:140,  y:398, w:32, h:32 },
+            { type:'spike', x:260,  y:398, w:32, h:32 },
+            { type:'fire',  x:570,  y:358, w:28, h:32 },
+            { type:'arrow', x:900,  y:318, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'spike', x:1220, y:358, w:32, h:32 },
+            { type:'spike', x:1310, y:358, w:32, h:32 },
+            { type:'arrow', x:1560, y:308, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'fire',  x:2260, y:398, w:28, h:32 },
+            { type:'fire',  x:2400, y:398, w:28, h:32 },
+            { type:'fire',  x:2540, y:398, w:28, h:32 },
+            { type:'spike', x:2660, y:398, w:32, h:32 },
         ],
         voidWardens: [
-            { x:850,  y:320, hp:60 },
-            { x:1550, y:400, hp:60 },
+            { x:1050, y:320, hp:60 },
+            { x:1900, y:360, hp:60 },
         ],
-        exit: { x:2150, y:360 },
+        exit: { x:2740, y:360 },
         groundY: 430,
     },
     // STAGE 5 — THE SUMMIT — all mechanics, final gauntlet
@@ -5942,37 +5942,37 @@ const CH2_STAGES = [
         name: 'THE SUMMIT',
         subtitle: 'All or nothing...',
         platforms: [
-            { x:-100, y:430, w:180,  h:80 },
-            { x:1900, y:430, w:400,  h:80 },
+            { x:-100, y:430, w:260,  h:80 },
+            { x:2200, y:430, w:500,  h:80 },
         ],
         moving: [
-            { x:200,  y:380, w:80, h:18, type:'bob',      rangeY:50,  speed:0.04,  phase:0   },
-            { x:380,  y:310, w:70, h:18, type:'pendulum',  rangeX:100, speed:0.03,  phase:0.5 },
-            { x:560,  y:360, w:80, h:18, type:'crumble',   crumbleTimer:0, crumbled:false     },
-            { x:730,  y:290, w:70, h:18, type:'slide',     rangeX:120, speed:2.2,   phase:0   },
-            { x:940,  y:340, w:80, h:18, type:'bob',       rangeY:65,  speed:0.045, phase:1   },
-            { x:1120, y:270, w:70, h:18, type:'pendulum',  rangeX:90,  speed:0.035, phase:2   },
-            { x:1300, y:320, w:80, h:18, type:'crumble',   crumbleTimer:0, crumbled:false     },
-            { x:1500, y:280, w:70, h:18, type:'slide',     rangeX:100, speed:2.5,   phase:1   },
-            { x:1700, y:360, w:80, h:18, type:'bob',       rangeY:40,  speed:0.05,  phase:0   },
+            { x:230,  y:380, w:100, h:18, type:'bob',      rangeY:50,  speed:0.04,  phase:0   },
+            { x:440,  y:310, w:90,  h:18, type:'pendulum', rangeX:100, speed:0.03,  phase:0.5 },
+            { x:640,  y:360, w:100, h:18, type:'crumble',  crumbleTimer:0, crumbled:false     },
+            { x:860,  y:290, w:90,  h:18, type:'slide',    rangeX:120, speed:2.2,   phase:0   },
+            { x:1090, y:340, w:100, h:18, type:'bob',      rangeY:65,  speed:0.045, phase:1   },
+            { x:1320, y:270, w:90,  h:18, type:'pendulum', rangeX:90,  speed:0.035, phase:2   },
+            { x:1550, y:320, w:100, h:18, type:'crumble',  crumbleTimer:0, crumbled:false     },
+            { x:1780, y:280, w:90,  h:18, type:'slide',    rangeX:100, speed:2.5,   phase:1   },
+            { x:2010, y:360, w:100, h:18, type:'bob',      rangeY:40,  speed:0.05,  phase:0   },
         ],
         traps: [
-            { type:'fire',  x:100,  y:398, w:28, h:32 },
-            { type:'spike', x:500,  y:330, w:32, h:32 }, // on crumble platform
-            { type:'arrow', x:800,  y:260, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'fire',  x:1000, y:310, w:28, h:32 },
-            { type:'spike', x:1160, y:238, w:32, h:32 },
-            { type:'arrow', x:1400, y:290, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'fire',  x:1950, y:398, w:28, h:32 },
-            { type:'fire',  x:2010, y:398, w:28, h:32 },
-            { type:'spike', x:2070, y:398, w:32, h:32 },
+            { type:'fire',  x:80,   y:398, w:28, h:32 },
+            { type:'spike', x:590,  y:330, w:32, h:32 },
+            { type:'arrow', x:940,  y:260, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'fire',  x:1160, y:310, w:28, h:32 },
+            { type:'spike', x:1390, y:238, w:32, h:32 },
+            { type:'arrow', x:1640, y:290, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'fire',  x:2280, y:398, w:28, h:32 },
+            { type:'fire',  x:2420, y:398, w:28, h:32 },
+            { type:'spike', x:2560, y:398, w:32, h:32 },
         ],
         voidWardens: [
-            { x:700,  y:260, hp:60 },
-            { x:1300, y:290, hp:60 },
-            { x:1800, y:400, hp:60 },
+            { x:820,  y:260, hp:60 },
+            { x:1520, y:290, hp:60 },
+            { x:2100, y:400, hp:60 },
         ],
-        exit: { x:2200, y:360 },
+        exit: { x:2640, y:360 },
         groundY: 430,
     },
 ];
@@ -6178,22 +6178,11 @@ function updateCH2() {
             p.frameTimer++;
             if (p.frameTimer > 6) { p.frame = Math.min(p.frame+1, 9); p.frameTimer=0; }
             if (p.frame >= 9) {
-                const softDeath = p._softDeath;
-                p._softDeath = false;
                 p.dead = false; p.frame = 0; // prevent re-triggering
-                if (softDeath) {
-                    // Lives remain — just respawn at stage start, keep lives count
-                    setTimeout(() => {
-                        if (CH2.character === 'knight') ch2Player.trapShield = 1;
-                        ch2InitStage(CH2.stage, false); // false = don't reset lives
-                    }, 600);
-                } else {
-                    // No lives left — full stage restart with lives reset
-                    setTimeout(() => {
-                        if (CH2.character === 'knight') ch2Player.trapShield = 1;
-                        ch2InitStage(CH2.stage, true); // true = reset lives to 3
-                    }, 800);
-                }
+                // All lives gone — restart stage with fresh 3 lives
+                setTimeout(() => {
+                    ch2InitStage(CH2.stage, true);
+                }, 800);
             }
         }
         return;
@@ -6425,34 +6414,34 @@ function ch2HurtPlayer(dmg) {
     const p = ch2Player;
     if (!p || p.invincible > 0 || p.dead) return;
 
-    // Knight trapShield — absorbs one hit for free (no life lost)
+    // Knight trapShield — absorbs one hit free, no life lost
     if (CH2.character === 'knight' && p.trapShield > 0) {
         p.trapShield--;
         p.invincible = 120;
-        ch2DmgNumbers.push({x:p.x+10, y:p.y-20, val:'SHIELD', life:60, color:'#88ccff', isText:true});
+        ch2DmgNumbers.push({x:p.x+10, y:p.y-24, val:'SHIELD', life:60, color:'#88ccff', isText:true});
         return;
     }
 
-    // Remove one life
     CH2.lives = Math.max(0, CH2.lives - 1);
-    p.invincible = 180; // long grace period after hit
+    CH2.noDeathStages[CH2.stage] = false;
+    CH2.deaths++;
 
     if (CH2.lives <= 0) {
-        // No lives left — trigger death animation then restart whole stage
+        // All 3 lives gone — death animation then full stage restart
         p.dead = true; p.state = 'death'; p.frame = 0; p.frameTimer = 0;
-        CH2.noDeathStages[CH2.stage] = false;
-        ch2DmgNumbers.push({x:p.x+10, y:p.y-30, val:'☠ STAGE RESTART', life:80, color:'#ff2222', isText:true});
+        ch2DmgNumbers.push({x:p.x+10, y:p.y-34, val:'☠ RESTARTING...', life:90, color:'#ff2222', isText:true});
     } else {
-        // Lives remain — flash the player and respawn at last checkpoint (no stage reset)
-        CH2.noDeathStages[CH2.stage] = false;
+        // Lives remain — flash + knockback but KEEP PLAYING, no stage reset
+        p.invincible = 150;
+        p.vy = -7;  // small upward bounce so they feel the hit
+        p.vx = (p.facing === 'right' ? -3 : 3); // knockback away from trap
         const livesLeft = CH2.lives;
-        ch2DmgNumbers.push({x:p.x+10, y:p.y-30, val:`💔 ${livesLeft} ${livesLeft===1?'LIFE':'LIVES'} LEFT`, life:90, color:'#ff6644', isText:true});
-        // Brief death-like pause then respawn at start of current stage view
-        p.dead = true; p.state = 'death'; p.frame = 0; p.frameTimer = 0;
-        // Mark as a "soft" death so the respawn handler knows not to reset lives
-        p._softDeath = true;
+        ch2DmgNumbers.push({
+            x: p.x + p.width/2, y: p.y - 28,
+            val: livesLeft === 2 ? '💔 2 LIVES LEFT' : '💔 LAST LIFE!',
+            life: 80, color: livesLeft === 1 ? '#ff2200' : '#ff6644', isText: true
+        });
     }
-    CH2.deaths++;
 }
 
 function spawnCh2DashParticles(p) {
@@ -6655,16 +6644,19 @@ function drawCH2() {
     const timeStr = `${mins}:${String(secs%60).padStart(2,'0')}`;
     window._ui.img('ui_titlebox', window.GAME_WIDTH/2-40, _ch2_PAD+32, 80, 22);
     window._ui.text(timeStr, window.GAME_WIDTH/2, _ch2_PAD+43, 9, '#88cc44', 'center');
-    // Lives display (3 hearts)
-    window._ui.img('ui_titlebox', _ch2_PAD, window.GAME_HEIGHT-50, 140, 38);
-    window._ui.text('LIVES', _ch2_PAD + 70, window.GAME_HEIGHT - 40, 8, '#aa8844', 'center');
-    const hearts = ['❤','❤','❤'];
-    const heartStr = hearts.map((h, i) => i < CH2.lives ? '❤' : '🖤').join(' ');
+    // Lives display — 3 individual hearts
+    window._ui.img('ui_titlebox', _ch2_PAD, window.GAME_HEIGHT - 54, 120, 44);
+    window._ui.text('LIVES', _ch2_PAD + 60, window.GAME_HEIGHT - 44, 8, '#aa8844', 'center');
     window._ctx.save();
-    window._ctx.font = 'bold 18px Arial';
-    window._ctx.textAlign = 'center';
-    window._ctx.fillStyle = CH2.lives > 1 ? '#ff4466' : '#ff2200';
-    window._ctx.fillText(heartStr, _ch2_PAD + 70, window.GAME_HEIGHT - 22);
+    window._ctx.font = 'bold 22px Arial';
+    window._ctx.textAlign = 'left';
+    for (let i = 0; i < 3; i++) {
+        const full = i < CH2.lives;
+        window._ctx.fillStyle = full ? (CH2.lives === 1 ? '#ff2200' : '#ff4466') : '#333';
+        window._ctx.globalAlpha = full ? 1 : 0.35;
+        window._ctx.fillText('❤', _ch2_PAD + 10 + i * 34, window.GAME_HEIGHT - 20);
+    }
+    window._ctx.globalAlpha = 1;
     window._ctx.restore();
     // Deaths counter
     window._ui.img('ui_titlebox', window.GAME_WIDTH-120, _ch2_PAD, 110, 28);
