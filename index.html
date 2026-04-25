@@ -5736,6 +5736,7 @@ const CH2 = window.CH2 = {
     stage: 0,            // 0-4 (5 stages)
     stageTimer: 0,
     deaths: 0,
+    lives: 3,            // current lives (reset each stage)
     totalTime: 0,
     stageStartTime: 0,
     stageTimes: [],
@@ -5781,7 +5782,7 @@ function makeCh2Player(character) {
         height: isNinja ? 64 : 62,
         drawWidth: isNinja ? 128 : 160,
         drawHeight: isNinja ? 128 : 140,
-        footOffset: isNinja ? 28 : 18,
+        footOffset: isNinja ? 0 : 18,
         vx: 0, vy: 0,
         speed: isNinja ? 5.5 : 5,
         jumpForce: isNinja ? -13.5 : -13,
@@ -5988,7 +5989,7 @@ let ch2ScrollX = 0;
 let ch2Time = 0;
 
 // ---- INIT STAGE ----
-function ch2InitStage(stageIdx) {
+function ch2InitStage(stageIdx, freshStart) {
     const stage = CH2_STAGES[stageIdx];
     ch2Platforms = stage.platforms.map(p => ({...p, type:1, arena:true}));
     // Deep-copy moving platforms — reset crumble state
@@ -6018,6 +6019,9 @@ function ch2InitStage(stageIdx) {
     CH2.stageStartTime = Date.now();
     CH2.ninjaCanDoubleJump = false;
     CH2.ninjaDoubleJump = false;
+
+    // Lives: always reset to 3 on a fresh stage start
+    if (freshStart !== false) CH2.lives = 3;
 
     // Reset player
     ch2Player.x = CH2.checkpointX;
@@ -6085,8 +6089,9 @@ window.startChapter2 = function() {
     CH2.checkpointX = 100; CH2.checkpointY = 340;
     ch2Player = makeCh2Player(CH2.character);
     CH2.active = true;
-    CH2.totalTime = Date.now(); // FIX: record run start time
-    ch2InitStage(0);
+    CH2.totalTime = Date.now();
+    CH2.lives = 3;
+    ch2InitStage(0, true);
     if (window.AQ) AQ.startGauntletRun();
     // Start game loop if not already running
     const homeEl = document.getElementById('home-screen');
@@ -6109,7 +6114,7 @@ window.ch2NextStage = function() {
         showCh2Complete();
     } else {
         CH2.checkpointX = 100; CH2.checkpointY = 340;
-        ch2InitStage(CH2.stage);
+        ch2InitStage(CH2.stage, true);
     }
 };
 window.restartChapter2 = function() {
@@ -6126,8 +6131,8 @@ function showCh2Complete() {
     document.getElementById('ch2-final-stats').innerHTML =
         `Character: ${CH2.character === 'knight' ? '⚔ KNIGHT' : '⚡ NINJA'}<br>` +
         `Total Time: ${m}m ${s}s<br>` +
-        `Deaths: ${CH2.deaths}<br>` +
-        `Perfect Stages: ${noDeath} / ${CH2_STAGES.length} 💀<br><br>${bestTimes}`;
+        `Lives Lost: ${CH2.deaths}<br>` +
+        `Perfect Stages: ${noDeath} / ${CH2_STAGES.length} ⭐<br><br>${bestTimes}`;
     document.getElementById('ch2-complete').style.display = 'flex';
     // Save to Supabase
     if (window.AQ) AQ.finishGauntletRun({
@@ -6173,14 +6178,22 @@ function updateCH2() {
             p.frameTimer++;
             if (p.frameTimer > 6) { p.frame = Math.min(p.frame+1, 9); p.frameTimer=0; }
             if (p.frame >= 9) {
-                // Respawn after delay
-                setTimeout(() => {
-                    CH2.deaths++;
-                    CH2.noDeathStages[CH2.stage] = false;
-                    if (CH2.character === 'knight') ch2Player.trapShield = 1;
-                    ch2InitStage(CH2.stage);
-                }, 800);
+                const softDeath = p._softDeath;
+                p._softDeath = false;
                 p.dead = false; p.frame = 0; // prevent re-triggering
+                if (softDeath) {
+                    // Lives remain — just respawn at stage start, keep lives count
+                    setTimeout(() => {
+                        if (CH2.character === 'knight') ch2Player.trapShield = 1;
+                        ch2InitStage(CH2.stage, false); // false = don't reset lives
+                    }, 600);
+                } else {
+                    // No lives left — full stage restart with lives reset
+                    setTimeout(() => {
+                        if (CH2.character === 'knight') ch2Player.trapShield = 1;
+                        ch2InitStage(CH2.stage, true); // true = reset lives to 3
+                    }, 800);
+                }
             }
         }
         return;
@@ -6277,7 +6290,10 @@ function updateCH2() {
     ch2PlatformCollide(p, allPlats);
 
     // Floor kill
-    if (p.y > window.GAME_HEIGHT + 100) { ch2HurtPlayer(p.hp); }
+    if (p.y > window.GAME_HEIGHT + 100) { ch2HurtPlayer(999); }
+
+    // Ceiling clamp — bounce back down, don't let player escape above screen
+    if (p.y < -p.height) { p.y = -p.height + 2; p.vy = Math.abs(p.vy) * 0.3; }
 
     // Left wall
     if (p.x - ch2ScrollX < 0) { p.x = ch2ScrollX; p.vx = 0; }
@@ -6408,20 +6424,35 @@ function updateCH2() {
 function ch2HurtPlayer(dmg) {
     const p = ch2Player;
     if (!p || p.invincible > 0 || p.dead) return;
-    // Knight trapShield — absorbs one trap hit
-    if (CH2.character==='knight' && p.trapShield > 0) {
+
+    // Knight trapShield — absorbs one hit for free (no life lost)
+    if (CH2.character === 'knight' && p.trapShield > 0) {
         p.trapShield--;
         p.invincible = 120;
-        ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:'SHIELD',life:60,color:'#88ccff',isText:true});
+        ch2DmgNumbers.push({x:p.x+10, y:p.y-20, val:'SHIELD', life:60, color:'#88ccff', isText:true});
         return;
     }
-    p.hp = Math.max(0, p.hp - dmg);
-    p.invincible = 120;
-    ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:dmg,life:55,color:'#ff4444'});
-    if (p.hp <= 0) {
-        p.dead = true; p.state='death'; p.frame=0; p.frameTimer=0;
+
+    // Remove one life
+    CH2.lives = Math.max(0, CH2.lives - 1);
+    p.invincible = 180; // long grace period after hit
+
+    if (CH2.lives <= 0) {
+        // No lives left — trigger death animation then restart whole stage
+        p.dead = true; p.state = 'death'; p.frame = 0; p.frameTimer = 0;
         CH2.noDeathStages[CH2.stage] = false;
+        ch2DmgNumbers.push({x:p.x+10, y:p.y-30, val:'☠ STAGE RESTART', life:80, color:'#ff2222', isText:true});
+    } else {
+        // Lives remain — flash the player and respawn at last checkpoint (no stage reset)
+        CH2.noDeathStages[CH2.stage] = false;
+        const livesLeft = CH2.lives;
+        ch2DmgNumbers.push({x:p.x+10, y:p.y-30, val:`💔 ${livesLeft} ${livesLeft===1?'LIFE':'LIVES'} LEFT`, life:90, color:'#ff6644', isText:true});
+        // Brief death-like pause then respawn at start of current stage view
+        p.dead = true; p.state = 'death'; p.frame = 0; p.frameTimer = 0;
+        // Mark as a "soft" death so the respawn handler knows not to reset lives
+        p._softDeath = true;
     }
+    CH2.deaths++;
 }
 
 function spawnCh2DashParticles(p) {
@@ -6444,9 +6475,11 @@ function showCh2StageClear() {
     const t = CH2.stageTimes[stageIdx];
     const noDeath = CH2.noDeathStages[stageIdx] !== false;
     const isLast = stageIdx >= CH2_STAGES.length - 1;
+    const livesDisplay = '❤'.repeat(CH2.lives) + '🖤'.repeat(3 - CH2.lives);
     document.getElementById('ch2-clear-info').innerHTML =
         `${CH2_STAGES[stageIdx].name}<br>` +
-        `Time: ${t}s  ${noDeath ? '💀 NO DEATHS ✔' : ''}<br>` +
+        `Time: ${t}s &nbsp;|&nbsp; Lives: ${livesDisplay}<br>` +
+        `${noDeath ? '⭐ PERFECT STAGE — No lives lost!' : ''}<br>` +
         `Stage ${stageIdx+1} of ${CH2_STAGES.length}`;
     const btn = document.querySelector('#ch2-stage-clear button');
     if (btn) btn.textContent = isLast ? '🏆 VIEW RESULTS' : '▶ NEXT STAGE';
@@ -6622,17 +6655,17 @@ function drawCH2() {
     const timeStr = `${mins}:${String(secs%60).padStart(2,'0')}`;
     window._ui.img('ui_titlebox', window.GAME_WIDTH/2-40, _ch2_PAD+32, 80, 22);
     window._ui.text(timeStr, window.GAME_WIDTH/2, _ch2_PAD+43, 9, '#88cc44', 'center');
-    // Player HP bar
-    window._ui.img('ui_titlebox', _ch2_PAD, window.GAME_HEIGHT-50, 180, 38);
-    const hp = p ? p.hp : 0, maxHp = p ? p.maxHp : 180;
-    const barX=_ch2_PAD+12, barY=window.GAME_HEIGHT-38, barW=155, barH=7;
-    window._ctx.save(); window._ctx.globalAlpha=0.4; window._ctx.fillStyle='#440000'; window._ctx.fillRect(barX,barY,barW,barH); window._ctx.restore();
-    if (hp>0) {
-        const ratio=hp/maxHp;
-        window._ctx.fillStyle=ratio>0.6?'#44dd66':ratio>0.3?'#f0a020':'#e03030';
-        window._ctx.fillRect(barX,barY,barW*ratio,barH);
-    }
-    window._ui.text(`${Math.ceil(hp)} / ${maxHp}`, barX+barW/2, barY+barH+7, 9, '#ffe8a0', 'center');
+    // Lives display (3 hearts)
+    window._ui.img('ui_titlebox', _ch2_PAD, window.GAME_HEIGHT-50, 140, 38);
+    window._ui.text('LIVES', _ch2_PAD + 70, window.GAME_HEIGHT - 40, 8, '#aa8844', 'center');
+    const hearts = ['❤','❤','❤'];
+    const heartStr = hearts.map((h, i) => i < CH2.lives ? '❤' : '🖤').join(' ');
+    window._ctx.save();
+    window._ctx.font = 'bold 18px Arial';
+    window._ctx.textAlign = 'center';
+    window._ctx.fillStyle = CH2.lives > 1 ? '#ff4466' : '#ff2200';
+    window._ctx.fillText(heartStr, _ch2_PAD + 70, window.GAME_HEIGHT - 22);
+    window._ctx.restore();
     // Deaths counter
     window._ui.img('ui_titlebox', window.GAME_WIDTH-120, _ch2_PAD, 110, 28);
     window._ui.text(`☠ ${CH2.deaths}`, window.GAME_WIDTH-65, _ch2_PAD+14, 10, '#ff6644', 'center');
