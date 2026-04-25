@@ -5783,8 +5783,8 @@ function makeCh2Player(character) {
         drawHeight: isNinja ? 128 : 140,
         footOffset: isNinja ? 28 : 18,
         vx: 0, vy: 0,
-        speed: isNinja ? 7 : 5,
-        jumpForce: isNinja ? -16 : -13,
+        speed: isNinja ? 5.5 : 5,
+        jumpForce: isNinja ? -13.5 : -13,
         gravity: 0.65,
         grounded: false,
         facing: 'right',
@@ -5797,7 +5797,7 @@ function makeCh2Player(character) {
         isAttacking: false, attackTimer: 0,
         dashing: false, dashTimer: 0, dashDir: 1,
         dashCooldown: 0, dashCooldownMax: 300,
-        dashSpeed: isNinja ? 20 : 16, dashDuration: 13,
+        dashSpeed: isNinja ? 16 : 16, dashDuration: 13,
         trapShield: isNinja ? 0 : 1, // Knight can survive 1 trap hit
     };
 }
@@ -5811,23 +5811,31 @@ const CH2_STAGES = [
         name: 'THE FLOOR',
         subtitle: 'Learn the void...',
         platforms: [
-            { x:-100, y:430, w:480,  h:80 }, // start ground
-            { x:500,  y:430, w:200,  h:80 }, // gap crossing
-            { x:800,  y:400, w:160,  h:80 }, // slight rise
-            { x:1060, y:430, w:300,  h:80 }, // landing
-            { x:1460, y:430, w:500,  h:80 }, // exit ground
+            { x:-100, y:430, w:600,  h:80 }, // generous start ground
+            { x:620,  y:430, w:280,  h:80 }, // first gap crossing
+            { x:1040, y:410, w:240,  h:80 }, // slight rise
+            { x:1420, y:430, w:320,  h:80 }, // mid platform
+            { x:1880, y:430, w:600,  h:80 }, // exit ground
         ],
         moving: [
-            { x:400, y:370, w:80, h:18, type:'slide', rangeX:80, speed:1.2, phase:0 },
-            { x:700, y:340, w:80, h:18, type:'bob',   rangeY:40, speed:0.03, phase:0 },
+            { x:520,  y:370, w:90, h:18, type:'slide', rangeX:90, speed:1.1, phase:0 },
+            { x:920,  y:345, w:90, h:18, type:'bob',   rangeY:45, speed:0.028, phase:0 },
+            { x:1340, y:375, w:70, h:18, type:'slide', rangeX:70, speed:1.3, phase:Math.PI },
+            { x:1790, y:360, w:80, h:18, type:'bob',   rangeY:35, speed:0.032, phase:1.0 },
         ],
         traps: [
-            { type:'fire', x:560,  y:395, w:28, h:35 },
-            { type:'spike',x:900,  y:368, w:32, h:32 },
-            { type:'fire', x:1200, y:395, w:28, h:35 },
+            { type:'fire',  x:200,  y:398, w:28, h:35 },
+            { type:'fire',  x:320,  y:398, w:28, h:35 },
+            { type:'spike', x:700,  y:398, w:32, h:32 },
+            { type:'spike', x:760,  y:398, w:32, h:32 },
+            { type:'fire',  x:1100, y:378, w:28, h:32 },
+            { type:'spike', x:1480, y:398, w:32, h:32 },
+            { type:'spike', x:1560, y:398, w:32, h:32 },
+            { type:'fire',  x:1960, y:398, w:28, h:35 },
+            { type:'fire',  x:2060, y:398, w:28, h:35 },
         ],
         voidWardens: [],
-        exit: { x:1820, y:360 },
+        exit: { x:2300, y:360 },
         groundY: 430,
     },
     // STAGE 2 — The Spike Hall — timed spikes, patience
@@ -5893,37 +5901,39 @@ const CH2_STAGES = [
         name: 'THE VOID CORRIDOR',
         subtitle: 'No room for mistakes...',
         platforms: [
-            { x:-100, y:430, w:200,  h:80 },
-            { x:260,  y:370, w:80,   h:80 },
-            { x:440,  y:310, w:70,   h:80 },
-            { x:620,  y:360, w:80,   h:80 },
-            { x:800,  y:300, w:70,   h:80 },
-            { x:980,  y:360, w:80,   h:80 },
-            { x:1160, y:310, w:70,   h:80 },
-            { x:1380, y:380, w:200,  h:80 },
-            { x:1700, y:430, w:500,  h:80 },
+            { x:-100, y:430, w:380,  h:80 }, // wide safe start — player spawns here comfortably
+            { x:420,  y:390, w:130,  h:80 }, // step up
+            { x:680,  y:350, w:110,  h:80 }, // step up
+            { x:920,  y:390, w:130,  h:80 }, // step down
+            { x:1180, y:340, w:110,  h:80 }, // step up
+            { x:1430, y:390, w:130,  h:80 }, // landing before run
+            { x:1700, y:430, w:600,  h:80 }, // final ground with traps
         ],
         moving: [
-            { x:200,  y:350, w:50, h:18, type:'bob',   rangeY:30, speed:0.05, phase:0 },
-            { x:350,  y:290, w:50, h:18, type:'crumble', crumbleTimer:0, crumbled:false },
-            { x:540,  y:340, w:50, h:18, type:'crumble', crumbleTimer:0, crumbled:false },
-            { x:740,  y:280, w:50, h:18, type:'bob',   rangeY:50, speed:0.045, phase:1 },
-            { x:1290, y:350, w:60, h:18, type:'slide', rangeX:60, speed:2.0, phase:0 },
+            { x:290,  y:370, w:100, h:18, type:'bob',    rangeY:35, speed:0.04,  phase:0   },
+            { x:565,  y:330, w:90,  h:18, type:'crumble', crumbleTimer:0, crumbled:false    },
+            { x:830,  y:370, w:90,  h:18, type:'slide',  rangeX:70, speed:1.8,   phase:0   },
+            { x:1080, y:310, w:80,  h:18, type:'crumble', crumbleTimer:0, crumbled:false    },
+            { x:1330, y:360, w:80,  h:18, type:'bob',    rangeY:45, speed:0.045, phase:1.5 },
         ],
         traps: [
-            { type:'arrow', x:660,  y:330, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'arrow', x:1020, y:330, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'spike', x:300,  y:338, w:32, h:32 },
-            { type:'spike', x:1440, y:348, w:32, h:32 },
+            { type:'spike', x:100,  y:398, w:32, h:32 },
+            { type:'spike', x:180,  y:398, w:32, h:32 },
+            { type:'fire',  x:470,  y:358, w:28, h:32 },
+            { type:'arrow', x:720,  y:318, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'spike', x:960,  y:358, w:32, h:32 },
+            { type:'spike', x:1010, y:358, w:32, h:32 },
+            { type:'arrow', x:1230, y:308, w:32, h:32, shootTimer:0, arrows:[] },
             { type:'fire',  x:1760, y:398, w:28, h:32 },
-            { type:'fire',  x:1820, y:398, w:28, h:32 },
-            { type:'fire',  x:1880, y:398, w:28, h:32 },
+            { type:'fire',  x:1840, y:398, w:28, h:32 },
+            { type:'fire',  x:1920, y:398, w:28, h:32 },
+            { type:'spike', x:2000, y:398, w:32, h:32 },
         ],
         voidWardens: [
-            { x:900,  y:270, hp:60 },
-            { x:1500, y:350, hp:60 },
+            { x:850,  y:320, hp:60 },
+            { x:1550, y:400, hp:60 },
         ],
-        exit: { x:2050, y:360 },
+        exit: { x:2150, y:360 },
         groundY: 430,
     },
     // STAGE 5 — THE SUMMIT — all mechanics, final gauntlet
@@ -6495,15 +6505,28 @@ function drawCH2() {
         window._ctx.save();
         window._ctx.globalAlpha = vw.alpha;
         if (vw.hurtTimer > 0) window._ctx.filter='brightness(3)';
-        const bossImg = window._images['boss_idle'] || window._images['boss_walk'];
-        if (bossImg && bossImg.complete) {
-            const bfw = bossImg.naturalWidth/4, bfh = bossImg.naturalHeight;
-            const bf = vw.frame % 4;
+        const bossImg = window._images['boss_idle'];
+        if (bossImg && bossImg.complete && bossImg.naturalWidth) {
+            const TOTAL_FRAMES = 9; // boss_idle has exactly 9 frames
+            const bfw = Math.floor(bossImg.naturalWidth / TOTAL_FRAMES);
+            const bfh = bossImg.naturalHeight;
+            const bf = vw.frame % TOTAL_FRAMES;
+            const dx = vw.x - (vw.drawWidth - vw.width) / 2;
+            const dy = vw.y + vw.height - vw.drawHeight;
             window._ctx.save();
-            if (vw.facing==='right') { window._ctx.scale(-1,1); window._ctx.translate(-(vw.x*2+vw.drawWidth),0); }
+            // Clip to draw area so adjacent frames never bleed through
+            window._ctx.beginPath();
+            window._ctx.rect(dx, dy, vw.drawWidth, vw.drawHeight);
+            window._ctx.clip();
             window._ctx.imageSmoothingEnabled = false;
-            window._ctx.drawImage(bossImg, bf*bfw, 0, bfw, bfh,
-                vw.x-(vw.drawWidth-vw.width)/2, vw.y+vw.height-vw.drawHeight, vw.drawWidth, vw.drawHeight);
+            if (vw.facing === 'right') {
+                // flip horizontally around the draw rect centre
+                window._ctx.translate(dx + vw.drawWidth, 0);
+                window._ctx.scale(-1, 1);
+                window._ctx.drawImage(bossImg, bf * bfw, 0, bfw, bfh, 0, dy, vw.drawWidth, vw.drawHeight);
+            } else {
+                window._ctx.drawImage(bossImg, bf * bfw, 0, bfw, bfh, dx, dy, vw.drawWidth, vw.drawHeight);
+            }
             window._ctx.restore();
         } else {
             window._ctx.fillStyle='#440088'; window._ctx.fillRect(vw.x, vw.y, vw.width, vw.height);
@@ -6515,7 +6538,7 @@ function drawCH2() {
             window._ctx.fillStyle='#330022'; window._ctx.fillRect(bx,by,bw,bh);
             window._ctx.fillStyle='#aa00ff'; window._ctx.fillRect(bx,by,bw*(vw.hp/vw.maxHp),bh);
         }
-        vw.frameTimer++; if(vw.frameTimer>8){vw.frame=(vw.frame+1)%4;vw.frameTimer=0;}
+        vw.frameTimer++; if(vw.frameTimer>8){vw.frame=(vw.frame+1)%9;vw.frameTimer=0;}
     });
 
     // Exit portal
