@@ -5561,6 +5561,11 @@
     // Expose startGame early so HTML onclick works even if inner IIFE fails
     window.startGame = function(mode) {
         window._gameMode = mode || 'endless';
+        // Hide Gauntlet character select if open
+        const ch2Sel = document.getElementById('ch2-select');
+        if (ch2Sel) ch2Sel.style.display = 'none';
+        // Deactivate CH2 mode when starting other modes
+        if (window.CH2) window.CH2.active = false;
         if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
         const homeEl = document.getElementById('home-screen');
         homeEl.classList.add('fade-out');
@@ -6227,17 +6232,17 @@ function updateCH2() {
     }
 
     // ---- INPUT ----
-    const leftHeld  = window._window._keys['ArrowLeft']  || window._window._keys['KeyA'];
-    const rightHeld = window._window._keys['ArrowRight'] || window._window._keys['KeyD'];
-    const jumpPress = window._window._keys['ArrowUp']    || window._window._keys['KeyW'];
+    const leftHeld  = window._keys['ArrowLeft']  || window._keys['KeyA'];
+    const rightHeld = window._keys['ArrowRight'] || window._keys['KeyD'];
+    const jumpPress = window._keys['ArrowUp']    || window._keys['KeyW'];
 
     // Dash with shift
-    if (!p.dashing && p.dashCooldown <= 0 && (window._window._keys['ShiftLeft']||window._window._keys['ShiftRight'])) {
+    if (!p.dashing && p.dashCooldown <= 0 && (window._keys['ShiftLeft']||window._keys['ShiftRight'])) {
         p.dashing = true; p.dashTimer = p.dashDuration;
         p.dashDir = p.facing === 'right' ? 1 : -1;
         p.invincible = p.dashDuration + 8;
         spawnCh2DashParticles(p);
-        window._window._keys['ShiftLeft'] = false; window._window._keys['ShiftRight'] = false;
+        window._keys['ShiftLeft'] = false; window._keys['ShiftRight'] = false;
     }
     if (p.dashCooldown > 0) p.dashCooldown--;
 
@@ -6271,11 +6276,11 @@ function updateCH2() {
         p.vy = p.jumpForce;
         p.grounded = false;
         if (CH2.character==='ninja') { CH2.ninjaCanDoubleJump = true; CH2.ninjaDoubleJump = false; }
-        window._window._keys['ArrowUp'] = false; window._window._keys['KeyW'] = false;
+        window._keys['ArrowUp'] = false; window._keys['KeyW'] = false;
     } else if (jumpPress && CH2.character==='ninja' && CH2.ninjaCanDoubleJump && !CH2.ninjaDoubleJump) {
         p.vy = p.jumpForce * 0.85;
         CH2.ninjaDoubleJump = true;
-        window._window._keys['ArrowUp'] = false; window._window._keys['KeyW'] = false;
+        window._keys['ArrowUp'] = false; window._keys['KeyW'] = false;
     }
     if (p.grounded) { CH2.ninjaCanDoubleJump = false; CH2.ninjaDoubleJump = false; }
 
@@ -6395,7 +6400,7 @@ function updateCH2() {
     }
 
     // Attack input
-    if ((window._window._keys['KeyK']||window._window._keys['Space']) && !p.isAttacking && !p.dashing) {
+    if ((window._keys['KeyK']||window._keys['Space']) && !p.isAttacking && !p.dashing) {
         p.isAttacking = true; p.attackTimer = 0;
         p.state = 'attack'; p.frame = 0;
     }
@@ -6666,7 +6671,7 @@ function drawCH2() {
     window._ui.img('ui_titlebox', window.GAME_WIDTH-120, _ch2_PAD, 110, 28);
     window._ui.text(`☠ ${CH2.deaths}`, window.GAME_WIDTH-65, _ch2_PAD+14, 10, '#ff6644', 'center');
     // Dash cooldown
-    const dashPW=130, dashPH=28, dashPX=window.GAME_WIDTH-dashPW-PAD, dashPY=_ch2_PAD+32;
+    const dashPW=130, dashPH=28, dashPX=window.GAME_WIDTH-dashPW-_ch2_PAD, dashPY=_ch2_PAD+32;
     window._ui.img('ui_titlebox', dashPX, dashPY, dashPW, dashPH);
     if (p && p.dashCooldown>0) {
         const progress=1-p.dashCooldown/p.dashCooldownMax;
