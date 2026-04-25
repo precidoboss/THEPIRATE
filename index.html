@@ -890,6 +890,17 @@
 </div>
 
 <script>
+    window.onerror = function(msg, src, line, col, err) {
+        console.error('GLOBAL ERROR:', msg, 'line:', line, 'col:', col);
+        return false;
+    };
+
+    // ---- Early stubs so HTML onclicks never get "not defined" ----
+    window.showChapter2Select = function() { console.warn('CH2 not ready yet'); };
+    window.selectCh2Character = function() {};
+    window.startChapter2 = function() {};
+    window.ch2NextStage = function() {};
+    window.restartChapter2 = function() {};
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     window._ctx = ctx;
@@ -1333,6 +1344,7 @@
 
     // ===== STORY MODE FUNCTIONS =====
     function initStoryMode() {
+        window.initStoryMode = initStoryMode;
         STORY_MODE.active = true;
         STORY_MODE.timer = 0;
         if(window.AQ) AQ.startSCRun();
@@ -4213,7 +4225,7 @@
         ['ch2-select','ch2-stage-clear','ch2-complete'].forEach(id => {
             const el = document.getElementById(id); if(el) el.style.display='none';
         });
-        CH2.active = false;
+        if (window.CH2) window.CH2.active = false;
         // Show home screen again
         const homeEl = document.getElementById('home-screen');
         homeEl.style.display = 'flex';
@@ -4337,7 +4349,7 @@
 
     function update() {
         // CH2 owns its own update — skip main loop when active
-        if (window.CH2 && CH2.active) {
+        if (window.CH2 && window.CH2.active) {
             if (window._ch2TickHook) window._ch2TickHook();
             return;
         }
@@ -5033,7 +5045,7 @@
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
         // CH2 owns its own draw — skip main renderer when active
-        if (window.CH2 && CH2.active) {
+        if (window.CH2 && window.CH2.active) {
             ctx.save();
             if (window._ch2DrawHook) window._ch2DrawHook();
             ctx.restore();
@@ -5546,8 +5558,27 @@
         if (el) el.classList.add('active');
     };
 
+    // Expose startGame early so HTML onclick works even if inner IIFE fails
+    window.startGame = function(mode) {
+        window._gameMode = mode || 'endless';
+        if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
+        const homeEl = document.getElementById('home-screen');
+        homeEl.classList.add('fade-out');
+        if (window.startMusic) window.startMusic();
+        window._cancelHomeAnim && window._cancelHomeAnim();
+        setTimeout(() => {
+            homeEl.style.display = 'none';
+            if (window.resetGame) window.resetGame();
+            window._gameLoopActive = true;
+            window._ch2SetLoopVars && window._ch2SetLoopVars(0, 0);
+            requestAnimationFrame(window._gameLoopTick);
+            if(window._gameMode==='story' && window.initStoryMode) window.initStoryMode();
+        }, 600);
+    };
+
     ;(function() {
         const homeCanvas = document.getElementById('home-canvas');
+        if (!homeCanvas) return; // guard against missing element
         const homeCtx = homeCanvas.getContext('2d');
 
         function resizeHome() {
@@ -5751,33 +5782,17 @@
         }
         window.animateHome();
 
-        window.startGame = function(mode) {
-            window._gameMode = mode || 'endless';
-            if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
-            const homeEl = document.getElementById('home-screen');
-            homeEl.classList.add('fade-out');
-            startMusic();
-            cancelAnimationFrame(homeAnimId);
-            setTimeout(() => {
-                homeEl.style.display = 'none';
-                resetGame();
-                window._gameLoopActive = true;
-                _lastTime = 0; _accumulator = 0;
-                requestAnimationFrame(_gameLoopTick);
-                if(window._gameMode==='story') initStoryMode();
-            }, 600);
-        };
+        // startGame is defined at the outer IIFE level above
     })();
 
 
 // ================================================================
 // CHAPTER 2 ENGINE — loaded after main IIFE
 // ================================================================
-window.addEventListener('load', function() {
 // ================================================================
 // CHAPTER 2 — THE GAUNTLET ENGINE
 // ================================================================
-const CH2 = {
+const CH2 = window.CH2 = {
     active: false,
     character: 'knight', // 'knight' | 'ninja'
     stage: 0,            // 0-4 (5 stages)
@@ -6721,7 +6736,6 @@ window._ch2DrawHook = function() {
 // CH2 uses exposed globals from main IIFE
 const _ch2_PAD = 10;
 
-});
 
         </script>
 
