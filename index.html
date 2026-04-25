@@ -6144,7 +6144,9 @@ window.startChapter2 = function() {
     CH2.checkpointX = 100; CH2.checkpointY = 340;
     ch2Player = makeCh2Player(CH2.character);
     CH2.active = true;
+    CH2.totalTime = Date.now(); // FIX: record run start time
     ch2InitStage(0);
+    if (window.AQ) AQ.startGauntletRun();
     // Start game loop if not already running
     const homeEl = document.getElementById('home-screen');
     homeEl.classList.add('fade-out');
@@ -6175,7 +6177,8 @@ window.restartChapter2 = function() {
 };
 
 function showCh2Complete() {
-    const totalSecs = Math.floor((Date.now() - CH2.totalTime) / 1000);
+    const totalMs = Date.now() - CH2.totalTime;
+    const totalSecs = Math.floor(totalMs / 1000);
     const m = Math.floor(totalSecs/60), s = totalSecs%60;
     const bestTimes = CH2.stageTimes.map((t,i)=>`Stage ${i+1}: ${t}s`).join('<br>');
     const noDeath = CH2.noDeathStages.filter(Boolean).length;
@@ -6185,6 +6188,14 @@ function showCh2Complete() {
         `Deaths: ${CH2.deaths}<br>` +
         `Perfect Stages: ${noDeath} / ${CH2_STAGES.length} 💀<br><br>${bestTimes}`;
     document.getElementById('ch2-complete').style.display = 'flex';
+    // Save to Supabase
+    if (window.AQ) AQ.finishGauntletRun({
+        character:     CH2.character,
+        totalTimeMs:   totalMs,
+        deaths:        CH2.deaths,
+        perfectStages: noDeath,
+        stageTimes:    CH2.stageTimes,
+    });
 }
 
 // ---- PLATFORM COLLISION HELPER ----
@@ -6977,6 +6988,28 @@ async function finishEndlessRun() {
     await checkAchievements();
 }
 
+function startGauntletRun() {
+    if (!_session || _isGuest) return;
+    _runStats.gauntlet = { startMs: Date.now() };
+}
+
+async function finishGauntletRun(ch2Data) {
+    if (!_session || _isGuest) return;
+    // ch2Data: { character, totalTimeMs, deaths, perfectStages, stageTimes }
+    try {
+        await db.from('gauntlet_runs').insert({
+            user_id:        _session.id,
+            character:      ch2Data.character,
+            total_time_ms:  ch2Data.totalTimeMs,
+            deaths:         ch2Data.deaths,
+            perfect_stages: ch2Data.perfectStages,
+            stage_times:    ch2Data.stageTimes, // JSON array
+            completed:      true,
+        });
+        await checkAchievements();
+    } catch(e) { console.warn('Gauntlet run save error', e); }
+}
+
 // ---- ACHIEVEMENTS ----
 async function checkAchievements() {
     if (!_session || _isGuest) return;
@@ -7123,6 +7156,7 @@ async function renderLB() {
         <div class="aq-lb-tabs">
             <div class="aq-lb-tab ${_lbMode==='shadow'?'active':''}" onclick="AQ._lbMode='shadow';AQ._lbPage=0;AQ.renderLB()">✦ Shadow Chronicle</div>
             <div class="aq-lb-tab ${_lbMode==='endless'?'active':''}" onclick="AQ._lbMode='endless';AQ._lbPage=0;AQ.renderLB()">⚔ Endless Mode</div>
+            <div class="aq-lb-tab ${_lbMode==='gauntlet'?'active':''}" onclick="AQ._lbMode='gauntlet';AQ._lbPage=0;AQ.renderLB()">⚡ The Gauntlet</div>
         </div>
         <div id="aq-lb-content" style="width:100%;"><div style="color:#7a5830;font-family:Cinzel,serif;font-size:12px;text-align:center;padding:20px;">Loading...</div></div>
         <button class="aq-btn secondary" style="margin-top:8px;" onclick="document.getElementById('aq-lb-overlay').style.display='none'">Close</button>
@@ -7134,8 +7168,12 @@ async function renderLB() {
             const { data } = await db.from('leaderboard_shadow').select('*');
             rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
             total = (data||[]).length;
-        } else {
+        } else if (_lbMode === 'endless') {
             const { data } = await db.from('leaderboard_endless').select('*');
+            rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
+            total = (data||[]).length;
+        } else {
+            const { data } = await db.from('leaderboard_gauntlet').select('*');
             rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
             total = (data||[]).length;
         }
@@ -7156,7 +7194,7 @@ async function renderLB() {
                     <td>${r.total_completions||0}</td>
                 </tr>`).join('')}
             </table>
-        ` : `
+        ` : _lbMode === 'endless' ? `
             <table class="aq-lb-table">
                 <tr><th>#</th><th>Player</th><th>Best Distance</th><th>Runs</th></tr>
                 ${rows.map(r=>`<tr class="${r.username===(_session&&_session.username)?'me':''}">
@@ -7164,6 +7202,18 @@ async function renderLB() {
                     <td>${r.username}</td>
                     <td>${(r.best_distance||0).toLocaleString()}m</td>
                     <td>${r.total_runs||0}</td>
+                </tr>`).join('')}
+            </table>
+        ` : `
+            <table class="aq-lb-table">
+                <tr><th>#</th><th>Player</th><th>Char</th><th>Best Time</th><th>Deaths</th><th>Perfect</th></tr>
+                ${rows.map(r=>`<tr class="${r.username===(_session&&_session.username)?'me':''}">
+                    <td class="aq-lb-rank">${r.rank}</td>
+                    <td>${r.username}</td>
+                    <td style="font-size:10px;">${r.best_character==='knight'?'⚔':'⚡'} ${r.best_character||'—'}</td>
+                    <td>${fmtMs(r.best_time_ms)}</td>
+                    <td>${r.total_deaths||0}</td>
+                    <td>${r.best_perfect_stages||0}/5 💀</td>
                 </tr>`).join('')}
             </table>
         `;
@@ -7211,6 +7261,7 @@ window.AQ = {
     // Hooks for game code
     startSCRun, finishSCRun,
     startEndlessRun, finishEndlessRun,
+    startGauntletRun, finishGauntletRun,
     trackSCKill, trackSCDamageDealt, trackSCDamageTaken, trackSCDeath,
     trackSCCoin, trackSCSpend, trackSCDist,
     trackEndlessKill, trackEndlessCoin, trackEndlessDist,
