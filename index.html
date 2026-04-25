@@ -801,7 +801,7 @@
         </div>
     </div>
     <!-- ===== CHAPTER 2 CHARACTER SELECT ===== -->
-    <div id="ch2-select" style="display:none;position:absolute;inset:0;z-index:30;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);">
+    <div id="ch2-select" style="display:none;position:absolute;inset:0;z-index:50;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);">
         <div style="position:relative;background:linear-gradient(160deg,#050e02,#020802);border:2px solid #3a6a18;border-radius:4px;padding:40px 60px;min-width:680px;display:flex;flex-direction:column;align-items:center;gap:20px;box-shadow:0 0 80px rgba(80,200,0,0.15);">
             <div class="pause-knot tl" style="border-image:none;background-image:url('https://raw.githubusercontent.com/precidoboss/adventurer/main/CornerKnot_14x14.png');background-size:contain;background-repeat:no-repeat;image-rendering:pixelated;width:28px;height:28px;position:absolute;top:-6px;left:-6px;"></div>
             <div class="pause-knot tr" style="background-image:url('https://raw.githubusercontent.com/precidoboss/adventurer/main/CornerKnot_14x14.png');background-size:contain;background-repeat:no-repeat;image-rendering:pixelated;width:28px;height:28px;position:absolute;top:-6px;right:-6px;transform:scaleX(-1);"></div>
@@ -923,8 +923,7 @@
         canvas.style.position = 'absolute';
         canvas.style.left = ((window.innerWidth  - GAME_WIDTH  * scale) / 2) + 'px';
         canvas.style.top  = ((window.innerHeight - GAME_HEIGHT * scale) / 2) + 'px';
-        // Don't block clicks on home screen buttons
-        canvas.style.pointerEvents = 'none';
+        canvas.style.pointerEvents = 'none'; // don't block home screen buttons
     }
     canvas.width  = GAME_WIDTH;
     canvas.height = GAME_HEIGHT;
@@ -4217,10 +4216,6 @@
         window._gameLoopActive = false;
         gamePaused = false;
         document.getElementById('pause-menu').style.display = 'none';
-        // Disable canvas clicks so home screen buttons are clickable again
-        const _gc = document.getElementById('gameCanvas');
-        if (_gc) _gc.style.pointerEvents = 'none';
-        if (window.CH2) window.CH2.active = false;
         // Fully reset story mode
         STORY_MODE.active = false; STORY_MODE.bossArena = false; STORY_MODE.boss = null;
         STORY_MODE.dialogue = null; STORY_MODE.cinematic = null;
@@ -5567,11 +5562,6 @@
     // Expose startGame early so HTML onclick works even if inner IIFE fails
     window.startGame = function(mode) {
         window._gameMode = mode || 'endless';
-        // Hide Gauntlet select if open
-        const ch2Sel = document.getElementById('ch2-select');
-        if (ch2Sel) ch2Sel.style.display = 'none';
-        if (window.CH2) window.CH2.active = false;
-        // Re-enable canvas clicks now that game is starting
         canvas.style.pointerEvents = 'auto';
         if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
         const homeEl = document.getElementById('home-screen');
@@ -6140,9 +6130,7 @@ window.selectCh2Character = function(char) {
 window.startChapter2 = function() {
     clearInterval(_ch2PreviewTimer);
     document.getElementById('ch2-select').style.display = 'none';
-    // Re-enable canvas pointer events now that game is starting
-    const _gc = document.getElementById('gameCanvas');
-    if (_gc) _gc.style.pointerEvents = 'auto';
+    canvas.style.pointerEvents = 'auto';
     CH2.character = _ch2SelectedChar;
     CH2.stage = 0;
     CH2.deaths = 0;
