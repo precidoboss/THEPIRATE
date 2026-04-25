@@ -212,7 +212,7 @@
             overflow: hidden;
             background: #0d0a07;
         }
-        #home-canvas { position: absolute; inset: 0; width:100%; height:100%; }
+        #home-canvas { position: absolute; inset: 0; width:100%; height:100%; pointer-events: none; }
 
         /* Stone crack texture overlay */
         .stone-cracks {
@@ -5561,10 +5561,8 @@
     // Expose startGame early so HTML onclick works even if inner IIFE fails
     window.startGame = function(mode) {
         window._gameMode = mode || 'endless';
-        // Hide Gauntlet character select if open
         const ch2Sel = document.getElementById('ch2-select');
         if (ch2Sel) ch2Sel.style.display = 'none';
-        // Deactivate CH2 mode when starting other modes
         if (window.CH2) window.CH2.active = false;
         if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
         const homeEl = document.getElementById('home-screen');
