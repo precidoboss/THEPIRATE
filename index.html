@@ -4216,6 +4216,7 @@
         window._gameLoopActive = false;
         gamePaused = false;
         document.getElementById('pause-menu').style.display = 'none';
+        document.getElementById('gameCanvas').style.pointerEvents = 'none';
         // Fully reset story mode
         STORY_MODE.active = false; STORY_MODE.bossArena = false; STORY_MODE.boss = null;
         STORY_MODE.dialogue = null; STORY_MODE.cinematic = null;
@@ -5564,6 +5565,10 @@
         window._gameMode = mode || 'endless';
         canvas.style.pointerEvents = 'auto';
         if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
+        // Ensure Gauntlet select is never shown during other modes
+        const _cs = document.getElementById('ch2-select');
+        if (_cs) _cs.style.display = 'none';
+        if (window.CH2) window.CH2.active = false;
         const homeEl = document.getElementById('home-screen');
         homeEl.classList.add('fade-out');
         if (window.startMusic) window.startMusic();
@@ -5935,13 +5940,13 @@ const CH2_STAGES = [
             { x:1700, y:430, w:500,  h:80 },
         ],
         moving: [
-            { x:280,  y:360, w:90, h:18, type:'pendulum', rangeX:100, speed:0.025, phase:0   },
-            { x:460,  y:300, w:80, h:18, type:'pendulum', rangeX:90,  speed:0.03,  phase:1.0 },
-            { x:650,  y:340, w:90, h:18, type:'bob',      rangeY:70,  speed:0.035, phase:0.5 },
-            { x:840,  y:280, w:80, h:18, type:'pendulum', rangeX:110, speed:0.028, phase:2.0 },
-            { x:1040, y:320, w:90, h:18, type:'slide',    rangeX:120, speed:1.8,   phase:0   },
-            { x:1260, y:360, w:80, h:18, type:'pendulum', rangeX:80,  speed:0.032, phase:1.5 },
-            { x:1460, y:300, w:90, h:18, type:'bob',      rangeY:60,  speed:0.04,  phase:0   },
+            { x:280,  y:355, w:120, h:18, type:'pendulum', rangeX:80,  speed:0.018, phase:0      },
+            { x:480,  y:300, w:110, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:1.047  },
+            { x:670,  y:345, w:120, h:18, type:'bob',      rangeY:45,  speed:0.025, phase:0.5    },
+            { x:860,  y:285, w:110, h:18, type:'pendulum', rangeX:85,  speed:0.018, phase:2.094  },
+            { x:1060, y:325, w:120, h:18, type:'slide',    rangeX:90,  speed:1.2,   phase:0      },
+            { x:1270, y:360, w:110, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:3.142  },
+            { x:1470, y:300, w:120, h:18, type:'bob',      rangeY:40,  speed:0.025, phase:1.5    },
         ],
         traps: [
             { type:'fire',  x:180,  y:398, w:28, h:32 },
@@ -6340,13 +6345,13 @@ function updateCH2() {
                 (t.arrows||[]).forEach(a => {
                     a.x += a.vx;
                     if (p.invincible===0 && p.x<a.x+a.w && p.x+p.width>a.x && p.y<a.y+a.h && p.y+p.height>a.y) {
-                        ch2HurtPlayer(15); a.x=-999;
+                        ch2HurtPlayer(10); a.x=-999;
                     }
                 });
             }
             if ((t.type==='spike'||t.type==='fire') && p.invincible===0) {
                 if (p.x<t.x+t.w && p.x+p.width>t.x && p.y<t.y+t.h && p.y+p.height>t.y) {
-                    ch2HurtPlayer(t.type==='fire'?20:30);
+                    ch2HurtPlayer(t.type==='fire'?8:12);
                 }
             }
         });
@@ -6374,8 +6379,8 @@ function updateCH2() {
         // Attack
         vw.attackCooldown = (vw.attackCooldown||0) - 1;
         if (dist < 70 && vw.attackCooldown <= 0 && p.invincible===0) {
-            ch2HurtPlayer(12);
-            vw.attackCooldown = 100;
+            ch2HurtPlayer(15);
+            vw.attackCooldown = 120;
         }
     });
 
@@ -6454,14 +6459,12 @@ function ch2HurtPlayer(dmg) {
     // Knight trapShield — absorbs one trap hit
     if (CH2.character==='knight' && p.trapShield > 0) {
         p.trapShield--;
-        p.invincible = 90;
+        p.invincible = 120;
         ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:'SHIELD',life:60,color:'#88ccff',isText:true});
         return;
     }
-    // Ninja one-hit-kill from traps (dmg >= 20)
-    if (CH2.character==='ninja' && dmg >= 20) dmg = p.hp;
     p.hp = Math.max(0, p.hp - dmg);
-    p.invincible = 70;
+    p.invincible = 120;
     ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:dmg,life:55,color:'#ff4444'});
     if (p.hp <= 0) {
         p.dead = true; p.state='death'; p.frame=0; p.frameTimer=0;
