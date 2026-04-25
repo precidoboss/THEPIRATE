@@ -892,6 +892,7 @@
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    window._ctx = ctx;
     const loadingEl = document.getElementById('loading');
     let uiScore = 0; let uiCoins = 0; let uiHp = 180; let uiMaxHp = 180;
     const gameOverEl = document.getElementById('game-over');
@@ -899,6 +900,8 @@
 
     const GAME_WIDTH = 960;
     const GAME_HEIGHT = 540;
+    window.GAME_WIDTH = GAME_WIDTH;
+    window.GAME_HEIGHT = GAME_HEIGHT;
 
     function resizeCanvas() {
         const scaleX = window.innerWidth / GAME_WIDTH;
@@ -1194,6 +1197,7 @@
     }
 
     function startMusic() {
+        window.startMusic = startMusic;
         if (bgMusic) return;
         bgMusic = new Audio('https://raw.githubusercontent.com/precidoboss/adventurer/main/Goblins_Dance_(Battle).wav');
         bgMusic.loop = true;
@@ -1208,6 +1212,7 @@
     }
 
     const images = {};
+    window._images = images; // expose for CH2 engine
     let assetsLoaded = 0;
     const totalAssets = Object.keys(ASSETS).length;
 
@@ -3955,8 +3960,10 @@
     let bloodAnims = []; // { x, y, frame, frameTimer, totalFrames, fps }
     let shakeTimer = 0, shakeMag = 0;
     let gamePaused = false;
+    window._getGamePaused = () => gamePaused;
 
     const keys = {};
+    window._keys = keys;
     let scrollX = 0;
     let score = 0;
     let platforms = [];
@@ -4222,6 +4229,7 @@
     };
 
     function resetGame() {
+        window.resetGame = resetGame;
         player.maxHp = 180;
         player.hp = player.maxHp;
         player.x = 100;
@@ -4328,6 +4336,11 @@
     }
 
     function update() {
+        // CH2 owns its own update — skip main loop when active
+        if (window.CH2 && CH2.active) {
+            if (window._ch2TickHook) window._ch2TickHook();
+            return;
+        }
         // Freeze everything during cinematics and NPC dialogue
         if (player.dead || gamePaused) return;
         if (STORY_MODE.cinematic) return;   // cinematic = full game freeze
@@ -5019,6 +5032,15 @@
         ctx.globalAlpha = 1;
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+        // CH2 owns its own draw — skip main renderer when active
+        if (window.CH2 && CH2.active) {
+            ctx.save();
+            if (window._ch2DrawHook) window._ch2DrawHook();
+            ctx.restore();
+            drawCanvasUI(); // still draw pause overlay
+            return;
+        }
+
         // Screen shake
         ctx.save();
         if (shakeTimer > 0) {
@@ -5295,6 +5317,8 @@
         ctx.fillText(txt, x, y);
         ctx.restore();
     }
+    // Expose for CH2 engine (runs outside the IIFE)
+    window._ui = { img: drawUI_img, text: drawUI_text };
 
     function drawCanvasUI() {
         ctx.save();
@@ -5490,6 +5514,7 @@
     const _STEP = 1000 / 60; // 16.67ms per tick
     let _lastTime = 0;
     let _accumulator = 0;
+    window._ch2SetLoopVars = (lt, acc) => { _lastTime=lt; _accumulator=acc; };
 
     function _gameLoopTick(timestamp) {
         if (!window._gameLoopActive) return;
@@ -5507,6 +5532,7 @@
         draw();
         requestAnimationFrame(_gameLoopTick);
     }
+    window._gameLoopTick = _gameLoopTick;
 
     loadAssets(() => {
         resetGame();
@@ -5597,6 +5623,8 @@
         }
 
         let homeAnimId;
+        window._getHomeAnimId = () => homeAnimId;
+        window._cancelHomeAnim = () => { if(homeAnimId) cancelAnimationFrame(homeAnimId); };
         window.animateHome = function animateHome() {
             homeAnimId = requestAnimationFrame(window.animateHome);
             const W = homeCanvas.width, H = homeCanvas.height;
@@ -5741,951 +5769,959 @@
         };
     })();
 
-    // ================================================================
-    // CHAPTER 2 — THE GAUNTLET ENGINE
-    // ================================================================
-    const CH2 = {
-        active: false,
-        character: 'knight', // 'knight' | 'ninja'
-        stage: 0,            // 0-4 (5 stages)
-        stageTimer: 0,
-        deaths: 0,
-        totalTime: 0,
-        stageStartTime: 0,
-        stageTimes: [],
-        noDeathStages: [],
-        checkpointX: 100,
-        checkpointY: 340,
-        scrollX: 0,
-        movingPlatforms: [],
+
+// ================================================================
+// CHAPTER 2 ENGINE — loaded after main IIFE
+// ================================================================
+window.addEventListener('load', function() {
+// ================================================================
+// CHAPTER 2 — THE GAUNTLET ENGINE
+// ================================================================
+const CH2 = {
+    active: false,
+    character: 'knight', // 'knight' | 'ninja'
+    stage: 0,            // 0-4 (5 stages)
+    stageTimer: 0,
+    deaths: 0,
+    totalTime: 0,
+    stageStartTime: 0,
+    stageTimes: [],
+    noDeathStages: [],
+    checkpointX: 100,
+    checkpointY: 340,
+    scrollX: 0,
+    movingPlatforms: [],
+    voidWardens: [],
+    stageComplete: false,
+    ninjaDoubleJump: false,
+    ninjaCanDoubleJump: false,
+};
+
+// ---- SPRITE DEFS ----
+const CH2_KNIGHT = {
+    idle:   { key:'ch2_knight_idle',   frames:7, fw:96, fh:83 },
+    walk:   { key:'ch2_knight_walk',   frames:7, fw:96, fh:83 },
+    run:    { key:'ch2_knight_run',    frames:8, fw:96, fh:83 },
+    jump:   { key:'ch2_knight_jump',   frames:5, fw:96, fh:83 },
+    attack: { key:'ch2_knight_atk1',   frames:6, fw:96, fh:83 },
+    defend: { key:'ch2_knight_defend', frames:6, fw:96, fh:83 },
+    death:  { key:'ch2_knight_atk2',   frames:5, fw:96, fh:83 }, // reuse atk2 as death
+};
+const CH2_NINJA = {
+    idle:   { key:'ch2_ninja_idle',   frames:8,  fw:128, fh:128 },
+    walk:   { key:'ch2_ninja_walk',   frames:10, fw:128, fh:128 },
+    attack: { key:'ch2_ninja_attack', frames:20, fw:128, fh:128 },
+    death:  { key:'ch2_ninja_death',  frames:14, fw:128, fh:128 },
+    hit:    { key:'ch2_ninja_hit',    frames:4,  fw:128, fh:128 },
+    white:  { key:'ch2_ninja_white',  frames:1,  fw:128, fh:128 },
+    jump:   { key:'ch2_ninja_idle',   frames:8,  fw:128, fh:128 },
+};
+
+// ---- CH2 PLAYER STATE ----
+let ch2Player = null;
+
+function makeCh2Player(character) {
+    const isNinja = character === 'ninja';
+    return {
+        x: 100, y: 300,
+        width: isNinja ? 44 : 48,
+        height: isNinja ? 64 : 62,
+        drawWidth: isNinja ? 128 : 160,
+        drawHeight: isNinja ? 128 : 140,
+        footOffset: isNinja ? 28 : 18,
+        vx: 0, vy: 0,
+        speed: isNinja ? 7 : 5,
+        jumpForce: isNinja ? -16 : -13,
+        gravity: 0.65,
+        grounded: false,
+        facing: 'right',
+        state: 'idle',
+        frame: 0, frameTimer: 0, frameSpeed: 6,
+        hp: isNinja ? 80 : 180,
+        maxHp: isNinja ? 80 : 180,
+        invincible: 0,
+        dead: false,
+        isAttacking: false, attackTimer: 0,
+        dashing: false, dashTimer: 0, dashDir: 1,
+        dashCooldown: 0, dashCooldownMax: 300,
+        dashSpeed: isNinja ? 20 : 16, dashDuration: 13,
+        trapShield: isNinja ? 0 : 1, // Knight can survive 1 trap hit
+    };
+}
+
+// ---- STAGE LAYOUTS ----
+// Each stage defines: platforms, traps, voidWardens, exit portal position
+// Moving platforms: { x,y,w,h, type:'bob'|'slide'|'pendulum'|'crumble'|'disappear', ...params }
+const CH2_STAGES = [
+    // STAGE 1 — The Floor — intro, basic moving bobs
+    {
+        name: 'THE FLOOR',
+        subtitle: 'Learn the void...',
+        platforms: [
+            { x:-100, y:430, w:480,  h:80 }, // start ground
+            { x:500,  y:430, w:200,  h:80 }, // gap crossing
+            { x:800,  y:400, w:160,  h:80 }, // slight rise
+            { x:1060, y:430, w:300,  h:80 }, // landing
+            { x:1460, y:430, w:500,  h:80 }, // exit ground
+        ],
+        moving: [
+            { x:400, y:370, w:80, h:18, type:'slide', rangeX:80, speed:1.2, phase:0 },
+            { x:700, y:340, w:80, h:18, type:'bob',   rangeY:40, speed:0.03, phase:0 },
+        ],
+        traps: [
+            { type:'fire', x:560,  y:395, w:28, h:35 },
+            { type:'spike',x:900,  y:368, w:32, h:32 },
+            { type:'fire', x:1200, y:395, w:28, h:35 },
+        ],
         voidWardens: [],
-        stageComplete: false,
-        ninjaDoubleJump: false,
-        ninjaCanDoubleJump: false,
-    };
+        exit: { x:1820, y:360 },
+        groundY: 430,
+    },
+    // STAGE 2 — The Spike Hall — timed spikes, patience
+    {
+        name: 'THE SPIKE HALL',
+        subtitle: 'Patience or perish...',
+        platforms: [
+            { x:-100, y:430, w:300,  h:80 },
+            { x:350,  y:390, w:120,  h:80 },
+            { x:600,  y:350, w:100,  h:80 },
+            { x:800,  y:310, w:120,  h:80 },
+            { x:1050, y:340, w:140,  h:80 },
+            { x:1320, y:380, w:120,  h:80 },
+            { x:1580, y:430, w:500,  h:80 },
+        ],
+        moving: [
+            { x:490, y:360, w:90, h:18, type:'bob', rangeY:50, speed:0.035, phase:0 },
+            { x:740, y:290, w:80, h:18, type:'bob', rangeY:35, speed:0.04,  phase:1.5 },
+            { x:970, y:310, w:80, h:18, type:'slide', rangeX:60, speed:1.5, phase:0 },
+        ],
+        traps: [
+            { type:'spike', x:380,  y:358, w:32, h:32 },
+            { type:'spike', x:430,  y:358, w:32, h:32 },
+            { type:'fire',  x:650,  y:318, w:28, h:32 },
+            { type:'spike', x:860,  y:278, w:32, h:32 },
+            { type:'spike', x:1100, y:308, w:32, h:32 },
+            { type:'spike', x:1150, y:308, w:32, h:32 },
+            { type:'fire',  x:1640, y:398, w:28, h:32 },
+            { type:'fire',  x:1700, y:398, w:28, h:32 },
+        ],
+        voidWardens: [{ x:1300, y:300, hp:60 }],
+        exit: { x:1900, y:360 },
+        groundY: 430,
+    },
+    // STAGE 3 — The Pendulum Path — timing focus
+    {
+        name: 'THE PENDULUM PATH',
+        subtitle: 'Feel the rhythm...',
+        platforms: [
+            { x:-100, y:430, w:250,  h:80 },
+            { x:1700, y:430, w:500,  h:80 },
+        ],
+        moving: [
+            { x:280,  y:360, w:90, h:18, type:'pendulum', rangeX:100, speed:0.025, phase:0   },
+            { x:460,  y:300, w:80, h:18, type:'pendulum', rangeX:90,  speed:0.03,  phase:1.0 },
+            { x:650,  y:340, w:90, h:18, type:'bob',      rangeY:70,  speed:0.035, phase:0.5 },
+            { x:840,  y:280, w:80, h:18, type:'pendulum', rangeX:110, speed:0.028, phase:2.0 },
+            { x:1040, y:320, w:90, h:18, type:'slide',    rangeX:120, speed:1.8,   phase:0   },
+            { x:1260, y:360, w:80, h:18, type:'pendulum', rangeX:80,  speed:0.032, phase:1.5 },
+            { x:1460, y:300, w:90, h:18, type:'bob',      rangeY:60,  speed:0.04,  phase:0   },
+        ],
+        traps: [
+            { type:'fire',  x:180,  y:398, w:28, h:32 },
+            { type:'spike', x:1760, y:398, w:32, h:32 },
+            { type:'spike', x:1820, y:398, w:32, h:32 },
+        ],
+        voidWardens: [{ x:1100, y:200, hp:60 }],
+        exit: { x:2050, y:360 },
+        groundY: 430,
+    },
+    // STAGE 4 — The Void Corridor — arrows, narrow platforms
+    {
+        name: 'THE VOID CORRIDOR',
+        subtitle: 'No room for mistakes...',
+        platforms: [
+            { x:-100, y:430, w:200,  h:80 },
+            { x:260,  y:370, w:80,   h:80 },
+            { x:440,  y:310, w:70,   h:80 },
+            { x:620,  y:360, w:80,   h:80 },
+            { x:800,  y:300, w:70,   h:80 },
+            { x:980,  y:360, w:80,   h:80 },
+            { x:1160, y:310, w:70,   h:80 },
+            { x:1380, y:380, w:200,  h:80 },
+            { x:1700, y:430, w:500,  h:80 },
+        ],
+        moving: [
+            { x:200,  y:350, w:50, h:18, type:'bob',   rangeY:30, speed:0.05, phase:0 },
+            { x:350,  y:290, w:50, h:18, type:'crumble', crumbleTimer:0, crumbled:false },
+            { x:540,  y:340, w:50, h:18, type:'crumble', crumbleTimer:0, crumbled:false },
+            { x:740,  y:280, w:50, h:18, type:'bob',   rangeY:50, speed:0.045, phase:1 },
+            { x:1290, y:350, w:60, h:18, type:'slide', rangeX:60, speed:2.0, phase:0 },
+        ],
+        traps: [
+            { type:'arrow', x:660,  y:330, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'arrow', x:1020, y:330, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'spike', x:300,  y:338, w:32, h:32 },
+            { type:'spike', x:1440, y:348, w:32, h:32 },
+            { type:'fire',  x:1760, y:398, w:28, h:32 },
+            { type:'fire',  x:1820, y:398, w:28, h:32 },
+            { type:'fire',  x:1880, y:398, w:28, h:32 },
+        ],
+        voidWardens: [
+            { x:900,  y:270, hp:60 },
+            { x:1500, y:350, hp:60 },
+        ],
+        exit: { x:2050, y:360 },
+        groundY: 430,
+    },
+    // STAGE 5 — THE SUMMIT — all mechanics, final gauntlet
+    {
+        name: 'THE SUMMIT',
+        subtitle: 'All or nothing...',
+        platforms: [
+            { x:-100, y:430, w:180,  h:80 },
+            { x:1900, y:430, w:400,  h:80 },
+        ],
+        moving: [
+            { x:200,  y:380, w:80, h:18, type:'bob',      rangeY:50,  speed:0.04,  phase:0   },
+            { x:380,  y:310, w:70, h:18, type:'pendulum',  rangeX:100, speed:0.03,  phase:0.5 },
+            { x:560,  y:360, w:80, h:18, type:'crumble',   crumbleTimer:0, crumbled:false     },
+            { x:730,  y:290, w:70, h:18, type:'slide',     rangeX:120, speed:2.2,   phase:0   },
+            { x:940,  y:340, w:80, h:18, type:'bob',       rangeY:65,  speed:0.045, phase:1   },
+            { x:1120, y:270, w:70, h:18, type:'pendulum',  rangeX:90,  speed:0.035, phase:2   },
+            { x:1300, y:320, w:80, h:18, type:'crumble',   crumbleTimer:0, crumbled:false     },
+            { x:1500, y:280, w:70, h:18, type:'slide',     rangeX:100, speed:2.5,   phase:1   },
+            { x:1700, y:360, w:80, h:18, type:'bob',       rangeY:40,  speed:0.05,  phase:0   },
+        ],
+        traps: [
+            { type:'fire',  x:100,  y:398, w:28, h:32 },
+            { type:'spike', x:500,  y:330, w:32, h:32 }, // on crumble platform
+            { type:'arrow', x:800,  y:260, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'fire',  x:1000, y:310, w:28, h:32 },
+            { type:'spike', x:1160, y:238, w:32, h:32 },
+            { type:'arrow', x:1400, y:290, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'fire',  x:1950, y:398, w:28, h:32 },
+            { type:'fire',  x:2010, y:398, w:28, h:32 },
+            { type:'spike', x:2070, y:398, w:32, h:32 },
+        ],
+        voidWardens: [
+            { x:700,  y:260, hp:60 },
+            { x:1300, y:290, hp:60 },
+            { x:1800, y:400, hp:60 },
+        ],
+        exit: { x:2200, y:360 },
+        groundY: 430,
+    },
+];
 
-    // ---- SPRITE DEFS ----
-    const CH2_KNIGHT = {
-        idle:   { key:'ch2_knight_idle',   frames:7, fw:96, fh:83 },
-        walk:   { key:'ch2_knight_walk',   frames:7, fw:96, fh:83 },
-        run:    { key:'ch2_knight_run',    frames:8, fw:96, fh:83 },
-        jump:   { key:'ch2_knight_jump',   frames:5, fw:96, fh:83 },
-        attack: { key:'ch2_knight_atk1',   frames:6, fw:96, fh:83 },
-        defend: { key:'ch2_knight_defend', frames:6, fw:96, fh:83 },
-        death:  { key:'ch2_knight_atk2',   frames:5, fw:96, fh:83 }, // reuse atk2 as death
-    };
-    const CH2_NINJA = {
-        idle:   { key:'ch2_ninja_idle',   frames:8,  fw:128, fh:128 },
-        walk:   { key:'ch2_ninja_walk',   frames:10, fw:128, fh:128 },
-        attack: { key:'ch2_ninja_attack', frames:20, fw:128, fh:128 },
-        death:  { key:'ch2_ninja_death',  frames:14, fw:128, fh:128 },
-        hit:    { key:'ch2_ninja_hit',    frames:4,  fw:128, fh:128 },
-        white:  { key:'ch2_ninja_white',  frames:1,  fw:128, fh:128 },
-        jump:   { key:'ch2_ninja_idle',   frames:8,  fw:128, fh:128 },
-    };
+// ---- CH2 GLOBALS ----
+let ch2Platforms = [];
+let ch2MovingPlatforms = [];
+let ch2Traps = [];
+let ch2VoidWardens = [];
+let ch2Exit = null;
+let ch2DmgNumbers = [];
+let ch2Particles = [];
+let ch2ScrollX = 0;
+let ch2Time = 0;
 
-    // ---- CH2 PLAYER STATE ----
-    let ch2Player = null;
+// ---- INIT STAGE ----
+function ch2InitStage(stageIdx) {
+    const stage = CH2_STAGES[stageIdx];
+    ch2Platforms = stage.platforms.map(p => ({...p, type:1, arena:true}));
+    // Deep-copy moving platforms — reset crumble state
+    ch2MovingPlatforms = stage.moving.map(p => ({
+        ...p,
+        _ox: p.x, _oy: p.y,
+        crumbleTimer: 0, crumbled: false, crumbleAlpha: 1,
+        type: p.type, arena: true
+    }));
+    ch2Traps = stage.traps.map(t => ({...t, frame:0, frameTimer:0, shootTimer:0, arrows:[]}));
+    ch2VoidWardens = stage.voidWardens.map(w => ({
+        x:w.x, y:w.y, width:60, height:80,
+        drawWidth:200, drawHeight:200,
+        hp:w.hp, maxHp:w.hp,
+        vx:0, vy:0, grounded:true,
+        facing:'left', state:'idle',
+        frame:0, frameTimer:0,
+        isAttacking:false, attackCooldown:0,
+        hurtTimer:0, dying:false, alpha:1,
+    }));
+    ch2Exit = { ...stage.exit, w:60, h:80, frame:0, frameTimer:0 };
+    ch2DmgNumbers = [];
+    ch2Particles = [];
+    ch2ScrollX = 0;
+    ch2Time = 0;
+    CH2.stageComplete = false;
+    CH2.stageStartTime = Date.now();
+    CH2.ninjaCanDoubleJump = false;
+    CH2.ninjaDoubleJump = false;
 
-    function makeCh2Player(character) {
-        const isNinja = character === 'ninja';
-        return {
-            x: 100, y: 300,
-            width: isNinja ? 44 : 48,
-            height: isNinja ? 64 : 62,
-            drawWidth: isNinja ? 128 : 160,
-            drawHeight: isNinja ? 128 : 140,
-            footOffset: isNinja ? 28 : 18,
-            vx: 0, vy: 0,
-            speed: isNinja ? 7 : 5,
-            jumpForce: isNinja ? -16 : -13,
-            gravity: 0.65,
-            grounded: false,
-            facing: 'right',
-            state: 'idle',
-            frame: 0, frameTimer: 0, frameSpeed: 6,
-            hp: isNinja ? 80 : 180,
-            maxHp: isNinja ? 80 : 180,
-            invincible: 0,
-            dead: false,
-            isAttacking: false, attackTimer: 0,
-            dashing: false, dashTimer: 0, dashDir: 1,
-            dashCooldown: 0, dashCooldownMax: 300,
-            dashSpeed: isNinja ? 20 : 16, dashDuration: 13,
-            trapShield: isNinja ? 0 : 1, // Knight can survive 1 trap hit
-        };
+    // Reset player
+    ch2Player.x = CH2.checkpointX;
+    ch2Player.y = CH2.checkpointY;
+    ch2Player.vx = 0; ch2Player.vy = 0;
+    ch2Player.dead = false; ch2Player.invincible = 0;
+    ch2Player.state = 'idle'; ch2Player.frame = 0;
+    ch2Player.grounded = false;
+    if (CH2.character === 'knight') ch2Player.trapShield = 1;
+}
+
+// ---- ANIMATE PREVIEW CANVASES ----
+let _ch2PreviewFrame = 0;
+let _ch2PreviewTimer = null;
+function animateCh2Previews() {
+    const knightImg = window._images['ch2_knight_idle'];
+    const ninjaImg  = window._images['ch2_ninja_idle'];
+    const kc = document.getElementById('ch2-knight-preview');
+    const nc = document.getElementById('ch2-ninja-preview');
+    if (kc && knightImg && knightImg.complete) {
+        const kctx = kc.getContext('2d');
+        kctx.clearRect(0,0,kc.width,kc.height);
+        kctx.imageSmoothingEnabled = false;
+        const f = _ch2PreviewFrame % 7;
+        kctx.drawImage(knightImg, f*96, 0, 96, 83, 0, 0, 192, 166);
     }
-
-    // ---- STAGE LAYOUTS ----
-    // Each stage defines: platforms, traps, voidWardens, exit portal position
-    // Moving platforms: { x,y,w,h, type:'bob'|'slide'|'pendulum'|'crumble'|'disappear', ...params }
-    const CH2_STAGES = [
-        // STAGE 1 — The Floor — intro, basic moving bobs
-        {
-            name: 'THE FLOOR',
-            subtitle: 'Learn the void...',
-            platforms: [
-                { x:-100, y:430, w:480,  h:80 }, // start ground
-                { x:500,  y:430, w:200,  h:80 }, // gap crossing
-                { x:800,  y:400, w:160,  h:80 }, // slight rise
-                { x:1060, y:430, w:300,  h:80 }, // landing
-                { x:1460, y:430, w:500,  h:80 }, // exit ground
-            ],
-            moving: [
-                { x:400, y:370, w:80, h:18, type:'slide', rangeX:80, speed:1.2, phase:0 },
-                { x:700, y:340, w:80, h:18, type:'bob',   rangeY:40, speed:0.03, phase:0 },
-            ],
-            traps: [
-                { type:'fire', x:560,  y:395, w:28, h:35 },
-                { type:'spike',x:900,  y:368, w:32, h:32 },
-                { type:'fire', x:1200, y:395, w:28, h:35 },
-            ],
-            voidWardens: [],
-            exit: { x:1820, y:360 },
-            groundY: 430,
-        },
-        // STAGE 2 — The Spike Hall — timed spikes, patience
-        {
-            name: 'THE SPIKE HALL',
-            subtitle: 'Patience or perish...',
-            platforms: [
-                { x:-100, y:430, w:300,  h:80 },
-                { x:350,  y:390, w:120,  h:80 },
-                { x:600,  y:350, w:100,  h:80 },
-                { x:800,  y:310, w:120,  h:80 },
-                { x:1050, y:340, w:140,  h:80 },
-                { x:1320, y:380, w:120,  h:80 },
-                { x:1580, y:430, w:500,  h:80 },
-            ],
-            moving: [
-                { x:490, y:360, w:90, h:18, type:'bob', rangeY:50, speed:0.035, phase:0 },
-                { x:740, y:290, w:80, h:18, type:'bob', rangeY:35, speed:0.04,  phase:1.5 },
-                { x:970, y:310, w:80, h:18, type:'slide', rangeX:60, speed:1.5, phase:0 },
-            ],
-            traps: [
-                { type:'spike', x:380,  y:358, w:32, h:32 },
-                { type:'spike', x:430,  y:358, w:32, h:32 },
-                { type:'fire',  x:650,  y:318, w:28, h:32 },
-                { type:'spike', x:860,  y:278, w:32, h:32 },
-                { type:'spike', x:1100, y:308, w:32, h:32 },
-                { type:'spike', x:1150, y:308, w:32, h:32 },
-                { type:'fire',  x:1640, y:398, w:28, h:32 },
-                { type:'fire',  x:1700, y:398, w:28, h:32 },
-            ],
-            voidWardens: [{ x:1300, y:300, hp:60 }],
-            exit: { x:1900, y:360 },
-            groundY: 430,
-        },
-        // STAGE 3 — The Pendulum Path — timing focus
-        {
-            name: 'THE PENDULUM PATH',
-            subtitle: 'Feel the rhythm...',
-            platforms: [
-                { x:-100, y:430, w:250,  h:80 },
-                { x:1700, y:430, w:500,  h:80 },
-            ],
-            moving: [
-                { x:280,  y:360, w:90, h:18, type:'pendulum', rangeX:100, speed:0.025, phase:0   },
-                { x:460,  y:300, w:80, h:18, type:'pendulum', rangeX:90,  speed:0.03,  phase:1.0 },
-                { x:650,  y:340, w:90, h:18, type:'bob',      rangeY:70,  speed:0.035, phase:0.5 },
-                { x:840,  y:280, w:80, h:18, type:'pendulum', rangeX:110, speed:0.028, phase:2.0 },
-                { x:1040, y:320, w:90, h:18, type:'slide',    rangeX:120, speed:1.8,   phase:0   },
-                { x:1260, y:360, w:80, h:18, type:'pendulum', rangeX:80,  speed:0.032, phase:1.5 },
-                { x:1460, y:300, w:90, h:18, type:'bob',      rangeY:60,  speed:0.04,  phase:0   },
-            ],
-            traps: [
-                { type:'fire',  x:180,  y:398, w:28, h:32 },
-                { type:'spike', x:1760, y:398, w:32, h:32 },
-                { type:'spike', x:1820, y:398, w:32, h:32 },
-            ],
-            voidWardens: [{ x:1100, y:200, hp:60 }],
-            exit: { x:2050, y:360 },
-            groundY: 430,
-        },
-        // STAGE 4 — The Void Corridor — arrows, narrow platforms
-        {
-            name: 'THE VOID CORRIDOR',
-            subtitle: 'No room for mistakes...',
-            platforms: [
-                { x:-100, y:430, w:200,  h:80 },
-                { x:260,  y:370, w:80,   h:80 },
-                { x:440,  y:310, w:70,   h:80 },
-                { x:620,  y:360, w:80,   h:80 },
-                { x:800,  y:300, w:70,   h:80 },
-                { x:980,  y:360, w:80,   h:80 },
-                { x:1160, y:310, w:70,   h:80 },
-                { x:1380, y:380, w:200,  h:80 },
-                { x:1700, y:430, w:500,  h:80 },
-            ],
-            moving: [
-                { x:200,  y:350, w:50, h:18, type:'bob',   rangeY:30, speed:0.05, phase:0 },
-                { x:350,  y:290, w:50, h:18, type:'crumble', crumbleTimer:0, crumbled:false },
-                { x:540,  y:340, w:50, h:18, type:'crumble', crumbleTimer:0, crumbled:false },
-                { x:740,  y:280, w:50, h:18, type:'bob',   rangeY:50, speed:0.045, phase:1 },
-                { x:1290, y:350, w:60, h:18, type:'slide', rangeX:60, speed:2.0, phase:0 },
-            ],
-            traps: [
-                { type:'arrow', x:660,  y:330, w:32, h:32, shootTimer:0, arrows:[] },
-                { type:'arrow', x:1020, y:330, w:32, h:32, shootTimer:0, arrows:[] },
-                { type:'spike', x:300,  y:338, w:32, h:32 },
-                { type:'spike', x:1440, y:348, w:32, h:32 },
-                { type:'fire',  x:1760, y:398, w:28, h:32 },
-                { type:'fire',  x:1820, y:398, w:28, h:32 },
-                { type:'fire',  x:1880, y:398, w:28, h:32 },
-            ],
-            voidWardens: [
-                { x:900,  y:270, hp:60 },
-                { x:1500, y:350, hp:60 },
-            ],
-            exit: { x:2050, y:360 },
-            groundY: 430,
-        },
-        // STAGE 5 — THE SUMMIT — all mechanics, final gauntlet
-        {
-            name: 'THE SUMMIT',
-            subtitle: 'All or nothing...',
-            platforms: [
-                { x:-100, y:430, w:180,  h:80 },
-                { x:1900, y:430, w:400,  h:80 },
-            ],
-            moving: [
-                { x:200,  y:380, w:80, h:18, type:'bob',      rangeY:50,  speed:0.04,  phase:0   },
-                { x:380,  y:310, w:70, h:18, type:'pendulum',  rangeX:100, speed:0.03,  phase:0.5 },
-                { x:560,  y:360, w:80, h:18, type:'crumble',   crumbleTimer:0, crumbled:false     },
-                { x:730,  y:290, w:70, h:18, type:'slide',     rangeX:120, speed:2.2,   phase:0   },
-                { x:940,  y:340, w:80, h:18, type:'bob',       rangeY:65,  speed:0.045, phase:1   },
-                { x:1120, y:270, w:70, h:18, type:'pendulum',  rangeX:90,  speed:0.035, phase:2   },
-                { x:1300, y:320, w:80, h:18, type:'crumble',   crumbleTimer:0, crumbled:false     },
-                { x:1500, y:280, w:70, h:18, type:'slide',     rangeX:100, speed:2.5,   phase:1   },
-                { x:1700, y:360, w:80, h:18, type:'bob',       rangeY:40,  speed:0.05,  phase:0   },
-            ],
-            traps: [
-                { type:'fire',  x:100,  y:398, w:28, h:32 },
-                { type:'spike', x:500,  y:330, w:32, h:32 }, // on crumble platform
-                { type:'arrow', x:800,  y:260, w:32, h:32, shootTimer:0, arrows:[] },
-                { type:'fire',  x:1000, y:310, w:28, h:32 },
-                { type:'spike', x:1160, y:238, w:32, h:32 },
-                { type:'arrow', x:1400, y:290, w:32, h:32, shootTimer:0, arrows:[] },
-                { type:'fire',  x:1950, y:398, w:28, h:32 },
-                { type:'fire',  x:2010, y:398, w:28, h:32 },
-                { type:'spike', x:2070, y:398, w:32, h:32 },
-            ],
-            voidWardens: [
-                { x:700,  y:260, hp:60 },
-                { x:1300, y:290, hp:60 },
-                { x:1800, y:400, hp:60 },
-            ],
-            exit: { x:2200, y:360 },
-            groundY: 430,
-        },
-    ];
-
-    // ---- CH2 GLOBALS ----
-    let ch2Platforms = [];
-    let ch2MovingPlatforms = [];
-    let ch2Traps = [];
-    let ch2VoidWardens = [];
-    let ch2Exit = null;
-    let ch2DmgNumbers = [];
-    let ch2Particles = [];
-    let ch2ScrollX = 0;
-    let ch2Time = 0;
-
-    // ---- INIT STAGE ----
-    function ch2InitStage(stageIdx) {
-        const stage = CH2_STAGES[stageIdx];
-        ch2Platforms = stage.platforms.map(p => ({...p, type:1, arena:true}));
-        // Deep-copy moving platforms — reset crumble state
-        ch2MovingPlatforms = stage.moving.map(p => ({
-            ...p,
-            _ox: p.x, _oy: p.y,
-            crumbleTimer: 0, crumbled: false, crumbleAlpha: 1,
-            type: p.type, arena: true
-        }));
-        ch2Traps = stage.traps.map(t => ({...t, frame:0, frameTimer:0, shootTimer:0, arrows:[]}));
-        ch2VoidWardens = stage.voidWardens.map(w => ({
-            x:w.x, y:w.y, width:60, height:80,
-            drawWidth:200, drawHeight:200,
-            hp:w.hp, maxHp:w.hp,
-            vx:0, vy:0, grounded:true,
-            facing:'left', state:'idle',
-            frame:0, frameTimer:0,
-            isAttacking:false, attackCooldown:0,
-            hurtTimer:0, dying:false, alpha:1,
-        }));
-        ch2Exit = { ...stage.exit, w:60, h:80, frame:0, frameTimer:0 };
-        ch2DmgNumbers = [];
-        ch2Particles = [];
-        ch2ScrollX = 0;
-        ch2Time = 0;
-        CH2.stageComplete = false;
-        CH2.stageStartTime = Date.now();
-        CH2.ninjaCanDoubleJump = false;
-        CH2.ninjaDoubleJump = false;
-
-        // Reset player
-        ch2Player.x = CH2.checkpointX;
-        ch2Player.y = CH2.checkpointY;
-        ch2Player.vx = 0; ch2Player.vy = 0;
-        ch2Player.dead = false; ch2Player.invincible = 0;
-        ch2Player.state = 'idle'; ch2Player.frame = 0;
-        ch2Player.grounded = false;
-        if (CH2.character === 'knight') ch2Player.trapShield = 1;
+    if (nc && ninjaImg && ninjaImg.complete) {
+        const nctx = nc.getContext('2d');
+        nctx.clearRect(0,0,nc.width,nc.height);
+        nctx.imageSmoothingEnabled = false;
+        const f = _ch2PreviewFrame % 8;
+        nctx.drawImage(ninjaImg, f*128, 0, 128, 128, 0, 0, 192, 192);
     }
+    _ch2PreviewFrame++;
+}
 
-    // ---- ANIMATE PREVIEW CANVASES ----
-    let _ch2PreviewFrame = 0;
-    let _ch2PreviewTimer = null;
-    function animateCh2Previews() {
-        const knightImg = images['ch2_knight_idle'];
-        const ninjaImg  = images['ch2_ninja_idle'];
-        const kc = document.getElementById('ch2-knight-preview');
-        const nc = document.getElementById('ch2-ninja-preview');
-        if (kc && knightImg && knightImg.complete) {
-            const kctx = kc.getContext('2d');
-            kctx.clearRect(0,0,kc.width,kc.height);
-            kctx.imageSmoothingEnabled = false;
-            const f = _ch2PreviewFrame % 7;
-            kctx.drawImage(knightImg, f*96, 0, 96, 83, 0, 0, 192, 166);
-        }
-        if (nc && ninjaImg && ninjaImg.complete) {
-            const nctx = nc.getContext('2d');
-            nctx.clearRect(0,0,nc.width,nc.height);
-            nctx.imageSmoothingEnabled = false;
-            const f = _ch2PreviewFrame % 8;
-            nctx.drawImage(ninjaImg, f*128, 0, 128, 128, 0, 0, 192, 192);
-        }
-        _ch2PreviewFrame++;
-    }
-
-    // ---- CHARACTER SELECT LOGIC ----
-    let _ch2SelectedChar = 'knight';
-    window.showChapter2Select = function() {
-        _ch2SelectedChar = 'knight';
-        document.getElementById('ch2-knight-card').style.borderColor = '#aaff44';
-        document.getElementById('ch2-ninja-card').style.borderColor = '#2a5a08';
-        document.getElementById('ch2-knight-sel').style.display = 'block';
-        document.getElementById('ch2-ninja-sel').style.display = 'none';
-        document.getElementById('ch2-select').style.display = 'flex';
-        if (_ch2PreviewTimer) clearInterval(_ch2PreviewTimer);
-        _ch2PreviewTimer = setInterval(animateCh2Previews, 100);
-    };
-    window.selectCh2Character = function(char) {
-        _ch2SelectedChar = char;
-        document.getElementById('ch2-knight-card').style.borderColor = char==='knight' ? '#aaff44' : '#3a5a18';
-        document.getElementById('ch2-ninja-card').style.borderColor  = char==='ninja'  ? '#aaff44' : '#2a5a08';
-        document.getElementById('ch2-knight-sel').style.display = char==='knight' ? 'block' : 'none';
-        document.getElementById('ch2-ninja-sel').style.display  = char==='ninja'  ? 'block' : 'none';
-    };
-    window.startChapter2 = function() {
-        clearInterval(_ch2PreviewTimer);
-        document.getElementById('ch2-select').style.display = 'none';
-        CH2.character = _ch2SelectedChar;
-        CH2.stage = 0;
-        CH2.deaths = 0;
-        CH2.stageTimes = [];
-        CH2.noDeathStages = [];
+// ---- CHARACTER SELECT LOGIC ----
+let _ch2SelectedChar = 'knight';
+window.showChapter2Select = function() {
+    _ch2SelectedChar = 'knight';
+    document.getElementById('ch2-knight-card').style.borderColor = '#aaff44';
+    document.getElementById('ch2-ninja-card').style.borderColor = '#2a5a08';
+    document.getElementById('ch2-knight-sel').style.display = 'block';
+    document.getElementById('ch2-ninja-sel').style.display = 'none';
+    document.getElementById('ch2-select').style.display = 'flex';
+    if (_ch2PreviewTimer) clearInterval(_ch2PreviewTimer);
+    _ch2PreviewTimer = setInterval(animateCh2Previews, 100);
+};
+window.selectCh2Character = function(char) {
+    _ch2SelectedChar = char;
+    document.getElementById('ch2-knight-card').style.borderColor = char==='knight' ? '#aaff44' : '#3a5a18';
+    document.getElementById('ch2-ninja-card').style.borderColor  = char==='ninja'  ? '#aaff44' : '#2a5a08';
+    document.getElementById('ch2-knight-sel').style.display = char==='knight' ? 'block' : 'none';
+    document.getElementById('ch2-ninja-sel').style.display  = char==='ninja'  ? 'block' : 'none';
+};
+window.startChapter2 = function() {
+    clearInterval(_ch2PreviewTimer);
+    document.getElementById('ch2-select').style.display = 'none';
+    CH2.character = _ch2SelectedChar;
+    CH2.stage = 0;
+    CH2.deaths = 0;
+    CH2.stageTimes = [];
+    CH2.noDeathStages = [];
+    CH2.checkpointX = 100; CH2.checkpointY = 340;
+    ch2Player = makeCh2Player(CH2.character);
+    CH2.active = true;
+    ch2InitStage(0);
+    // Start game loop if not already running
+    const homeEl = document.getElementById('home-screen');
+    homeEl.classList.add('fade-out');
+    if (window.startMusic) window.startMusic();
+    window._cancelHomeAnim && window._cancelHomeAnim();
+    setTimeout(() => {
+        homeEl.style.display = 'none';
+        if (window.resetGame) window.resetGame();
+        window._gameLoopActive = true;
+        window._ch2SetLoopVars && window._ch2SetLoopVars(0, 0);
+        requestAnimationFrame(window._gameLoopTick);
+    }, 300);
+};
+window.ch2NextStage = function() {
+    document.getElementById('ch2-stage-clear').style.display = 'none';
+    CH2.stage++;
+    if (CH2.stage >= CH2_STAGES.length) {
+        // All stages done
+        showCh2Complete();
+    } else {
         CH2.checkpointX = 100; CH2.checkpointY = 340;
-        ch2Player = makeCh2Player(CH2.character);
-        CH2.active = true;
-        ch2InitStage(0);
-        // Start game loop if not already running
-        const homeEl = document.getElementById('home-screen');
-        homeEl.classList.add('fade-out');
-        startMusic();
-        cancelAnimationFrame(homeAnimId);
-        setTimeout(() => {
-            homeEl.style.display = 'none';
-            resetGame(); // reset main player/platforms so they don't interfere
-            window._gameLoopActive = true;
-            _lastTime = 0; _accumulator = 0;
-            requestAnimationFrame(_gameLoopTick);
-        }, 300);
-    };
-    window.ch2NextStage = function() {
-        document.getElementById('ch2-stage-clear').style.display = 'none';
-        CH2.stage++;
-        if (CH2.stage >= CH2_STAGES.length) {
-            // All stages done
-            showCh2Complete();
-        } else {
-            CH2.checkpointX = 100; CH2.checkpointY = 340;
-            ch2InitStage(CH2.stage);
-        }
-    };
-    window.restartChapter2 = function() {
-        document.getElementById('ch2-complete').style.display = 'none';
-        window.showChapter2Select();
-    };
+        ch2InitStage(CH2.stage);
+    }
+};
+window.restartChapter2 = function() {
+    document.getElementById('ch2-complete').style.display = 'none';
+    window.showChapter2Select();
+};
 
-    function showCh2Complete() {
-        const totalSecs = Math.floor((Date.now() - CH2.totalTime) / 1000);
-        const m = Math.floor(totalSecs/60), s = totalSecs%60;
-        const bestTimes = CH2.stageTimes.map((t,i)=>`Stage ${i+1}: ${t}s`).join('<br>');
-        const noDeath = CH2.noDeathStages.filter(Boolean).length;
-        document.getElementById('ch2-final-stats').innerHTML =
-            `Character: ${CH2.character === 'knight' ? '⚔ KNIGHT' : '⚡ NINJA'}<br>` +
-            `Total Time: ${m}m ${s}s<br>` +
-            `Deaths: ${CH2.deaths}<br>` +
-            `Perfect Stages: ${noDeath} / ${CH2_STAGES.length} 💀<br><br>${bestTimes}`;
-        document.getElementById('ch2-complete').style.display = 'flex';
+function showCh2Complete() {
+    const totalSecs = Math.floor((Date.now() - CH2.totalTime) / 1000);
+    const m = Math.floor(totalSecs/60), s = totalSecs%60;
+    const bestTimes = CH2.stageTimes.map((t,i)=>`Stage ${i+1}: ${t}s`).join('<br>');
+    const noDeath = CH2.noDeathStages.filter(Boolean).length;
+    document.getElementById('ch2-final-stats').innerHTML =
+        `Character: ${CH2.character === 'knight' ? '⚔ KNIGHT' : '⚡ NINJA'}<br>` +
+        `Total Time: ${m}m ${s}s<br>` +
+        `Deaths: ${CH2.deaths}<br>` +
+        `Perfect Stages: ${noDeath} / ${CH2_STAGES.length} 💀<br><br>${bestTimes}`;
+    document.getElementById('ch2-complete').style.display = 'flex';
+}
+
+// ---- PLATFORM COLLISION HELPER ----
+function ch2PlatformCollide(obj, plats) {
+    obj.grounded = false;
+    const surfOffset = 22;
+    for (const p of plats) {
+        if (p.crumbled) continue;
+        const surf = p.y + surfOffset;
+        if (obj.x < p.x+p.w && obj.x+obj.width > p.x &&
+            obj.y+obj.height+(obj.footOffset||0) > surf &&
+            obj.y+obj.height+(obj.footOffset||0) < surf+p.h+20 &&
+            obj.vy >= 0) {
+            obj.y = surf - obj.height - (obj.footOffset||0);
+            obj.vy = 0;
+            obj.grounded = true;
+            if (p.type==='crumble' || p.crumbleTimer !== undefined) {
+                p.crumbleTimer += 1;
+                if (p.crumbleTimer > 50) { p.crumbled = true; setTimeout(()=>{ p.crumbled=false; p.crumbleTimer=0; p.crumbleAlpha=1; }, 2500); }
+            }
+            return p;
+        }
+    }
+    return null;
+}
+
+// ---- CH2 UPDATE LOOP ----
+function updateCH2() {
+    if (!CH2.active || CH2.stageComplete) return;
+    ch2Time++;
+    const p = ch2Player;
+    if (!p || p.dead) {
+        if (p && p.dead) {
+            p.frameTimer++;
+            if (p.frameTimer > 6) { p.frame = Math.min(p.frame+1, 9); p.frameTimer=0; }
+            if (p.frame >= 9) {
+                // Respawn after delay
+                setTimeout(() => {
+                    CH2.deaths++;
+                    CH2.noDeathStages[CH2.stage] = false;
+                    if (CH2.character === 'knight') ch2Player.trapShield = 1;
+                    ch2InitStage(CH2.stage);
+                }, 800);
+                p.dead = false; p.frame = 0; // prevent re-triggering
+            }
+        }
+        return;
     }
 
-    // ---- PLATFORM COLLISION HELPER ----
-    function ch2PlatformCollide(obj, plats) {
-        obj.grounded = false;
-        const surfOffset = 22;
-        for (const p of plats) {
-            if (p.crumbled) continue;
-            const surf = p.y + surfOffset;
-            if (obj.x < p.x+p.w && obj.x+obj.width > p.x &&
-                obj.y+obj.height+(obj.footOffset||0) > surf &&
-                obj.y+obj.height+(obj.footOffset||0) < surf+p.h+20 &&
-                obj.vy >= 0) {
-                obj.y = surf - obj.height - (obj.footOffset||0);
-                obj.vy = 0;
-                obj.grounded = true;
-                if (p.type==='crumble' || p.crumbleTimer !== undefined) {
-                    p.crumbleTimer += 1;
-                    if (p.crumbleTimer > 50) { p.crumbled = true; setTimeout(()=>{ p.crumbled=false; p.crumbleTimer=0; p.crumbleAlpha=1; }, 2500); }
-                }
-                return p;
-            }
-        }
-        return null;
+    // ---- INPUT ----
+    const leftHeld  = window._window._keys['ArrowLeft']  || window._window._keys['KeyA'];
+    const rightHeld = window._window._keys['ArrowRight'] || window._window._keys['KeyD'];
+    const jumpPress = window._window._keys['ArrowUp']    || window._window._keys['KeyW'];
+
+    // Dash with shift
+    if (!p.dashing && p.dashCooldown <= 0 && (window._window._keys['ShiftLeft']||window._window._keys['ShiftRight'])) {
+        p.dashing = true; p.dashTimer = p.dashDuration;
+        p.dashDir = p.facing === 'right' ? 1 : -1;
+        p.invincible = p.dashDuration + 8;
+        spawnCh2DashParticles(p);
+        window._window._keys['ShiftLeft'] = false; window._window._keys['ShiftRight'] = false;
     }
+    if (p.dashCooldown > 0) p.dashCooldown--;
 
-    // ---- CH2 UPDATE LOOP ----
-    function updateCH2() {
-        if (!CH2.active || CH2.stageComplete) return;
-        ch2Time++;
-        const p = ch2Player;
-        if (!p || p.dead) {
-            if (p && p.dead) {
-                p.frameTimer++;
-                if (p.frameTimer > 6) { p.frame = Math.min(p.frame+1, 9); p.frameTimer=0; }
-                if (p.frame >= 9) {
-                    // Respawn after delay
-                    setTimeout(() => {
-                        CH2.deaths++;
-                        CH2.noDeathStages[CH2.stage] = false;
-                        if (CH2.character === 'knight') ch2Player.trapShield = 1;
-                        ch2InitStage(CH2.stage);
-                    }, 800);
-                    p.dead = false; p.frame = 0; // prevent re-triggering
-                }
-            }
-            return;
-        }
-
-        // ---- INPUT ----
-        const leftHeld  = keys['ArrowLeft']  || keys['KeyA'];
-        const rightHeld = keys['ArrowRight'] || keys['KeyD'];
-        const jumpPress = keys['ArrowUp']    || keys['KeyW'];
-
-        // Dash with shift
-        if (!p.dashing && p.dashCooldown <= 0 && (keys['ShiftLeft']||keys['ShiftRight'])) {
-            p.dashing = true; p.dashTimer = p.dashDuration;
-            p.dashDir = p.facing === 'right' ? 1 : -1;
-            p.invincible = p.dashDuration + 8;
-            spawnCh2DashParticles(p);
-            keys['ShiftLeft'] = false; keys['ShiftRight'] = false;
-        }
-        if (p.dashCooldown > 0) p.dashCooldown--;
-
-        // Movement
-        if (p.dashing) {
-            p.dashTimer--;
-            p.vx = p.dashDir * p.dashSpeed;
-            if (p.dashTimer % 2 === 0) spawnCh2DashTrail(p);
-            // Dash damage on voidWardens
-            ch2VoidWardens.forEach(vw => {
-                if (vw.dying || vw.dashHit) return;
-                if (p.x < vw.x+vw.width && p.x+p.width > vw.x &&
-                    p.y < vw.y+vw.height && p.y+p.height > vw.y) {
-                    const dmg = Math.ceil(vw.maxHp * 0.5);
-                    vw.hp = Math.max(0, vw.hp - dmg);
-                    vw.dashHit = true; vw.hurtTimer = 15;
-                    ch2DmgNumbers.push({x:vw.x,y:vw.y-20,val:dmg,life:50,color:'#44ddff'});
-                    if (vw.hp <= 0) vw.dying = true;
-                }
-            });
-            if (p.dashTimer <= 0) { p.dashing=false; p.dashCooldown=p.dashCooldownMax; ch2VoidWardens.forEach(vw=>vw.dashHit=false); }
-        } else {
-            if (rightHeld) { p.vx = p.speed; p.facing='right'; }
-            else if (leftHeld) { p.vx = -p.speed; p.facing='left'; }
-            else { p.vx *= 0.8; }
-        }
-
-        // Jump
-        const wasGrounded = p.grounded;
-        if (jumpPress && wasGrounded) {
-            p.vy = p.jumpForce;
-            p.grounded = false;
-            if (CH2.character==='ninja') { CH2.ninjaCanDoubleJump = true; CH2.ninjaDoubleJump = false; }
-            keys['ArrowUp'] = false; keys['KeyW'] = false;
-        } else if (jumpPress && CH2.character==='ninja' && CH2.ninjaCanDoubleJump && !CH2.ninjaDoubleJump) {
-            p.vy = p.jumpForce * 0.85;
-            CH2.ninjaDoubleJump = true;
-            keys['ArrowUp'] = false; keys['KeyW'] = false;
-        }
-        if (p.grounded) { CH2.ninjaCanDoubleJump = false; CH2.ninjaDoubleJump = false; }
-
-        // Gravity
-        p.vy += p.gravity;
-        p.vy = Math.min(p.vy, 18);
-
-        // Update moving platforms
-        ch2MovingPlatforms.forEach(mp => {
-            if (mp.crumbled) return;
-            switch(mp.type) {
-                case 'bob':
-                    mp.y = mp._oy + Math.sin(ch2Time * mp.speed + mp.phase) * mp.rangeY;
-                    break;
-                case 'slide':
-                    mp.x = mp._ox + Math.sin(ch2Time * 0.02 * mp.speed + mp.phase) * mp.rangeX;
-                    break;
-                case 'pendulum':
-                    mp.x = mp._ox + Math.sin(ch2Time * mp.speed + mp.phase) * mp.rangeX;
-                    mp.y = mp._oy + (1-Math.cos(ch2Time * mp.speed + mp.phase)) * 20;
-                    break;
-            }
-            if (mp.crumbleTimer > 0 && !mp.crumbled) {
-                mp.crumbleAlpha = Math.max(0.2, 1 - mp.crumbleTimer/50);
-            }
-        });
-
-        // Move player
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.invincible > 0) p.invincible--;
-
-        // Scroll
-        const targetScroll = Math.max(0, p.x - GAME_WIDTH * 0.35);
-        ch2ScrollX += (targetScroll - ch2ScrollX) * 0.12;
-
-        // Platform collisions — static + moving
-        const allPlats = [...ch2Platforms, ...ch2MovingPlatforms];
-        ch2PlatformCollide(p, allPlats);
-
-        // Floor kill
-        if (p.y > GAME_HEIGHT + 100) { ch2HurtPlayer(p.hp); }
-
-        // Left wall
-        if (p.x - ch2ScrollX < 0) { p.x = ch2ScrollX; p.vx = 0; }
-
-        // ---- TRAP COLLISIONS ----
-        if (p.invincible === 0) {
-            ch2Traps.forEach(t => {
-                t.frameTimer = (t.frameTimer||0) + 1;
-                const speeds = {fire:8,spike:12,arrow:15};
-                const frames = {fire:4,spike:5,arrow:6};
-                if (t.frameTimer >= speeds[t.type]) { t.frame=(t.frame+1)%frames[t.type]; t.frameTimer=0; }
-
-                if (t.type==='arrow') {
-                    t.shootTimer = (t.shootTimer||0) + 1;
-                    if (t.shootTimer > 280) { t.shootTimer=0; t.arrows=t.arrows||[]; t.arrows.push({x:t.x+32,y:t.y+14,vx:-5,w:12,h:6}); }
-                    t.arrows = (t.arrows||[]).filter(a=>a.x>-50);
-                    (t.arrows||[]).forEach(a => {
-                        a.x += a.vx;
-                        if (p.invincible===0 && p.x<a.x+a.w && p.x+p.width>a.x && p.y<a.y+a.h && p.y+p.height>a.y) {
-                            ch2HurtPlayer(15); a.x=-999;
-                        }
-                    });
-                }
-                if ((t.type==='spike'||t.type==='fire') && p.invincible===0) {
-                    if (p.x<t.x+t.w && p.x+p.width>t.x && p.y<t.y+t.h && p.y+p.height>t.y) {
-                        ch2HurtPlayer(t.type==='fire'?20:30);
-                    }
-                }
-            });
-        }
-
-        // ---- VOID WARDEN AI ----
+    // Movement
+    if (p.dashing) {
+        p.dashTimer--;
+        p.vx = p.dashDir * p.dashSpeed;
+        if (p.dashTimer % 2 === 0) spawnCh2DashTrail(p);
+        // Dash damage on voidWardens
         ch2VoidWardens.forEach(vw => {
-            if (vw.dying) {
-                vw.frameTimer++; if(vw.frameTimer>4){vw.frame++;vw.frameTimer=0;}
-                vw.alpha = Math.max(0, 1 - vw.frame/15);
-                return;
-            }
-            if (vw.dashHit && vw.hurtTimer > 0) vw.hurtTimer--;
-            vw.vy += 0.6;
-            const vwPlats = [...ch2Platforms, ...ch2MovingPlatforms];
-            ch2PlatformCollide(vw, vwPlats);
-            vw.y += vw.vy; vw.x += vw.vx;
-
-            const dx = p.x - vw.x;
-            vw.facing = dx > 0 ? 'right' : 'left';
-            const dist = Math.abs(dx);
-            if (dist > 80) { vw.vx = Math.sign(dx) * 1.8; vw.state='walk'; }
-            else { vw.vx *= 0.8; vw.state='idle'; }
-
-            // Attack
-            vw.attackCooldown = (vw.attackCooldown||0) - 1;
-            if (dist < 70 && vw.attackCooldown <= 0 && p.invincible===0) {
-                ch2HurtPlayer(12);
-                vw.attackCooldown = 100;
+            if (vw.dying || vw.dashHit) return;
+            if (p.x < vw.x+vw.width && p.x+p.width > vw.x &&
+                p.y < vw.y+vw.height && p.y+p.height > vw.y) {
+                const dmg = Math.ceil(vw.maxHp * 0.5);
+                vw.hp = Math.max(0, vw.hp - dmg);
+                vw.dashHit = true; vw.hurtTimer = 15;
+                ch2DmgNumbers.push({x:vw.x,y:vw.y-20,val:dmg,life:50,color:'#44ddff'});
+                if (vw.hp <= 0) vw.dying = true;
             }
         });
-
-        // ---- ENEMY COLLISION (player attacks) ----
-        if (p.isAttacking) {
-            ch2VoidWardens.forEach(vw => {
-                if (vw.dying || vw.hitThisAttack) return;
-                const range = 80;
-                const facingRight = p.facing==='right';
-                const inRange = facingRight ? (vw.x > p.x && vw.x < p.x+range) : (vw.x+vw.width < p.x && vw.x+vw.width > p.x-range);
-                if (inRange && Math.abs((vw.y+vw.height/2)-(p.y+p.height/2)) < 60) {
-                    const dmg = CH2.character==='knight' ? 25 : 12;
-                    vw.hp = Math.max(0, vw.hp - dmg);
-                    vw.hitThisAttack = true;
-                    vw.hurtTimer = 12;
-                    ch2DmgNumbers.push({x:vw.x+10,y:vw.y-20,val:dmg,life:50,color:'#ffaa00'});
-                    if (vw.hp<=0) { vw.dying=true; spawnCh2DeathParticles(vw); }
-                }
-            });
-        }
-
-        // Attack input
-        if ((keys['KeyK']||keys['Space']) && !p.isAttacking && !p.dashing) {
-            p.isAttacking = true; p.attackTimer = 0;
-            p.state = 'attack'; p.frame = 0;
-        }
-        if (p.isAttacking) {
-            p.attackTimer++;
-            const atk = CH2.character==='knight' ? CH2_KNIGHT.attack : CH2_NINJA.attack;
-            if (p.attackTimer > atk.frames * 5) {
-                p.isAttacking = false;
-                ch2VoidWardens.forEach(vw=>vw.hitThisAttack=false);
-            }
-        }
-
-        // Animate player
-        if (!p.isAttacking) {
-            p.state = !p.grounded ? 'jump' : (Math.abs(p.vx)>0.5 ? (Math.abs(p.vx)>p.speed*0.9?'run':'walk') : 'idle');
-        }
-        p.frameTimer++;
-        const spd = p.state==='attack'?3:p.state==='run'?4:6;
-        if (p.frameTimer >= spd) {
-            const def = CH2.character==='knight' ? CH2_KNIGHT : CH2_NINJA;
-            const stateDef = def[p.state] || def.idle;
-            p.frame = (p.frame+1) % stateDef.frames;
-            p.frameTimer = 0;
-        }
-
-        // Damage numbers
-        ch2DmgNumbers.forEach(d=>{d.y-=1;d.life--;});
-        ch2DmgNumbers = ch2DmgNumbers.filter(d=>d.life>0);
-
-        // Particles
-        ch2Particles.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.1;pt.life--;});
-        ch2Particles = ch2Particles.filter(pt=>pt.life>0);
-
-        // ---- EXIT PORTAL ----
-        if (ch2Exit) {
-            ch2Exit.frameTimer++;
-            if (ch2Exit.frameTimer>8){ch2Exit.frame=(ch2Exit.frame+1)%6;ch2Exit.frameTimer=0;}
-            if (!CH2.stageComplete &&
-                Math.abs(p.x+p.width/2 - (ch2Exit.x+30)) < 60 &&
-                Math.abs(p.y+p.height   - (ch2Exit.y+80)) < 80) {
-                CH2.stageComplete = true;
-                const elapsed = Math.floor((Date.now()-CH2.stageStartTime)/1000);
-                CH2.stageTimes[CH2.stage] = elapsed;
-                if (CH2.noDeathStages[CH2.stage] === undefined) CH2.noDeathStages[CH2.stage] = true;
-                setTimeout(showCh2StageClear, 600);
-            }
-        }
+        if (p.dashTimer <= 0) { p.dashing=false; p.dashCooldown=p.dashCooldownMax; ch2VoidWardens.forEach(vw=>vw.dashHit=false); }
+    } else {
+        if (rightHeld) { p.vx = p.speed; p.facing='right'; }
+        else if (leftHeld) { p.vx = -p.speed; p.facing='left'; }
+        else { p.vx *= 0.8; }
     }
 
-    function ch2HurtPlayer(dmg) {
-        const p = ch2Player;
-        if (!p || p.invincible > 0 || p.dead) return;
-        // Knight trapShield — absorbs one trap hit
-        if (CH2.character==='knight' && p.trapShield > 0) {
-            p.trapShield--;
-            p.invincible = 90;
-            ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:'SHIELD',life:60,color:'#88ccff',isText:true});
-            return;
+    // Jump
+    const wasGrounded = p.grounded;
+    if (jumpPress && wasGrounded) {
+        p.vy = p.jumpForce;
+        p.grounded = false;
+        if (CH2.character==='ninja') { CH2.ninjaCanDoubleJump = true; CH2.ninjaDoubleJump = false; }
+        window._window._keys['ArrowUp'] = false; window._window._keys['KeyW'] = false;
+    } else if (jumpPress && CH2.character==='ninja' && CH2.ninjaCanDoubleJump && !CH2.ninjaDoubleJump) {
+        p.vy = p.jumpForce * 0.85;
+        CH2.ninjaDoubleJump = true;
+        window._window._keys['ArrowUp'] = false; window._window._keys['KeyW'] = false;
+    }
+    if (p.grounded) { CH2.ninjaCanDoubleJump = false; CH2.ninjaDoubleJump = false; }
+
+    // Gravity
+    p.vy += p.gravity;
+    p.vy = Math.min(p.vy, 18);
+
+    // Update moving platforms
+    ch2MovingPlatforms.forEach(mp => {
+        if (mp.crumbled) return;
+        switch(mp.type) {
+            case 'bob':
+                mp.y = mp._oy + Math.sin(ch2Time * mp.speed + mp.phase) * mp.rangeY;
+                break;
+            case 'slide':
+                mp.x = mp._ox + Math.sin(ch2Time * 0.02 * mp.speed + mp.phase) * mp.rangeX;
+                break;
+            case 'pendulum':
+                mp.x = mp._ox + Math.sin(ch2Time * mp.speed + mp.phase) * mp.rangeX;
+                mp.y = mp._oy + (1-Math.cos(ch2Time * mp.speed + mp.phase)) * 20;
+                break;
         }
-        // Ninja one-hit-kill from traps (dmg >= 20)
-        if (CH2.character==='ninja' && dmg >= 20) dmg = p.hp;
-        p.hp = Math.max(0, p.hp - dmg);
-        p.invincible = 70;
-        ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:dmg,life:55,color:'#ff4444'});
-        if (p.hp <= 0) {
-            p.dead = true; p.state='death'; p.frame=0; p.frameTimer=0;
-            CH2.noDeathStages[CH2.stage] = false;
+        if (mp.crumbleTimer > 0 && !mp.crumbled) {
+            mp.crumbleAlpha = Math.max(0.2, 1 - mp.crumbleTimer/50);
         }
-    }
+    });
 
-    function spawnCh2DashParticles(p) {
-        for (let i=0;i<18;i++) {
-            const a=Math.random()*Math.PI*2, s=Math.random()*4+1;
-            const colors=['#ffffff','#aaddff','#88ccff','#44aaff','#6699ff'];
-            ch2Particles.push({x:p.x+p.width/2,y:p.y+p.height*0.5,vx:Math.cos(a)*s-p.dashDir*2,vy:Math.sin(a)*s-1.5,life:25,maxLife:25,color:colors[Math.floor(Math.random()*colors.length)],size:3+Math.random()*4,isDash:true});
-        }
-    }
-    function spawnCh2DashTrail(p) {
-        const colors=['#aaddff','#6699ff','#4477ff'];
-        for(let i=0;i<5;i++) ch2Particles.push({x:p.x+p.width/2+(Math.random()-0.5)*20,y:p.y+p.height*0.4+(Math.random()-0.5)*20,vx:-p.dashDir*(Math.random()*2+1),vy:(Math.random()-0.5)*1.5,life:12,maxLife:12,color:colors[Math.floor(Math.random()*3)],size:2+Math.random()*3,isDash:true});
-    }
-    function spawnCh2DeathParticles(vw) {
-        for(let i=0;i<12;i++){const a=(Math.PI*2/12)*i;ch2Particles.push({x:vw.x+vw.width/2,y:vw.y+vw.height/2,vx:Math.cos(a)*(2+Math.random()*3),vy:Math.sin(a)*(2+Math.random()*3)-2,life:35,maxLife:35,color:`hsl(${Math.random()*40+270},80%,60%)`,size:4,isDash:false});}
-    }
+    // Move player
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.invincible > 0) p.invincible--;
 
-    function showCh2StageClear() {
-        const stageIdx = CH2.stage;
-        const t = CH2.stageTimes[stageIdx];
-        const noDeath = CH2.noDeathStages[stageIdx] !== false;
-        const isLast = stageIdx >= CH2_STAGES.length - 1;
-        document.getElementById('ch2-clear-info').innerHTML =
-            `${CH2_STAGES[stageIdx].name}<br>` +
-            `Time: ${t}s  ${noDeath ? '💀 NO DEATHS ✔' : ''}<br>` +
-            `Stage ${stageIdx+1} of ${CH2_STAGES.length}`;
-        const btn = document.querySelector('#ch2-stage-clear button');
-        if (btn) btn.textContent = isLast ? '🏆 VIEW RESULTS' : '▶ NEXT STAGE';
-        document.getElementById('ch2-stage-clear').style.display = 'flex';
-    }
+    // Scroll
+    const targetScroll = Math.max(0, p.x - window.GAME_WIDTH * 0.35);
+    ch2ScrollX += (targetScroll - ch2ScrollX) * 0.12;
 
-    // ---- CH2 DRAW ----
-    function drawCH2() {
-        if (!CH2.active) return;
-        const p = ch2Player;
-        ctx.save();
-        ctx.translate(-Math.round(ch2ScrollX), 0);
+    // Platform collisions — static + moving
+    const allPlats = [...ch2Platforms, ...ch2MovingPlatforms];
+    ch2PlatformCollide(p, allPlats);
 
-        // Background (reuse arena back)
-        const arenaBack = images['arena_back'];
-        ctx.save(); ctx.translate(Math.round(ch2ScrollX),0);
-        if (arenaBack && arenaBack.complete) {
-            ctx.drawImage(arenaBack, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-        } else {
-            ctx.fillStyle='#0a0515'; ctx.fillRect(0,0,GAME_WIDTH,GAME_HEIGHT);
-        }
-        ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,GAME_WIDTH,GAME_HEIGHT);
-        ctx.restore();
+    // Floor kill
+    if (p.y > window.GAME_HEIGHT + 100) { ch2HurtPlayer(p.hp); }
 
-        // Static platforms
-        ch2Platforms.forEach(p => { drawCh2Platform(p,1); });
+    // Left wall
+    if (p.x - ch2ScrollX < 0) { p.x = ch2ScrollX; p.vx = 0; }
 
-        // Moving platforms
-        ch2MovingPlatforms.forEach(mp => {
-            if (mp.crumbled) return;
-            ctx.save();
-            ctx.globalAlpha = mp.crumbleAlpha || 1;
-            drawCh2Platform(mp, mp.crumbleTimer>0 ? 2 : 0); // red tint when crumbling
-            ctx.restore();
-        });
-
-        // Traps
+    // ---- TRAP COLLISIONS ----
+    if (p.invincible === 0) {
         ch2Traps.forEach(t => {
-            const trapKeys={fire:'trap_fire',spike:'trap_spike',arrow:'trap_arrow'};
-            const trapFr={fire:4,spike:5,arrow:6};
-            const img = images[trapKeys[t.type]];
-            if (img && img.complete) {
-                const fw = img.naturalWidth/trapFr[t.type];
-                ctx.drawImage(img, t.frame*fw, 0, fw, img.naturalHeight, t.x, t.y, t.w, t.h);
-            }
-            // Draw arrows
-            (t.arrows||[]).forEach(a => {
-                ctx.fillStyle='#cc8844';
-                ctx.fillRect(a.x, a.y, a.w, a.h);
-            });
-        });
+            t.frameTimer = (t.frameTimer||0) + 1;
+            const speeds = {fire:8,spike:12,arrow:15};
+            const frames = {fire:4,spike:5,arrow:6};
+            if (t.frameTimer >= speeds[t.type]) { t.frame=(t.frame+1)%frames[t.type]; t.frameTimer=0; }
 
-        // Void wardens
-        ch2VoidWardens.forEach(vw => {
-            if (vw.alpha <= 0) return;
-            ctx.save();
-            ctx.globalAlpha = vw.alpha;
-            if (vw.hurtTimer > 0) ctx.filter='brightness(3)';
-            const bossImg = images['boss_idle'] || images['boss_walk'];
-            if (bossImg && bossImg.complete) {
-                const bfw = bossImg.naturalWidth/4, bfh = bossImg.naturalHeight;
-                const bf = vw.frame % 4;
-                ctx.save();
-                if (vw.facing==='right') { ctx.scale(-1,1); ctx.translate(-(vw.x*2+vw.drawWidth),0); }
-                ctx.imageSmoothingEnabled = false;
-                ctx.drawImage(bossImg, bf*bfw, 0, bfw, bfh,
-                    vw.x-(vw.drawWidth-vw.width)/2, vw.y+vw.height-vw.drawHeight, vw.drawWidth, vw.drawHeight);
-                ctx.restore();
-            } else {
-                ctx.fillStyle='#440088'; ctx.fillRect(vw.x, vw.y, vw.width, vw.height);
+            if (t.type==='arrow') {
+                t.shootTimer = (t.shootTimer||0) + 1;
+                if (t.shootTimer > 280) { t.shootTimer=0; t.arrows=t.arrows||[]; t.arrows.push({x:t.x+32,y:t.y+14,vx:-5,w:12,h:6}); }
+                t.arrows = (t.arrows||[]).filter(a=>a.x>-50);
+                (t.arrows||[]).forEach(a => {
+                    a.x += a.vx;
+                    if (p.invincible===0 && p.x<a.x+a.w && p.x+p.width>a.x && p.y<a.y+a.h && p.y+p.height>a.y) {
+                        ch2HurtPlayer(15); a.x=-999;
+                    }
+                });
             }
-            ctx.restore();
-            // HP bar
-            if (!vw.dying) {
-                const bw=60, bh=5, bx=vw.x, by=vw.y-10;
-                ctx.fillStyle='#330022'; ctx.fillRect(bx,by,bw,bh);
-                ctx.fillStyle='#aa00ff'; ctx.fillRect(bx,by,bw*(vw.hp/vw.maxHp),bh);
-            }
-            vw.frameTimer++; if(vw.frameTimer>8){vw.frame=(vw.frame+1)%4;vw.frameTimer=0;}
-        });
-
-        // Exit portal
-        if (ch2Exit && !CH2.stageComplete) {
-            ctx.save();
-            const pulse = 0.7 + 0.3*Math.sin(ch2Time*0.08);
-            ctx.globalAlpha = pulse;
-            ctx.fillStyle='#aaff44';
-            ctx.shadowColor='#aaff44'; ctx.shadowBlur=20;
-            ctx.font='bold 48px Arial'; ctx.textAlign='center';
-            ctx.fillText('⬡', ch2Exit.x+30, ch2Exit.y+40);
-            ctx.shadowBlur=0; ctx.globalAlpha=1;
-            ctx.font='10px AntiquityPrint,serif'; ctx.fillStyle='#aaff44';
-            ctx.fillText('EXIT', ch2Exit.x+30, ch2Exit.y+60);
-            ctx.restore();
-        }
-
-        // Player
-        if (p) {
-            const def = CH2.character==='knight' ? CH2_KNIGHT : CH2_NINJA;
-            const stateDef = def[p.state] || def.idle;
-            const img = images[stateDef.key];
-            if (img && img.complete) {
-                const fw = stateDef.fw, fh = stateDef.fh;
-                const frame = Math.min(p.frame, stateDef.frames-1);
-                const dw = p.drawWidth, dh = p.drawHeight;
-                const dx = p.x - (dw-p.width)/2;
-                const dy = p.y + p.height - dh + (p.footOffset||0);
-                ctx.save();
-                if (p.invincible>0 && Math.floor(ch2Time/4)%2===0) ctx.globalAlpha=0.4;
-                ctx.imageSmoothingEnabled = false;
-                if (p.facing==='left') {
-                    ctx.save(); ctx.scale(-1,1);
-                    ctx.drawImage(img, frame*fw, 0, fw, fh, -(dx+dw), dy, dw, dh);
-                    ctx.restore();
-                } else {
-                    ctx.drawImage(img, frame*fw, 0, fw, fh, dx, dy, dw, dh);
+            if ((t.type==='spike'||t.type==='fire') && p.invincible===0) {
+                if (p.x<t.x+t.w && p.x+p.width>t.x && p.y<t.y+t.h && p.y+p.height>t.y) {
+                    ch2HurtPlayer(t.type==='fire'?20:30);
                 }
-                ctx.restore();
             }
-        }
-
-        // Particles
-        ch2Particles.forEach(pt => {
-            ctx.save();
-            const alpha = Math.max(0, pt.life/(pt.maxLife||25));
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = pt.color;
-            if (pt.isDash) {
-                ctx.shadowColor=pt.color; ctx.shadowBlur=8;
-                ctx.beginPath(); ctx.arc(pt.x,pt.y,(pt.size||3)*alpha,0,Math.PI*2); ctx.fill();
-            } else {
-                ctx.beginPath(); ctx.arc(pt.x,pt.y,4,0,Math.PI*2); ctx.fill();
-            }
-            ctx.restore();
         });
-
-        // Damage numbers
-        ch2DmgNumbers.forEach(d => {
-            ctx.save();
-            ctx.globalAlpha = Math.min(1, d.life/20);
-            if (d.isText) {
-                ctx.font='bold 13px AntiquityPrint,serif'; ctx.fillStyle=d.color;
-                ctx.textAlign='center'; ctx.fillText(d.val, d.x, d.y);
-            } else {
-                ctx.font='bold 20px Arial'; ctx.textAlign='center';
-                ctx.strokeStyle='#000'; ctx.lineWidth=3; ctx.strokeText('-'+d.val,d.x,d.y);
-                ctx.fillStyle=d.color; ctx.fillText('-'+d.val,d.x,d.y);
-            }
-            ctx.restore();
-        });
-
-        ctx.restore(); // end scroll transform
-
-        // ---- HUD (fixed, no scroll) ----
-        // Stage name panel
-        drawUI_img('ui_titlebox', GAME_WIDTH/2-90, PAD, 180, 28);
-        drawUI_text(`STAGE ${CH2.stage+1} — ${CH2_STAGES[CH2.stage].name}`, GAME_WIDTH/2, PAD+14, 9, '#aaff44', 'center');
-        // Timer
-        const secs = Math.floor(ch2Time/60), mins = Math.floor(secs/60);
-        const timeStr = `${mins}:${String(secs%60).padStart(2,'0')}`;
-        drawUI_img('ui_titlebox', GAME_WIDTH/2-40, PAD+32, 80, 22);
-        drawUI_text(timeStr, GAME_WIDTH/2, PAD+43, 9, '#88cc44', 'center');
-        // Player HP bar
-        drawUI_img('ui_titlebox', PAD, GAME_HEIGHT-50, 180, 38);
-        const hp = p ? p.hp : 0, maxHp = p ? p.maxHp : 180;
-        const barX=PAD+12, barY=GAME_HEIGHT-38, barW=155, barH=7;
-        ctx.save(); ctx.globalAlpha=0.4; ctx.fillStyle='#440000'; ctx.fillRect(barX,barY,barW,barH); ctx.restore();
-        if (hp>0) {
-            const ratio=hp/maxHp;
-            ctx.fillStyle=ratio>0.6?'#44dd66':ratio>0.3?'#f0a020':'#e03030';
-            ctx.fillRect(barX,barY,barW*ratio,barH);
-        }
-        drawUI_text(`${Math.ceil(hp)} / ${maxHp}`, barX+barW/2, barY+barH+7, 9, '#ffe8a0', 'center');
-        // Deaths counter
-        drawUI_img('ui_titlebox', GAME_WIDTH-120, PAD, 110, 28);
-        drawUI_text(`☠ ${CH2.deaths}`, GAME_WIDTH-65, PAD+14, 10, '#ff6644', 'center');
-        // Dash cooldown
-        const dashPW=130, dashPH=28, dashPX=GAME_WIDTH-dashPW-PAD, dashPY=PAD+32;
-        drawUI_img('ui_titlebox', dashPX, dashPY, dashPW, dashPH);
-        if (p && p.dashCooldown>0) {
-            const progress=1-p.dashCooldown/p.dashCooldownMax;
-            ctx.save(); ctx.fillStyle='#224466'; ctx.globalAlpha=0.3; ctx.fillRect(dashPX+8,dashPY+20,dashPW-16,3); ctx.globalAlpha=1; ctx.fillStyle='#44ddff'; ctx.fillRect(dashPX+8,dashPY+20,(dashPW-16)*progress,3); ctx.restore();
-            drawUI_text('⚡ '+Math.ceil(p.dashCooldown/60)+'s', dashPX+dashPW/2, dashPY+11, 10, '#7abbcc', 'center');
-        } else {
-            drawUI_text('⚡ READY', dashPX+dashPW/2, dashPY+dashPH/2, 10, '#ffe8a0', 'center');
-        }
-        // Character tag
-        drawUI_img('ui_titlebox', PAD, PAD, 100, 28);
-        const charLabel = CH2.character==='knight' ? '⚔ KNIGHT' : '⚡ NINJA';
-        drawUI_text(charLabel, PAD+50, PAD+14, 10, '#ffe8a0', 'center');
     }
 
-    function drawCh2Platform(p, variant) {
-        const platImg = images['arena_platform'];
-        if (platImg && platImg.complete) {
-            ctx.save();
-            if (variant===2) { ctx.filter='sepia(1) saturate(3) hue-rotate(-20deg)'; } // crumbling = reddish
-            ctx.beginPath(); ctx.rect(p.x, p.y, p.w, p.h); ctx.clip();
-            const pw=platImg.naturalWidth, ph=platImg.naturalHeight;
-            for(let px=p.x;px<p.x+p.w;px+=pw) ctx.drawImage(platImg,px,p.y,pw,p.h||ph);
-            ctx.restore();
-        } else {
-            ctx.fillStyle = variant===2 ? '#6a1010' : '#3a2010';
-            ctx.fillRect(p.x, p.y, p.w, p.h);
+    // ---- VOID WARDEN AI ----
+    ch2VoidWardens.forEach(vw => {
+        if (vw.dying) {
+            vw.frameTimer++; if(vw.frameTimer>4){vw.frame++;vw.frameTimer=0;}
+            vw.alpha = Math.max(0, 1 - vw.frame/15);
+            return;
+        }
+        if (vw.dashHit && vw.hurtTimer > 0) vw.hurtTimer--;
+        vw.vy += 0.6;
+        const vwPlats = [...ch2Platforms, ...ch2MovingPlatforms];
+        ch2PlatformCollide(vw, vwPlats);
+        vw.y += vw.vy; vw.x += vw.vx;
+
+        const dx = p.x - vw.x;
+        vw.facing = dx > 0 ? 'right' : 'left';
+        const dist = Math.abs(dx);
+        if (dist > 80) { vw.vx = Math.sign(dx) * 1.8; vw.state='walk'; }
+        else { vw.vx *= 0.8; vw.state='idle'; }
+
+        // Attack
+        vw.attackCooldown = (vw.attackCooldown||0) - 1;
+        if (dist < 70 && vw.attackCooldown <= 0 && p.invincible===0) {
+            ch2HurtPlayer(12);
+            vw.attackCooldown = 100;
+        }
+    });
+
+    // ---- ENEMY COLLISION (player attacks) ----
+    if (p.isAttacking) {
+        ch2VoidWardens.forEach(vw => {
+            if (vw.dying || vw.hitThisAttack) return;
+            const range = 80;
+            const facingRight = p.facing==='right';
+            const inRange = facingRight ? (vw.x > p.x && vw.x < p.x+range) : (vw.x+vw.width < p.x && vw.x+vw.width > p.x-range);
+            if (inRange && Math.abs((vw.y+vw.height/2)-(p.y+p.height/2)) < 60) {
+                const dmg = CH2.character==='knight' ? 25 : 12;
+                vw.hp = Math.max(0, vw.hp - dmg);
+                vw.hitThisAttack = true;
+                vw.hurtTimer = 12;
+                ch2DmgNumbers.push({x:vw.x+10,y:vw.y-20,val:dmg,life:50,color:'#ffaa00'});
+                if (vw.hp<=0) { vw.dying=true; spawnCh2DeathParticles(vw); }
+            }
+        });
+    }
+
+    // Attack input
+    if ((window._window._keys['KeyK']||window._window._keys['Space']) && !p.isAttacking && !p.dashing) {
+        p.isAttacking = true; p.attackTimer = 0;
+        p.state = 'attack'; p.frame = 0;
+    }
+    if (p.isAttacking) {
+        p.attackTimer++;
+        const atk = CH2.character==='knight' ? CH2_KNIGHT.attack : CH2_NINJA.attack;
+        if (p.attackTimer > atk.frames * 5) {
+            p.isAttacking = false;
+            ch2VoidWardens.forEach(vw=>vw.hitThisAttack=false);
         }
     }
 
-    // Hook into main game loop
-    const _origGameLoop = window._gameLoopTick;
-    // CH2 update is called from the main update path via a hook
-    // We patch the draw and update calls at the loop level
-    const _ch2PatchedUpdate = true; // flag
+    // Animate player
+    if (!p.isAttacking) {
+        p.state = !p.grounded ? 'jump' : (Math.abs(p.vx)>0.5 ? (Math.abs(p.vx)>p.speed*0.9?'run':'walk') : 'idle');
+    }
+    p.frameTimer++;
+    const spd = p.state==='attack'?3:p.state==='run'?4:6;
+    if (p.frameTimer >= spd) {
+        const def = CH2.character==='knight' ? CH2_KNIGHT : CH2_NINJA;
+        const stateDef = def[p.state] || def.idle;
+        p.frame = (p.frame+1) % stateDef.frames;
+        p.frameTimer = 0;
+    }
 
-    // Patch into main loop — intercept draw and update
-    const _origDrawCanvas = window._drawCanvas;
+    // Damage numbers
+    ch2DmgNumbers.forEach(d=>{d.y-=1;d.life--;});
+    ch2DmgNumbers = ch2DmgNumbers.filter(d=>d.life>0);
 
-    // Since CH2 runs inside the same loop, we hook drawCanvasUI (always called last)
-    // and inject CH2 draw + update there
-    const _origDrawCanvasUI = window.drawCanvasUI;
-    // Actually we hook at a higher level — inject into the gameLoop update function
-    // by patching the exposed _gameUpdate if available, else use the PAD reference trick
-    // The cleanest approach: add CH2 update/draw calls to the existing functions via the
-    // already-exposed module pattern — insert at bottom of update and draw
+    // Particles
+    ch2Particles.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.1;pt.life--;});
+    ch2Particles = ch2Particles.filter(pt=>pt.life>0);
 
-    // We detect CH2 active in the main draw and update by checking CH2.active
-    // Since updateCH2 and drawCH2 are now defined globally, we just need them called.
-    // The main loop calls update() then draw() — we patch update and draw below:
+    // ---- EXIT PORTAL ----
+    if (ch2Exit) {
+        ch2Exit.frameTimer++;
+        if (ch2Exit.frameTimer>8){ch2Exit.frame=(ch2Exit.frame+1)%6;ch2Exit.frameTimer=0;}
+        if (!CH2.stageComplete &&
+            Math.abs(p.x+p.width/2 - (ch2Exit.x+30)) < 60 &&
+            Math.abs(p.y+p.height   - (ch2Exit.y+80)) < 80) {
+            CH2.stageComplete = true;
+            const elapsed = Math.floor((Date.now()-CH2.stageStartTime)/1000);
+            CH2.stageTimes[CH2.stage] = elapsed;
+            if (CH2.noDeathStages[CH2.stage] === undefined) CH2.noDeathStages[CH2.stage] = true;
+            setTimeout(showCh2StageClear, 600);
+        }
+    }
+}
 
-    const __origUpdate = typeof window._ch2UpdateHooked !== 'undefined' ? null : true;
-    window._ch2UpdateHooked = true;
+function ch2HurtPlayer(dmg) {
+    const p = ch2Player;
+    if (!p || p.invincible > 0 || p.dead) return;
+    // Knight trapShield — absorbs one trap hit
+    if (CH2.character==='knight' && p.trapShield > 0) {
+        p.trapShield--;
+        p.invincible = 90;
+        ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:'SHIELD',life:60,color:'#88ccff',isText:true});
+        return;
+    }
+    // Ninja one-hit-kill from traps (dmg >= 20)
+    if (CH2.character==='ninja' && dmg >= 20) dmg = p.hp;
+    p.hp = Math.max(0, p.hp - dmg);
+    p.invincible = 70;
+    ch2DmgNumbers.push({x:p.x+10,y:p.y-20,val:dmg,life:55,color:'#ff4444'});
+    if (p.hp <= 0) {
+        p.dead = true; p.state='death'; p.frame=0; p.frameTimer=0;
+        CH2.noDeathStages[CH2.stage] = false;
+    }
+}
 
-    // The main gameLoop is inside an IIFE — we can't patch it directly.
-    // Instead, use the canvas postMessage trick or requestAnimationFrame.
-    // Best approach: CH2 owns its OWN rAF loop when active, pausing the main one.
-    // But that's complex. Simplest: we already have updateCH2/drawCH2 defined.
-    // We'll call them from the existing _gameLoopTick by detecting CH2.active.
-    // Since _gameLoopTick is defined in the IIFE, we use a global tick hook:
-    window._ch2TickHook = function() {
-        if (CH2.active && !gamePaused) updateCH2();
-    };
-    window._ch2DrawHook = function() {
-        if (CH2.active) drawCH2();
-    };
+function spawnCh2DashParticles(p) {
+    for (let i=0;i<18;i++) {
+        const a=Math.random()*Math.PI*2, s=Math.random()*4+1;
+        const colors=['#ffffff','#aaddff','#88ccff','#44aaff','#6699ff'];
+        ch2Particles.push({x:p.x+p.width/2,y:p.y+p.height*0.5,vx:Math.cos(a)*s-p.dashDir*2,vy:Math.sin(a)*s-1.5,life:25,maxLife:25,color:colors[Math.floor(Math.random()*colors.length)],size:3+Math.random()*4,isDash:true});
+    }
+}
+function spawnCh2DashTrail(p) {
+    const colors=['#aaddff','#6699ff','#4477ff'];
+    for(let i=0;i<5;i++) ch2Particles.push({x:p.x+p.width/2+(Math.random()-0.5)*20,y:p.y+p.height*0.4+(Math.random()-0.5)*20,vx:-p.dashDir*(Math.random()*2+1),vy:(Math.random()-0.5)*1.5,life:12,maxLife:12,color:colors[Math.floor(Math.random()*3)],size:2+Math.random()*3,isDash:true});
+}
+function spawnCh2DeathParticles(vw) {
+    for(let i=0;i<12;i++){const a=(Math.PI*2/12)*i;ch2Particles.push({x:vw.x+vw.width/2,y:vw.y+vw.height/2,vx:Math.cos(a)*(2+Math.random()*3),vy:Math.sin(a)*(2+Math.random()*3)-2,life:35,maxLife:35,color:`hsl(${Math.random()*40+270},80%,60%)`,size:4,isDash:false});}
+}
 
-    const PAD = 10; // mirror of the inner PAD constant for HUD use
+function showCh2StageClear() {
+    const stageIdx = CH2.stage;
+    const t = CH2.stageTimes[stageIdx];
+    const noDeath = CH2.noDeathStages[stageIdx] !== false;
+    const isLast = stageIdx >= CH2_STAGES.length - 1;
+    document.getElementById('ch2-clear-info').innerHTML =
+        `${CH2_STAGES[stageIdx].name}<br>` +
+        `Time: ${t}s  ${noDeath ? '💀 NO DEATHS ✔' : ''}<br>` +
+        `Stage ${stageIdx+1} of ${CH2_STAGES.length}`;
+    const btn = document.querySelector('#ch2-stage-clear button');
+    if (btn) btn.textContent = isLast ? '🏆 VIEW RESULTS' : '▶ NEXT STAGE';
+    document.getElementById('ch2-stage-clear').style.display = 'flex';
+}
+
+// ---- CH2 DRAW ----
+function drawCH2() {
+    if (!CH2.active) return;
+    const p = ch2Player;
+    window._ctx.save();
+    window._ctx.translate(-Math.round(ch2ScrollX), 0);
+
+    // Background (reuse arena back)
+    const arenaBack = window._images['arena_back'];
+    window._ctx.save(); window._ctx.translate(Math.round(ch2ScrollX),0);
+    if (arenaBack && arenaBack.complete) {
+        window._ctx.drawImage(arenaBack, 0, 0, window.GAME_WIDTH, window.GAME_HEIGHT);
+    } else {
+        window._ctx.fillStyle='#0a0515'; window._ctx.fillRect(0,0,window.GAME_WIDTH,window.GAME_HEIGHT);
+    }
+    window._ctx.fillStyle='rgba(0,0,0,0.45)'; window._ctx.fillRect(0,0,window.GAME_WIDTH,window.GAME_HEIGHT);
+    window._ctx.restore();
+
+    // Static platforms
+    ch2Platforms.forEach(p => { drawCh2Platform(p,1); });
+
+    // Moving platforms
+    ch2MovingPlatforms.forEach(mp => {
+        if (mp.crumbled) return;
+        window._ctx.save();
+        window._ctx.globalAlpha = mp.crumbleAlpha || 1;
+        drawCh2Platform(mp, mp.crumbleTimer>0 ? 2 : 0); // red tint when crumbling
+        window._ctx.restore();
+    });
+
+    // Traps
+    ch2Traps.forEach(t => {
+        const trapKeys={fire:'trap_fire',spike:'trap_spike',arrow:'trap_arrow'};
+        const trapFr={fire:4,spike:5,arrow:6};
+        const img = window._images[trapKeys[t.type]];
+        if (img && img.complete) {
+            const fw = img.naturalWidth/trapFr[t.type];
+            window._ctx.drawImage(img, t.frame*fw, 0, fw, img.naturalHeight, t.x, t.y, t.w, t.h);
+        }
+        // Draw arrows
+        (t.arrows||[]).forEach(a => {
+            window._ctx.fillStyle='#cc8844';
+            window._ctx.fillRect(a.x, a.y, a.w, a.h);
+        });
+    });
+
+    // Void wardens
+    ch2VoidWardens.forEach(vw => {
+        if (vw.alpha <= 0) return;
+        window._ctx.save();
+        window._ctx.globalAlpha = vw.alpha;
+        if (vw.hurtTimer > 0) window._ctx.filter='brightness(3)';
+        const bossImg = window._images['boss_idle'] || window._images['boss_walk'];
+        if (bossImg && bossImg.complete) {
+            const bfw = bossImg.naturalWidth/4, bfh = bossImg.naturalHeight;
+            const bf = vw.frame % 4;
+            window._ctx.save();
+            if (vw.facing==='right') { window._ctx.scale(-1,1); window._ctx.translate(-(vw.x*2+vw.drawWidth),0); }
+            window._ctx.imageSmoothingEnabled = false;
+            window._ctx.drawImage(bossImg, bf*bfw, 0, bfw, bfh,
+                vw.x-(vw.drawWidth-vw.width)/2, vw.y+vw.height-vw.drawHeight, vw.drawWidth, vw.drawHeight);
+            window._ctx.restore();
+        } else {
+            window._ctx.fillStyle='#440088'; window._ctx.fillRect(vw.x, vw.y, vw.width, vw.height);
+        }
+        window._ctx.restore();
+        // HP bar
+        if (!vw.dying) {
+            const bw=60, bh=5, bx=vw.x, by=vw.y-10;
+            window._ctx.fillStyle='#330022'; window._ctx.fillRect(bx,by,bw,bh);
+            window._ctx.fillStyle='#aa00ff'; window._ctx.fillRect(bx,by,bw*(vw.hp/vw.maxHp),bh);
+        }
+        vw.frameTimer++; if(vw.frameTimer>8){vw.frame=(vw.frame+1)%4;vw.frameTimer=0;}
+    });
+
+    // Exit portal
+    if (ch2Exit && !CH2.stageComplete) {
+        window._ctx.save();
+        const pulse = 0.7 + 0.3*Math.sin(ch2Time*0.08);
+        window._ctx.globalAlpha = pulse;
+        window._ctx.fillStyle='#aaff44';
+        window._ctx.shadowColor='#aaff44'; window._ctx.shadowBlur=20;
+        window._ctx.font='bold 48px Arial'; window._ctx.textAlign='center';
+        window._ctx.fillText('⬡', ch2Exit.x+30, ch2Exit.y+40);
+        window._ctx.shadowBlur=0; window._ctx.globalAlpha=1;
+        window._ctx.font='10px AntiquityPrint,serif'; window._ctx.fillStyle='#aaff44';
+        window._ctx.fillText('EXIT', ch2Exit.x+30, ch2Exit.y+60);
+        window._ctx.restore();
+    }
+
+    // Player
+    if (p) {
+        const def = CH2.character==='knight' ? CH2_KNIGHT : CH2_NINJA;
+        const stateDef = def[p.state] || def.idle;
+        const img = window._images[stateDef.key];
+        if (img && img.complete) {
+            const fw = stateDef.fw, fh = stateDef.fh;
+            const frame = Math.min(p.frame, stateDef.frames-1);
+            const dw = p.drawWidth, dh = p.drawHeight;
+            const dx = p.x - (dw-p.width)/2;
+            const dy = p.y + p.height - dh + (p.footOffset||0);
+            window._ctx.save();
+            if (p.invincible>0 && Math.floor(ch2Time/4)%2===0) window._ctx.globalAlpha=0.4;
+            window._ctx.imageSmoothingEnabled = false;
+            if (p.facing==='left') {
+                window._ctx.save(); window._ctx.scale(-1,1);
+                window._ctx.drawImage(img, frame*fw, 0, fw, fh, -(dx+dw), dy, dw, dh);
+                window._ctx.restore();
+            } else {
+                window._ctx.drawImage(img, frame*fw, 0, fw, fh, dx, dy, dw, dh);
+            }
+            window._ctx.restore();
+        }
+    }
+
+    // Particles
+    ch2Particles.forEach(pt => {
+        window._ctx.save();
+        const alpha = Math.max(0, pt.life/(pt.maxLife||25));
+        window._ctx.globalAlpha = alpha;
+        window._ctx.fillStyle = pt.color;
+        if (pt.isDash) {
+            window._ctx.shadowColor=pt.color; window._ctx.shadowBlur=8;
+            window._ctx.beginPath(); window._ctx.arc(pt.x,pt.y,(pt.size||3)*alpha,0,Math.PI*2); window._ctx.fill();
+        } else {
+            window._ctx.beginPath(); window._ctx.arc(pt.x,pt.y,4,0,Math.PI*2); window._ctx.fill();
+        }
+        window._ctx.restore();
+    });
+
+    // Damage numbers
+    ch2DmgNumbers.forEach(d => {
+        window._ctx.save();
+        window._ctx.globalAlpha = Math.min(1, d.life/20);
+        if (d.isText) {
+            window._ctx.font='bold 13px AntiquityPrint,serif'; window._ctx.fillStyle=d.color;
+            window._ctx.textAlign='center'; window._ctx.fillText(d.val, d.x, d.y);
+        } else {
+            window._ctx.font='bold 20px Arial'; window._ctx.textAlign='center';
+            window._ctx.strokeStyle='#000'; window._ctx.lineWidth=3; window._ctx.strokeText('-'+d.val,d.x,d.y);
+            window._ctx.fillStyle=d.color; window._ctx.fillText('-'+d.val,d.x,d.y);
+        }
+        window._ctx.restore();
+    });
+
+    window._ctx.restore(); // end scroll transform
+
+    // ---- HUD (fixed, no scroll) ----
+    // Stage name panel
+    window._ui.img('ui_titlebox', window.GAME_WIDTH/2-90, _ch2_PAD, 180, 28);
+    window._ui.text(`STAGE ${CH2.stage+1} — ${CH2_STAGES[CH2.stage].name}`, window.GAME_WIDTH/2, _ch2_PAD+14, 9, '#aaff44', 'center');
+    // Timer
+    const secs = Math.floor(ch2Time/60), mins = Math.floor(secs/60);
+    const timeStr = `${mins}:${String(secs%60).padStart(2,'0')}`;
+    window._ui.img('ui_titlebox', window.GAME_WIDTH/2-40, _ch2_PAD+32, 80, 22);
+    window._ui.text(timeStr, window.GAME_WIDTH/2, _ch2_PAD+43, 9, '#88cc44', 'center');
+    // Player HP bar
+    window._ui.img('ui_titlebox', _ch2_PAD, window.GAME_HEIGHT-50, 180, 38);
+    const hp = p ? p.hp : 0, maxHp = p ? p.maxHp : 180;
+    const barX=_ch2_PAD+12, barY=window.GAME_HEIGHT-38, barW=155, barH=7;
+    window._ctx.save(); window._ctx.globalAlpha=0.4; window._ctx.fillStyle='#440000'; window._ctx.fillRect(barX,barY,barW,barH); window._ctx.restore();
+    if (hp>0) {
+        const ratio=hp/maxHp;
+        window._ctx.fillStyle=ratio>0.6?'#44dd66':ratio>0.3?'#f0a020':'#e03030';
+        window._ctx.fillRect(barX,barY,barW*ratio,barH);
+    }
+    window._ui.text(`${Math.ceil(hp)} / ${maxHp}`, barX+barW/2, barY+barH+7, 9, '#ffe8a0', 'center');
+    // Deaths counter
+    window._ui.img('ui_titlebox', window.GAME_WIDTH-120, _ch2_PAD, 110, 28);
+    window._ui.text(`☠ ${CH2.deaths}`, window.GAME_WIDTH-65, _ch2_PAD+14, 10, '#ff6644', 'center');
+    // Dash cooldown
+    const dashPW=130, dashPH=28, dashPX=window.GAME_WIDTH-dashPW-PAD, dashPY=_ch2_PAD+32;
+    window._ui.img('ui_titlebox', dashPX, dashPY, dashPW, dashPH);
+    if (p && p.dashCooldown>0) {
+        const progress=1-p.dashCooldown/p.dashCooldownMax;
+        window._ctx.save(); window._ctx.fillStyle='#224466'; window._ctx.globalAlpha=0.3; window._ctx.fillRect(dashPX+8,dashPY+20,dashPW-16,3); window._ctx.globalAlpha=1; window._ctx.fillStyle='#44ddff'; window._ctx.fillRect(dashPX+8,dashPY+20,(dashPW-16)*progress,3); window._ctx.restore();
+        window._ui.text('⚡ '+Math.ceil(p.dashCooldown/60)+'s', dashPX+dashPW/2, dashPY+11, 10, '#7abbcc', 'center');
+    } else {
+        window._ui.text('⚡ READY', dashPX+dashPW/2, dashPY+dashPH/2, 10, '#ffe8a0', 'center');
+    }
+    // Character tag
+    window._ui.img('ui_titlebox', _ch2_PAD, _ch2_PAD, 100, 28);
+    const charLabel = CH2.character==='knight' ? '⚔ KNIGHT' : '⚡ NINJA';
+    window._ui.text(charLabel, _ch2_PAD+50, _ch2_PAD+14, 10, '#ffe8a0', 'center');
+}
+
+function drawCh2Platform(p, variant) {
+    const platImg = window._images['arena_platform'];
+    if (platImg && platImg.complete) {
+        window._ctx.save();
+        if (variant===2) { window._ctx.filter='sepia(1) saturate(3) hue-rotate(-20deg)'; } // crumbling = reddish
+        window._ctx.beginPath(); window._ctx.rect(p.x, p.y, p.w, p.h); window._ctx.clip();
+        const pw=platImg.naturalWidth, ph=platImg.naturalHeight;
+        for(let px=p.x;px<p.x+p.w;px+=pw) window._ctx.drawImage(platImg,px,p.y,pw,p.h||ph);
+        window._ctx.restore();
+    } else {
+        window._ctx.fillStyle = variant===2 ? '#6a1010' : '#3a2010';
+        window._ctx.fillRect(p.x, p.y, p.w, p.h);
+    }
+}
+
+// Hook into main game loop
+const _origGameLoop = window._gameLoopTick;
+// CH2 update is called from the main update path via a hook
+// We patch the draw and update calls at the loop level
+const _ch2PatchedUpdate = true; // flag
+
+// Patch into main loop — intercept draw and update
+const _origDrawCanvas = window._drawCanvas;
+
+// Since CH2 runs inside the same loop, we hook drawCanvasUI (always called last)
+// and inject CH2 draw + update there
+const _origDrawCanvasUI = window.drawCanvasUI;
+// Actually we hook at a higher level — inject into the gameLoop update function
+// by patching the exposed _gameUpdate if available, else use the _ch2_PAD reference trick
+// The cleanest approach: add CH2 update/draw calls to the existing functions via the
+// already-exposed module pattern — insert at bottom of update and draw
+
+// We detect CH2 active in the main draw and update by checking CH2.active
+// Since updateCH2 and drawCH2 are now defined globally, we just need them called.
+// The main loop calls update() then draw() — we patch update and draw below:
+
+const __origUpdate = typeof window._ch2UpdateHooked !== 'undefined' ? null : true;
+window._ch2UpdateHooked = true;
+
+// The main gameLoop is inside an IIFE — we can't patch it directly.
+// Instead, use the canvas postMessage trick or requestAnimationFrame.
+// Best approach: CH2 owns its OWN rAF loop when active, pausing the main one.
+// But that's complex. Simplest: we already have updateCH2/drawCH2 defined.
+// We'll call them from the existing _gameLoopTick by detecting CH2.active.
+// Since _gameLoopTick is defined in the IIFE, we use a global tick hook:
+window._ch2TickHook = function() {
+    if (CH2.active && !window._getGamePaused()) updateCH2();
+};
+window._ch2DrawHook = function() {
+    if (CH2.active) drawCH2();
+};
+
+// CH2 uses exposed globals from main IIFE
+const _ch2_PAD = 10;
+
+});
 
         </script>
 
