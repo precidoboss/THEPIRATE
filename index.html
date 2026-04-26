@@ -5807,172 +5807,190 @@ function makeCh2Player(character) {
 // Each stage defines: platforms, traps, voidWardens, exit portal position
 // Moving platforms: { x,y,w,h, type:'bob'|'slide'|'pendulum'|'crumble'|'disappear', ...params }
 const CH2_STAGES = [
-    // STAGE 1 — The Floor — intro, basic moving bobs
+    // STAGE 1 — THE FLOOR — intro, teaches basic traversal
     {
         name: 'THE FLOOR',
         subtitle: 'Learn the void...',
         platforms: [
-            { x:-100, y:430, w:700,  h:80 }, // generous start ground
-            { x:740,  y:430, w:360,  h:80 }, // first section after gap
-            { x:1240, y:410, w:320,  h:80 }, // slight rise
-            { x:1700, y:430, w:380,  h:80 }, // mid platform
-            { x:2220, y:430, w:600,  h:80 }, // exit ground
+            { x:-100, y:430, w:800,  h:80 }, // huge safe start — no traps here
+            { x:860,  y:430, w:400,  h:80 }, // after first moving platform
+            { x:1380, y:420, w:380,  h:80 }, // slight height change
+            { x:1880, y:430, w:440,  h:80 }, // mid section
+            { x:2460, y:430, w:700,  h:80 }, // final long ground
         ],
         moving: [
-            { x:610,  y:375, w:110, h:18, type:'slide', rangeX:90, speed:1.1, phase:0 },
-            { x:1100, y:348, w:110, h:18, type:'bob',   rangeY:45, speed:0.028, phase:0 },
-            { x:1570, y:378, w:100, h:18, type:'slide', rangeX:70, speed:1.3, phase:Math.PI },
-            { x:2110, y:362, w:100, h:18, type:'bob',   rangeY:35, speed:0.032, phase:1.0 },
+            { x:720,  y:368, w:120, h:18, type:'slide', rangeX:80,  speed:1.0, phase:0 },
+            { x:1260, y:348, w:110, h:18, type:'bob',   rangeY:40,  speed:0.025, phase:0 },
+            { x:1810, y:362, w:100, h:18, type:'slide', rangeX:70,  speed:1.2, phase:Math.PI },
+            { x:2390, y:355, w:110, h:18, type:'bob',   rangeY:32,  speed:0.03, phase:1.0 },
         ],
         traps: [
-            { type:'fire',  x:250,  y:398, w:28, h:35 },
-            { type:'fire',  x:450,  y:398, w:28, h:35 },
-            { type:'spike', x:820,  y:398, w:32, h:32 },
-            { type:'spike', x:920,  y:398, w:32, h:32 },
-            { type:'fire',  x:1310, y:378, w:28, h:32 },
-            { type:'spike', x:1780, y:398, w:32, h:32 },
-            { type:'spike', x:1920, y:398, w:32, h:32 },
-            { type:'fire',  x:2310, y:398, w:28, h:35 },
-            { type:'fire',  x:2480, y:398, w:28, h:35 },
+            // First traps start far from spawn — visible and avoidable
+            { type:'fire',  x:420,  y:398, w:28, h:35 },
+            { type:'fire',  x:640,  y:398, w:28, h:35 },
+            { type:'spike', x:960,  y:398, w:32, h:32 },
+            { type:'spike', x:1100, y:398, w:32, h:32 },
+            { type:'fire',  x:1460, y:388, w:28, h:32 },
+            { type:'spike', x:1960, y:398, w:32, h:32 },
+            { type:'spike', x:2120, y:398, w:32, h:32 },
+            { type:'rock',  x:2600, y:280, groundY:430, spawnInterval:200, rocks:[], spawnTimer:60 },
+            { type:'fire',  x:2820, y:398, w:28, h:35 },
+            { type:'fire',  x:3000, y:398, w:28, h:35 },
         ],
         voidWardens: [],
-        exit: { x:2660, y:360 },
+        exit: { x:3010, y:360 },
         groundY: 430,
     },
-    // STAGE 2 — The Spike Hall — timed spikes, patience
+
+    // STAGE 2 — THE SPIKE HALL — stepped platforms, patience
     {
         name: 'THE SPIKE HALL',
         subtitle: 'Patience or perish...',
         platforms: [
-            { x:-100, y:430, w:380,  h:80 },
-            { x:440,  y:390, w:180,  h:80 },
-            { x:760,  y:350, w:160,  h:80 },
-            { x:1060, y:310, w:180,  h:80 },
-            { x:1380, y:340, w:200,  h:80 },
-            { x:1720, y:390, w:180,  h:80 },
-            { x:2040, y:430, w:600,  h:80 },
+            { x:-100, y:430, w:600,  h:80 }, // safe wide start
+            { x:700,  y:400, w:260,  h:80 }, // step 1
+            { x:1080, y:365, w:240,  h:80 }, // step 2
+            { x:1440, y:330, w:260,  h:80 }, // step 3
+            { x:1830, y:360, w:260,  h:80 }, // step 4
+            { x:2230, y:430, w:700,  h:80 }, // final long ground
         ],
         moving: [
-            { x:320,  y:365, w:110, h:18, type:'bob',   rangeY:50, speed:0.035, phase:0   },
-            { x:630,  y:295, w:110, h:18, type:'bob',   rangeY:35, speed:0.04,  phase:1.5 },
-            { x:930,  y:315, w:110, h:18, type:'slide', rangeX:70, speed:1.5,   phase:0   },
+            { x:570,  y:375, w:120, h:18, type:'bob',   rangeY:45, speed:0.03,  phase:0   },
+            { x:960,  y:340, w:110, h:18, type:'bob',   rangeY:32, speed:0.038, phase:1.5 },
+            { x:1320, y:305, w:110, h:18, type:'slide', rangeX:65, speed:1.4,   phase:0   },
+            { x:1710, y:335, w:100, h:18, type:'bob',   rangeY:28, speed:0.032, phase:0.8 },
         ],
         traps: [
-            { type:'spike', x:480,  y:358, w:32, h:32 },
-            { type:'spike', x:560,  y:358, w:32, h:32 },
-            { type:'fire',  x:820,  y:318, w:28, h:32 },
-            { type:'spike', x:1120, y:278, w:32, h:32 },
-            { type:'spike', x:1480, y:308, w:32, h:32 },
-            { type:'spike', x:1570, y:308, w:32, h:32 },
-            { type:'fire',  x:2100, y:398, w:28, h:32 },
-            { type:'fire',  x:2220, y:398, w:28, h:32 },
+            // Traps start well after spawn area
+            { type:'spike', x:340,  y:398, w:32, h:32 },
+            { type:'spike', x:500,  y:398, w:32, h:32 },
+            { type:'fire',  x:780,  y:368, w:28, h:32 },
+            { type:'spike', x:1140, y:333, w:32, h:32 },
+            { type:'rock',  x:1340, y:240, groundY:365, spawnInterval:220, rocks:[], spawnTimer:40 },
+            { type:'spike', x:1510, y:298, w:32, h:32 },
+            { type:'spike', x:1650, y:298, w:32, h:32 },
+            { type:'fire',  x:1900, y:328, w:28, h:32 },
+            { type:'spike', x:2350, y:398, w:32, h:32 },
+            { type:'fire',  x:2540, y:398, w:28, h:32 },
+            { type:'fire',  x:2720, y:398, w:28, h:32 },
         ],
-        voidWardens: [{ x:1650, y:310, hp:60 }],
-        exit: { x:2460, y:360 },
+        voidWardens: [{ x:1780, y:330, hp:60 }],
+        exit: { x:2780, y:360 },
         groundY: 430,
     },
-    // STAGE 3 — The Pendulum Path — timing focus
+
+    // STAGE 3 — THE PENDULUM PATH — timing focus, moving platforms only
     {
         name: 'THE PENDULUM PATH',
         subtitle: 'Feel the rhythm...',
         platforms: [
-            { x:-100, y:430, w:320,  h:80 },
-            { x:1980, y:430, w:600,  h:80 },
+            { x:-100, y:430, w:480,  h:80 }, // big safe start
+            { x:2400, y:430, w:700,  h:80 }, // big safe end
         ],
         moving: [
-            { x:280,  y:355, w:140, h:18, type:'pendulum', rangeX:80,  speed:0.018, phase:0      },
-            { x:510,  y:300, w:130, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:1.047  },
-            { x:730,  y:345, w:140, h:18, type:'bob',      rangeY:45,  speed:0.025, phase:0.5    },
-            { x:960,  y:285, w:130, h:18, type:'pendulum', rangeX:85,  speed:0.018, phase:2.094  },
-            { x:1190, y:325, w:140, h:18, type:'slide',    rangeX:90,  speed:1.2,   phase:0      },
-            { x:1430, y:360, w:130, h:18, type:'pendulum', rangeX:75,  speed:0.018, phase:3.142  },
-            { x:1680, y:300, w:140, h:18, type:'bob',      rangeY:40,  speed:0.025, phase:1.5    },
+            { x:420,  y:360, w:150, h:18, type:'pendulum', rangeX:80,  speed:0.016, phase:0      },
+            { x:670,  y:305, w:140, h:18, type:'pendulum', rangeX:70,  speed:0.016, phase:1.047  },
+            { x:910,  y:350, w:150, h:18, type:'bob',      rangeY:42,  speed:0.022, phase:0.5    },
+            { x:1160, y:290, w:140, h:18, type:'pendulum', rangeX:80,  speed:0.016, phase:2.094  },
+            { x:1420, y:330, w:150, h:18, type:'slide',    rangeX:85,  speed:1.1,   phase:0      },
+            { x:1680, y:365, w:140, h:18, type:'pendulum', rangeX:70,  speed:0.016, phase:3.142  },
+            { x:1940, y:305, w:150, h:18, type:'bob',      rangeY:38,  speed:0.022, phase:1.5    },
+            { x:2200, y:350, w:130, h:18, type:'slide',    rangeX:60,  speed:1.3,   phase:0.5    },
         ],
         traps: [
-            { type:'fire',  x:130,  y:398, w:28, h:32 },
-            { type:'spike', x:2040, y:398, w:32, h:32 },
-            { type:'spike', x:2160, y:398, w:32, h:32 },
+            { type:'fire',  x:200,  y:398, w:28, h:32 },
+            { type:'rock',  x:900,  y:210, groundY:350, spawnInterval:190, rocks:[], spawnTimer:90 },
+            { type:'rock',  x:1500, y:220, groundY:350, spawnInterval:240, rocks:[], spawnTimer:30 },
+            { type:'spike', x:2480, y:398, w:32, h:32 },
+            { type:'spike', x:2640, y:398, w:32, h:32 },
+            { type:'fire',  x:2820, y:398, w:28, h:32 },
         ],
-        voidWardens: [{ x:1200, y:200, hp:60 }],
-        exit: { x:2380, y:360 },
+        voidWardens: [{ x:1250, y:200, hp:60 }],
+        exit: { x:2960, y:360 },
         groundY: 430,
     },
-    // STAGE 4 — The Void Corridor — arrows, wider platforms, breathing room
+
+    // STAGE 4 — THE VOID CORRIDOR — arrows and crumble, wider steps
     {
         name: 'THE VOID CORRIDOR',
         subtitle: 'No room for mistakes...',
         platforms: [
-            { x:-100, y:430, w:440,  h:80 }, // wide safe start
-            { x:510,  y:390, w:180,  h:80 }, // step
-            { x:840,  y:350, w:160,  h:80 }, // step
-            { x:1160, y:390, w:180,  h:80 }, // step
-            { x:1500, y:340, w:160,  h:80 }, // step
-            { x:1830, y:390, w:180,  h:80 }, // landing
-            { x:2180, y:430, w:600,  h:80 }, // final ground
+            { x:-100, y:430, w:600,  h:80 }, // wide safe start
+            { x:720,  y:400, w:220,  h:80 }, // first step
+            { x:1080, y:360, w:200,  h:80 }, // second step up
+            { x:1430, y:400, w:220,  h:80 }, // step down
+            { x:1800, y:355, w:200,  h:80 }, // step up
+            { x:2170, y:400, w:220,  h:80 }, // landing
+            { x:2570, y:430, w:700,  h:80 }, // final ground
         ],
         moving: [
-            { x:360,  y:372, w:120, h:18, type:'bob',     rangeY:35, speed:0.04,  phase:0   },
-            { x:700,  y:330, w:110, h:18, type:'crumble', crumbleTimer:0, crumbled:false     },
-            { x:1020, y:372, w:110, h:18, type:'slide',   rangeX:70, speed:1.8,   phase:0   },
-            { x:1350, y:312, w:100, h:18, type:'crumble', crumbleTimer:0, crumbled:false     },
-            { x:1680, y:360, w:110, h:18, type:'bob',     rangeY:45, speed:0.045, phase:1.5 },
+            { x:570,  y:380, w:130, h:18, type:'bob',     rangeY:30, speed:0.038, phase:0   },
+            { x:940,  y:340, w:120, h:18, type:'crumble', crumbleTimer:0, crumbled:false     },
+            { x:1290, y:380, w:120, h:18, type:'slide',   rangeX:65, speed:1.7,   phase:0   },
+            { x:1660, y:335, w:110, h:18, type:'crumble', crumbleTimer:0, crumbled:false     },
+            { x:2030, y:380, w:120, h:18, type:'bob',     rangeY:40, speed:0.042, phase:1.5 },
         ],
         traps: [
-            { type:'spike', x:140,  y:398, w:32, h:32 },
-            { type:'spike', x:260,  y:398, w:32, h:32 },
-            { type:'fire',  x:570,  y:358, w:28, h:32 },
-            { type:'arrow', x:900,  y:318, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'spike', x:1220, y:358, w:32, h:32 },
-            { type:'spike', x:1310, y:358, w:32, h:32 },
-            { type:'arrow', x:1560, y:308, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'fire',  x:2260, y:398, w:28, h:32 },
-            { type:'fire',  x:2400, y:398, w:28, h:32 },
-            { type:'fire',  x:2540, y:398, w:28, h:32 },
-            { type:'spike', x:2660, y:398, w:32, h:32 },
+            // Spike pair starts 300px from spawn — plenty of warning
+            { type:'spike', x:310,  y:398, w:32, h:32 },
+            { type:'spike', x:450,  y:398, w:32, h:32 },
+            { type:'fire',  x:790,  y:368, w:28, h:32 },
+            { type:'arrow', x:1140, y:328, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'spike', x:1510, y:368, w:32, h:32 },
+            { type:'spike', x:1640, y:368, w:32, h:32 },
+            { type:'arrow', x:1870, y:323, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'rock',  x:2200, y:260, groundY:400, spawnInterval:200, rocks:[], spawnTimer:50 },
+            { type:'fire',  x:2660, y:398, w:28, h:32 },
+            { type:'fire',  x:2830, y:398, w:28, h:32 },
+            { type:'fire',  x:3000, y:398, w:28, h:32 },
+            { type:'spike', x:3100, y:398, w:32, h:32 },
         ],
         voidWardens: [
-            { x:1050, y:320, hp:60 },
-            { x:1900, y:360, hp:60 },
+            { x:1150, y:330, hp:60 },
+            { x:2280, y:370, hp:60 },
         ],
-        exit: { x:2740, y:360 },
+        exit: { x:3140, y:360 },
         groundY: 430,
     },
-    // STAGE 5 — THE SUMMIT — all mechanics, final gauntlet
+
+    // STAGE 5 — THE SUMMIT — all mechanics, wide moving platforms
     {
         name: 'THE SUMMIT',
         subtitle: 'All or nothing...',
         platforms: [
-            { x:-100, y:430, w:260,  h:80 },
-            { x:2200, y:430, w:500,  h:80 },
+            { x:-100, y:430, w:420,  h:80 }, // safe start
+            { x:2750, y:430, w:600,  h:80 }, // final safe ground
         ],
         moving: [
-            { x:230,  y:380, w:100, h:18, type:'bob',      rangeY:50,  speed:0.04,  phase:0   },
-            { x:440,  y:310, w:90,  h:18, type:'pendulum', rangeX:100, speed:0.03,  phase:0.5 },
-            { x:640,  y:360, w:100, h:18, type:'crumble',  crumbleTimer:0, crumbled:false     },
-            { x:860,  y:290, w:90,  h:18, type:'slide',    rangeX:120, speed:2.2,   phase:0   },
-            { x:1090, y:340, w:100, h:18, type:'bob',      rangeY:65,  speed:0.045, phase:1   },
-            { x:1320, y:270, w:90,  h:18, type:'pendulum', rangeX:90,  speed:0.035, phase:2   },
-            { x:1550, y:320, w:100, h:18, type:'crumble',  crumbleTimer:0, crumbled:false     },
-            { x:1780, y:280, w:90,  h:18, type:'slide',    rangeX:100, speed:2.5,   phase:1   },
-            { x:2010, y:360, w:100, h:18, type:'bob',      rangeY:40,  speed:0.05,  phase:0   },
+            { x:380,  y:385, w:120, h:18, type:'bob',      rangeY:48,  speed:0.038, phase:0   },
+            { x:620,  y:315, w:110, h:18, type:'pendulum', rangeX:95,  speed:0.028, phase:0.5 },
+            { x:870,  y:365, w:120, h:18, type:'crumble',  crumbleTimer:0, crumbled:false     },
+            { x:1110, y:295, w:110, h:18, type:'slide',    rangeX:110, speed:2.0,   phase:0   },
+            { x:1370, y:345, w:120, h:18, type:'bob',      rangeY:60,  speed:0.042, phase:1   },
+            { x:1640, y:275, w:110, h:18, type:'pendulum', rangeX:85,  speed:0.032, phase:2   },
+            { x:1900, y:325, w:120, h:18, type:'crumble',  crumbleTimer:0, crumbled:false     },
+            { x:2160, y:285, w:110, h:18, type:'slide',    rangeX:95,  speed:2.3,   phase:1   },
+            { x:2440, y:365, w:120, h:18, type:'bob',      rangeY:38,  speed:0.048, phase:0   },
         ],
         traps: [
-            { type:'fire',  x:80,   y:398, w:28, h:32 },
-            { type:'spike', x:590,  y:330, w:32, h:32 },
-            { type:'arrow', x:940,  y:260, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'fire',  x:1160, y:310, w:28, h:32 },
-            { type:'spike', x:1390, y:238, w:32, h:32 },
-            { type:'arrow', x:1640, y:290, w:32, h:32, shootTimer:0, arrows:[] },
-            { type:'fire',  x:2280, y:398, w:28, h:32 },
-            { type:'fire',  x:2420, y:398, w:28, h:32 },
-            { type:'spike', x:2560, y:398, w:32, h:32 },
+            { type:'fire',  x:200,  y:398, w:28, h:32 },
+            { type:'spike', x:820,  y:335, w:32, h:32 },
+            { type:'rock',  x:1050, y:200, groundY:365, spawnInterval:160, rocks:[], spawnTimer:20 },
+            { type:'arrow', x:1200, y:263, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'fire',  x:1440, y:313, w:28, h:32 },
+            { type:'spike', x:1710, y:243, w:32, h:32 },
+            { type:'rock',  x:1980, y:210, groundY:350, spawnInterval:175, rocks:[], spawnTimer:80 },
+            { type:'arrow', x:2240, y:253, w:32, h:32, shootTimer:0, arrows:[] },
+            { type:'fire',  x:2840, y:398, w:28, h:32 },
+            { type:'fire',  x:3020, y:398, w:28, h:32 },
+            { type:'spike', x:3150, y:398, w:32, h:32 },
         ],
         voidWardens: [
-            { x:820,  y:260, hp:60 },
-            { x:1520, y:290, hp:60 },
-            { x:2100, y:400, hp:60 },
+            { x:1100, y:265, hp:60 },
+            { x:1900, y:295, hp:60 },
+            { x:2650, y:400, hp:60 },
         ],
-        exit: { x:2640, y:360 },
+        exit: { x:3220, y:360 },
         groundY: 430,
     },
 ];
@@ -6151,21 +6169,37 @@ function ch2PlatformCollide(obj, plats) {
     for (const p of plats) {
         if (p.crumbled) continue;
         const surf = p.y + surfOffset;
-        if (obj.x < p.x+p.w && obj.x+obj.width > p.x &&
-            obj.y+obj.height+(obj.footOffset||0) > surf &&
-            obj.y+obj.height+(obj.footOffset||0) < surf+p.h+20 &&
+        if (obj.x < p.x + p.w && obj.x + obj.width > p.x &&
+            obj.y + obj.height + (obj.footOffset||0) > surf &&
+            obj.y + obj.height + (obj.footOffset||0) < surf + p.h + 20 &&
             obj.vy >= 0) {
             obj.y = surf - obj.height - (obj.footOffset||0);
             obj.vy = 0;
             obj.grounded = true;
-            if (p.type==='crumble' || p.crumbleTimer !== undefined) {
+            if (p.type === 'crumble' || p.crumbleTimer !== undefined) {
                 p.crumbleTimer += 1;
-                if (p.crumbleTimer > 50) { p.crumbled = true; setTimeout(()=>{ p.crumbled=false; p.crumbleTimer=0; p.crumbleAlpha=1; }, 2500); }
+                if (p.crumbleTimer > 50) {
+                    p.crumbled = true;
+                    setTimeout(() => { p.crumbled = false; p.crumbleTimer = 0; p.crumbleAlpha = 1; }, 2500);
+                }
             }
             return p;
         }
     }
     return null;
+}
+
+// Returns true if obj would have solid ground within probeW pixels in direction dir (+1 right, -1 left)
+function ch2EdgeAhead(obj, plats, dir) {
+    const probeX = dir > 0 ? obj.x + obj.width + 8 : obj.x - 8;
+    const feetY   = obj.y + obj.height + (obj.footOffset||0) + 4;
+    const surfOffset = 22;
+    for (const p of plats) {
+        if (p.crumbled) continue;
+        const surf = p.y + surfOffset;
+        if (probeX >= p.x && probeX <= p.x + p.w && Math.abs(feetY - surf) < 36) return true;
+    }
+    return false;
 }
 
 // ---- CH2 UPDATE LOOP ----
@@ -6287,58 +6321,146 @@ function updateCH2() {
     // Left wall
     if (p.x - ch2ScrollX < 0) { p.x = ch2ScrollX; p.vx = 0; }
 
-    // ---- TRAP COLLISIONS ----
-    if (p.invincible === 0) {
-        ch2Traps.forEach(t => {
-            t.frameTimer = (t.frameTimer||0) + 1;
-            const speeds = {fire:8,spike:12,arrow:15};
-            const frames = {fire:4,spike:5,arrow:6};
-            if (t.frameTimer >= speeds[t.type]) { t.frame=(t.frame+1)%frames[t.type]; t.frameTimer=0; }
+    // ---- TRAP UPDATES + COLLISION ----
+    // Animate and move all traps, then do ONE collision check — break on first hit
+    let trapHitThisFrame = false;
+    ch2Traps.forEach(t => {
+        t.frameTimer = (t.frameTimer || 0) + 1;
+        const speeds = { fire:8, spike:12, arrow:15, rock:6 };
+        const frames = { fire:4,  spike:5,  arrow:6,  rock:6 };
+        if (t.frameTimer >= (speeds[t.type]||8)) {
+            t.frame = (t.frame + 1) % (frames[t.type]||4);
+            t.frameTimer = 0;
+        }
 
-            if (t.type==='arrow') {
-                t.shootTimer = (t.shootTimer||0) + 1;
-                if (t.shootTimer > 280) { t.shootTimer=0; t.arrows=t.arrows||[]; t.arrows.push({x:t.x+32,y:t.y+14,vx:-5,w:12,h:6}); }
-                t.arrows = (t.arrows||[]).filter(a=>a.x>-50);
-                (t.arrows||[]).forEach(a => {
-                    a.x += a.vx;
-                    if (p.invincible===0 && p.x<a.x+a.w && p.x+p.width>a.x && p.y<a.y+a.h && p.y+p.height>a.y) {
-                        ch2HurtPlayer(10); a.x=-999;
-                    }
-                });
+        // Rock trap — spawns falling rocks from above
+        if (t.type === 'rock') {
+            t.spawnTimer = (t.spawnTimer || 0) + 1;
+            if (t.spawnTimer >= (t.spawnInterval || 180)) {
+                t.spawnTimer = 0;
+                t.rocks = t.rocks || [];
+                t.rocks.push({ x: t.x + (Math.random()-0.5)*40, y: t.y, vy: 1.5, r: 10 + Math.random()*6, active: true });
             }
-            if ((t.type==='spike'||t.type==='fire') && p.invincible===0) {
-                if (p.x<t.x+t.w && p.x+p.width>t.x && p.y<t.y+t.h && p.y+p.height>t.y) {
-                    ch2HurtPlayer(t.type==='fire'?8:12);
+            t.rocks = (t.rocks || []).filter(r => r.active && r.y < window.GAME_HEIGHT + 60);
+            t.rocks.forEach(r => {
+                r.vy += 0.35;
+                r.y   += r.vy;
+                // Rock hits player
+                if (!trapHitThisFrame && p.invincible === 0 &&
+                    Math.abs(p.x + p.width/2 - r.x) < r.r + p.width/2 &&
+                    Math.abs(p.y + p.height/2 - r.y) < r.r + p.height/2) {
+                    trapHitThisFrame = true;
+                    r.active = false;
+                    ch2HurtPlayer(0);
                 }
+                // Rock hits ground platforms
+                const allP2 = [...ch2Platforms, ...ch2MovingPlatforms];
+                for (const pl of allP2) {
+                    if (!pl.crumbled && r.y + r.r > pl.y + 22 && r.y - r.r < pl.y + 22 && r.x > pl.x && r.x < pl.x + pl.w) {
+                        r.active = false;
+                        // Spawn pebble particles
+                        for (let i = 0; i < 5; i++) {
+                            ch2Particles.push({ x:r.x, y:r.y, vx:(Math.random()-0.5)*4, vy:-Math.random()*3,
+                                life:18, maxLife:18, color:'#8b7355', size:3+Math.random()*3, isDash:false });
+                        }
+                        break;
+                    }
+                }
+            });
+            return; // rock traps don't do normal hitbox
+        }
+
+        // Arrow trap
+        if (t.type === 'arrow') {
+            t.shootTimer = (t.shootTimer || 0) + 1;
+            if (t.shootTimer > 260) {
+                t.shootTimer = 0;
+                t.arrows = t.arrows || [];
+                t.arrows.push({ x: t.x + 32, y: t.y + 14, vx: -6, w: 14, h: 7, active: true });
             }
-        });
-    }
+            t.arrows = (t.arrows || []).filter(a => a.active && a.x > ch2ScrollX - 80);
+            t.arrows.forEach(a => {
+                a.x += a.vx;
+                if (!trapHitThisFrame && p.invincible === 0 &&
+                    p.x < a.x + a.w && p.x + p.width > a.x &&
+                    p.y < a.y + a.h && p.y + p.height > a.y) {
+                    trapHitThisFrame = true;
+                    a.active = false;
+                    ch2HurtPlayer(0);
+                }
+            });
+            return;
+        }
+
+        // Static traps — fire and spike
+        if (!trapHitThisFrame && p.invincible === 0 &&
+            p.x < t.x + t.w && p.x + p.width > t.x &&
+            p.y < t.y + t.h && p.y + p.height > t.y) {
+            trapHitThisFrame = true;
+            ch2HurtPlayer(0);
+        }
+    });
 
     // ---- VOID WARDEN AI ----
     ch2VoidWardens.forEach(vw => {
         if (vw.dying) {
-            vw.frameTimer++; if(vw.frameTimer>4){vw.frame++;vw.frameTimer=0;}
-            vw.alpha = Math.max(0, 1 - vw.frame/15);
+            vw.frameTimer++; if (vw.frameTimer > 4) { vw.frame++; vw.frameTimer = 0; }
+            vw.alpha = Math.max(0, 1 - vw.frame / 15);
             return;
         }
-        if (vw.dashHit && vw.hurtTimer > 0) vw.hurtTimer--;
+        if (vw.hurtTimer > 0) vw.hurtTimer--;
+
+        // Gravity first
         vw.vy += 0.6;
+        if (vw.vy > 14) vw.vy = 14;
+
+        // Apply vertical movement then collide
+        vw.y += vw.vy;
         const vwPlats = [...ch2Platforms, ...ch2MovingPlatforms];
         ch2PlatformCollide(vw, vwPlats);
-        vw.y += vw.vy; vw.x += vw.vx;
 
+        // Horizontal movement — only move toward player if ground exists ahead
         const dx = p.x - vw.x;
-        vw.facing = dx > 0 ? 'right' : 'left';
         const dist = Math.abs(dx);
-        if (dist > 80) { vw.vx = Math.sign(dx) * 1.8; vw.state='walk'; }
-        else { vw.vx *= 0.8; vw.state='idle'; }
+        const dir  = Math.sign(dx);
+        vw.facing  = dx > 0 ? 'right' : 'left';
 
-        // Attack
-        vw.attackCooldown = (vw.attackCooldown||0) - 1;
-        if (dist < 70 && vw.attackCooldown <= 0 && p.invincible===0) {
-            ch2HurtPlayer(15);
-            vw.attackCooldown = 120;
+        const PATROL_SPEED = 1.4;
+        const STOP_DIST    = 55;
+
+        if (vw.grounded) {
+            if (dist > STOP_DIST) {
+                const groundAhead = ch2EdgeAhead(vw, vwPlats, dir);
+                if (groundAhead) {
+                    vw.vx = dir * PATROL_SPEED;
+                    vw.state = 'walk';
+                } else {
+                    // Edge detected — stop and idle at the platform edge
+                    vw.vx = 0;
+                    vw.state = 'idle';
+                }
+            } else {
+                vw.vx *= 0.7;
+                vw.state = 'idle';
+            }
+        } else {
+            // In the air — apply some air drag but don't steer
+            vw.vx *= 0.92;
+            vw.state = 'idle';
         }
+
+        vw.x += vw.vx;
+
+        // Attack — only when grounded AND player is at roughly same height AND close enough
+        vw.attackCooldown = (vw.attackCooldown || 0) - 1;
+        const sameLevel = Math.abs((vw.y + vw.height) - (p.y + p.height)) < 60;
+        if (dist < 70 && sameLevel && vw.grounded && vw.attackCooldown <= 0 && p.invincible === 0) {
+            ch2HurtPlayer(0); // 0 = triggers lives loss via ch2HurtPlayer (1 life)
+            vw.attackCooldown = 130;
+        }
+
+        // Kill void warden that falls into the void
+        if (vw.y > window.GAME_HEIGHT + 200) { vw.dying = true; }
     });
 
     // ---- ENEMY COLLISION (player attacks) ----
@@ -6414,30 +6536,31 @@ function ch2HurtPlayer(dmg) {
     const p = ch2Player;
     if (!p || p.invincible > 0 || p.dead) return;
 
+    // Set invincible FIRST — blocks any re-entry this same frame from other traps
+    p.invincible = 160;
+
     // Knight trapShield — absorbs one hit free, no life lost
     if (CH2.character === 'knight' && p.trapShield > 0) {
         p.trapShield--;
-        p.invincible = 120;
-        ch2DmgNumbers.push({x:p.x+10, y:p.y-24, val:'SHIELD', life:60, color:'#88ccff', isText:true});
+        ch2DmgNumbers.push({ x: p.x + p.width/2, y: p.y - 28, val: '🛡 SHIELD', life: 70, color: '#88ccff', isText: true });
         return;
     }
 
+    // Always exactly 1 life lost regardless of dmg value
     CH2.lives = Math.max(0, CH2.lives - 1);
     CH2.noDeathStages[CH2.stage] = false;
     CH2.deaths++;
 
     if (CH2.lives <= 0) {
-        // All 3 lives gone — death animation then full stage restart
         p.dead = true; p.state = 'death'; p.frame = 0; p.frameTimer = 0;
-        ch2DmgNumbers.push({x:p.x+10, y:p.y-34, val:'☠ RESTARTING...', life:90, color:'#ff2222', isText:true});
+        ch2DmgNumbers.push({ x: p.x + p.width/2, y: p.y - 38, val: '☠ RESTARTING...', life: 90, color: '#ff2222', isText: true });
     } else {
-        // Lives remain — flash + knockback but KEEP PLAYING, no stage reset
-        p.invincible = 150;
-        p.vy = -7;  // small upward bounce so they feel the hit
-        p.vx = (p.facing === 'right' ? -3 : 3); // knockback away from trap
+        // Keep playing — knockback bump, stay at current position
+        p.vy = -6;
+        p.vx = (p.facing === 'right' ? -4 : 4);
         const livesLeft = CH2.lives;
         ch2DmgNumbers.push({
-            x: p.x + p.width/2, y: p.y - 28,
+            x: p.x + p.width/2, y: p.y - 32,
             val: livesLeft === 2 ? '💔 2 LIVES LEFT' : '💔 LAST LIFE!',
             life: 80, color: livesLeft === 1 ? '#ff2200' : '#ff6644', isText: true
         });
@@ -6507,17 +6630,85 @@ function drawCH2() {
 
     // Traps
     ch2Traps.forEach(t => {
-        const trapKeys={fire:'trap_fire',spike:'trap_spike',arrow:'trap_arrow'};
-        const trapFr={fire:4,spike:5,arrow:6};
+        if (t.type === 'rock') {
+            // Draw spawn indicator (shadow on ground below)
+            window._ctx.save();
+            window._ctx.globalAlpha = 0.25 + 0.15 * Math.sin(ch2Time * 0.1);
+            window._ctx.fillStyle = '#000';
+            window._ctx.beginPath();
+            window._ctx.ellipse(t.x, t.groundY + 22, 20, 6, 0, 0, Math.PI*2);
+            window._ctx.fill();
+            window._ctx.restore();
+            // Draw warning warning indicator above spawn every few seconds
+            const warnPct = (t.spawnTimer || 0) / (t.spawnInterval || 180);
+            if (warnPct > 0.7) {
+                window._ctx.save();
+                window._ctx.globalAlpha = (warnPct - 0.7) / 0.3;
+                window._ctx.font = 'bold 18px Arial';
+                window._ctx.textAlign = 'center';
+                window._ctx.fillStyle = '#ff4400';
+                window._ctx.fillText('⚠', t.x, t.y - 10);
+                window._ctx.restore();
+            }
+            // Draw falling rocks
+            (t.rocks || []).forEach(r => {
+                window._ctx.save();
+                const wobble = Math.sin(r.y * 0.3) * 0.12;
+                window._ctx.translate(r.x, r.y);
+                window._ctx.rotate(wobble + r.vy * 0.05);
+                // Main boulder body
+                const grad = window._ctx.createRadialGradient(-r.r*0.3, -r.r*0.3, r.r*0.1, 0, 0, r.r);
+                grad.addColorStop(0, '#c8a97a');
+                grad.addColorStop(0.5, '#8b7355');
+                grad.addColorStop(1, '#4a3a22');
+                window._ctx.fillStyle = grad;
+                window._ctx.beginPath();
+                // Irregular polygon rock shape
+                const pts = 7;
+                for (let i = 0; i < pts; i++) {
+                    const a = (Math.PI*2/pts)*i - Math.PI*0.5;
+                    const jitter = r.r * (0.78 + ((i*37+17)%23)/100);
+                    const px = Math.cos(a)*jitter, py = Math.sin(a)*jitter;
+                    i === 0 ? window._ctx.moveTo(px,py) : window._ctx.lineTo(px,py);
+                }
+                window._ctx.closePath();
+                window._ctx.fill();
+                // Crack highlight
+                window._ctx.strokeStyle = 'rgba(200,180,140,0.4)';
+                window._ctx.lineWidth = 1.5;
+                window._ctx.beginPath();
+                window._ctx.moveTo(-r.r*0.2, -r.r*0.3);
+                window._ctx.lineTo(r.r*0.1, r.r*0.1);
+                window._ctx.stroke();
+                // Speed streak (motion blur effect)
+                window._ctx.globalAlpha = Math.min(0.4, r.vy * 0.04);
+                window._ctx.strokeStyle = '#c8a97a';
+                window._ctx.lineWidth = r.r * 0.5;
+                window._ctx.beginPath();
+                window._ctx.moveTo(0, 0);
+                window._ctx.lineTo(0, -r.vy * 2.5);
+                window._ctx.stroke();
+                window._ctx.restore();
+            });
+            return;
+        }
+
+        const trapKeys = { fire:'trap_fire', spike:'trap_spike', arrow:'trap_arrow' };
+        const trapFr   = { fire:4, spike:5, arrow:6 };
         const img = window._images[trapKeys[t.type]];
         if (img && img.complete) {
-            const fw = img.naturalWidth/trapFr[t.type];
+            const fw = img.naturalWidth / trapFr[t.type];
             window._ctx.drawImage(img, t.frame*fw, 0, fw, img.naturalHeight, t.x, t.y, t.w, t.h);
         }
-        // Draw arrows
-        (t.arrows||[]).forEach(a => {
-            window._ctx.fillStyle='#cc8844';
+        // Draw arrows with motion trail
+        (t.arrows || []).filter(a => a.active !== false).forEach(a => {
+            window._ctx.save();
+            window._ctx.fillStyle = '#cc8844';
             window._ctx.fillRect(a.x, a.y, a.w, a.h);
+            // Arrow tip
+            window._ctx.fillStyle = '#ffcc66';
+            window._ctx.fillRect(a.x - 4, a.y + 1, 5, a.h - 2);
+            window._ctx.restore();
         });
     });
 
