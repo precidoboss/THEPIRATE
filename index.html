@@ -3530,7 +3530,7 @@
         const b = STORY_MODE.boss;
         if(!b) return;
         const stateMap = { idle:'boss_idle',walk:'boss_walk',run:'boss_run',attack:'boss_attack',hurt:'boss_hurt',death:'boss_death',jump:'boss_jump' };
-        const framesMap = { idle:9,walk:8,run:8,attack:13,hurt:3,death:19,jump:9 };
+        const framesMap = { idle:8,walk:8,run:8,attack:4,hurt:3,death:18,jump:3 };
         const key = stateMap[b.state]||'boss_idle';
         const totalF = framesMap[b.state]||9;
         const img = images[key];
@@ -6761,89 +6761,74 @@ function drawCH2() {
         });
     });
 
-    // Void wardens — per-state sprite animation
-    const VW_ANIMS = {
-        idle:   { key: 'boss_idle',   frames: 8,  speed: 8  },
-        walk:   { key: 'boss_walk',   frames: 8,  speed: 7  },
-        run:    { key: 'boss_run',    frames: 8,  speed: 5  },
-        attack: { key: 'boss_attack', frames: 4,  speed: 6  },
-        hurt:   { key: 'boss_hurt',   frames: 3,  speed: 6  },
-        death:  { key: 'boss_death',  frames: 18, speed: 5  },
-        jump:   { key: 'boss_jump',   frames: 3,  speed: 8  },
-    };
+    // Void wardens — use same drawSprite logic as Shadow Chronicle boss (transparent, correct flip)
+    const VW_STATE_MAP   = { idle:'boss_idle', walk:'boss_walk', run:'boss_run', attack:'boss_attack', hurt:'boss_hurt', death:'boss_death', jump:'boss_jump' };
+    const VW_FRAMES_MAP  = { idle:8, walk:8, run:8, attack:4, hurt:3, death:18, jump:3 };
 
     ch2VoidWardens.forEach(vw => {
         if (vw.alpha <= 0) return;
 
-        // Determine anim state
-        const animState = vw.dying ? 'death'
-            : vw.hurtTimer > 8 ? 'hurt'
-            : vw.isAttacking ? 'attack'
-            : vw.state === 'walk' ? 'walk'
-            : 'idle';
+        // Pick animation state
+        const animKey = vw.dying            ? 'death'
+                      : vw.hurtTimer > 8   ? 'hurt'
+                      : vw.isAttacking     ? 'attack'
+                      : vw.state === 'walk' ? 'walk'
+                      : 'idle';
 
-        // Advance frame timer
-        const anim = VW_ANIMS[animState] || VW_ANIMS.idle;
-        if (!vw._animState || vw._animState !== animState) {
-            vw._animState = animState;
-            vw._frame = 0;
-            vw._frameTimer = 0;
-        }
-        vw._frameTimer = (vw._frameTimer || 0) + 1;
-        if (vw._frameTimer >= anim.speed) {
-            vw._frameTimer = 0;
+        const totalF  = VW_FRAMES_MAP[animKey] || 8;
+        const imgKey  = VW_STATE_MAP[animKey]  || 'boss_idle';
+
+        // Advance per-warden frame timer
+        if (vw._animKey !== animKey) { vw._animKey = animKey; vw._frame = 0; vw._ftimer = 0; }
+        const speed = animKey === 'death' ? 5 : animKey === 'hurt' ? 6 : animKey === 'attack' ? 6 : 8;
+        vw._ftimer = (vw._ftimer || 0) + 1;
+        if (vw._ftimer >= speed) {
+            vw._ftimer = 0;
             vw._frame = vw.dying
-                ? Math.min((vw._frame || 0) + 1, anim.frames - 1)
-                : ((vw._frame || 0) + 1) % anim.frames;
+                ? Math.min((vw._frame || 0) + 1, totalF - 1)
+                : ((vw._frame || 0) + 1) % totalF;
         }
 
-        const img = window._images[anim.key];
-        if (!img || !img.complete || !img.naturalWidth) {
-            // Fallback rectangle
-            window._ctx.save();
-            window._ctx.globalAlpha = vw.alpha;
-            window._ctx.fillStyle = '#440088';
-            window._ctx.fillRect(vw.x, vw.y, vw.width, vw.height);
-            window._ctx.restore();
-        } else {
-            const totalFrames = anim.frames;
-            const frameW = Math.floor(img.naturalWidth / totalFrames);
+        const img  = window._images[imgKey];
+        const dx   = vw.x - (vw.drawWidth  - vw.width)  / 2;
+        const dy   = vw.y + vw.height - vw.drawHeight;
+        const flipH = vw.facing === 'right'; // facing right = sprite faces right = no flip if sprite faces left by default
+
+        window._ctx.save();
+        window._ctx.globalAlpha = vw.alpha;
+        if (vw.hurtTimer > 0 && !vw.dying) window._ctx.filter = 'brightness(3) saturate(0)';
+
+        // Use drawSprite — handles clip (transparent bg) + flip correctly
+        if (img && img.complete && img.naturalWidth) {
+            const frameW = img.naturalWidth / totalF;
             const frameH = img.naturalHeight;
-            const curFrame = Math.min(vw._frame || 0, totalFrames - 1);
-
-            // Draw destination — scale to warden draw size, centred on collision box
-            const dw = vw.drawWidth;
-            const dh = vw.drawHeight;
-            const dx = vw.x - (dw - vw.width) / 2;
-            const dy = vw.y + vw.height - dh;
-
+            const safeFrame = Math.min(Math.floor(vw._frame || 0), totalF - 1);
             window._ctx.save();
-            window._ctx.globalAlpha = vw.alpha;
-            if (vw.hurtTimer > 0 && !vw.dying) window._ctx.filter = 'brightness(2.5) saturate(3)';
-            window._ctx.imageSmoothingEnabled = false;
-
-            // Clip strictly to one frame's destination rect so no bleed from neighbours
             window._ctx.beginPath();
-            window._ctx.rect(dx, dy, dw, dh);
+            window._ctx.rect(dx + 0.5, dy, vw.drawWidth - 1, vw.drawHeight);
             window._ctx.clip();
-
-            if (vw.facing === 'right') {
-                window._ctx.translate(dx + dw, 0);
+            window._ctx.imageSmoothingEnabled = false;
+            if (flipH) {
+                window._ctx.translate(dx + vw.drawWidth, dy);
                 window._ctx.scale(-1, 1);
-                window._ctx.drawImage(img,
-                    curFrame * frameW, 0, frameW, frameH,
-                    0, dy, dw, dh);
+                window._ctx.drawImage(img, safeFrame * frameW, 0, frameW, frameH, 0, 0, vw.drawWidth, vw.drawHeight);
             } else {
-                window._ctx.drawImage(img,
-                    curFrame * frameW, 0, frameW, frameH,
-                    dx, dy, dw, dh);
+                window._ctx.drawImage(img, safeFrame * frameW, 0, frameW, frameH, dx, dy, vw.drawWidth, vw.drawHeight);
             }
             window._ctx.restore();
+        } else {
+            // Fallback box
+            window._ctx.fillStyle = '#440088';
+            window._ctx.fillRect(vw.x, vw.y, vw.width, vw.height);
         }
 
-        // HP bar (only when alive)
+        window._ctx.filter = 'none';
+        window._ctx.restore();
+
+        // HP bar
         if (!vw.dying) {
-            const bw = 60, bh = 5, bx = vw.x + (vw.width - bw) / 2, by = vw.y - 12;
+            const bw = 60, bh = 5;
+            const bx = vw.x + (vw.width - bw) / 2, by = vw.y - 12;
             window._ctx.fillStyle = '#220033';
             window._ctx.fillRect(bx, by, bw, bh);
             window._ctx.fillStyle = vw.hp / vw.maxHp > 0.5 ? '#aa00ff' : '#ff2244';
