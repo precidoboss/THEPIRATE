@@ -3530,7 +3530,7 @@
         const b = STORY_MODE.boss;
         if(!b) return;
         const stateMap = { idle:'boss_idle',walk:'boss_walk',run:'boss_run',attack:'boss_attack',hurt:'boss_hurt',death:'boss_death',jump:'boss_jump' };
-        const framesMap = { idle:9,walk:8,run:8,attack:13,hurt:3,death:19,jump:9 };
+        const framesMap = { idle:10, walk:8, run:8, attack:13, hurt:3, death:18, jump:3 };
         const key = stateMap[b.state]||'boss_idle';
         const totalF = framesMap[b.state]||9;
         const img = images[key];
@@ -3980,6 +3980,16 @@
         const scaleY = GAME_HEIGHT / rect.height;
         const cx = (e.clientX - rect.left) * scaleX;
         const cy = (e.clientY - rect.top)  * scaleY;
+
+        // CH2 Gauntlet mode — only check pause button, skip all story checks
+        if (window.CH2 && window.CH2.active) {
+            const pb = window._pauseBtnBounds;
+            if (pb && cx >= pb.x && cx <= pb.x + pb.w && cy >= pb.y && cy <= pb.y + pb.h) {
+                togglePause();
+            }
+            return;
+        }
+
         // End screen click
         if(window._endScreenActive) {
             window._endScreenActive=false;
@@ -6160,6 +6170,12 @@ window.startChapter2 = function() {
     CH2.lives = 3;
     ch2InitStage(0, true);
     if (window.AQ) AQ.startGauntletRun();
+    // Reset story mode state so clicks aren't swallowed by market/dialogue checks
+    if (window.STORY_MODE) {
+        STORY_MODE.marketOpen = false;
+        STORY_MODE.dialogue = null;
+        STORY_MODE.active = false;
+    }
     // Start game loop if not already running
     const homeEl = document.getElementById('home-screen');
     homeEl.classList.add('fade-out');
@@ -6763,7 +6779,7 @@ function drawCH2() {
 
     // Void wardens — use same drawSprite logic as Shadow Chronicle boss (transparent, correct flip)
     const VW_STATE_MAP   = { idle:'boss_idle', walk:'boss_walk', run:'boss_run', attack:'boss_attack', hurt:'boss_hurt', death:'boss_death', jump:'boss_jump' };
-    const VW_FRAMES_MAP  = { idle:9, walk:8, run:8, attack:13, hurt:3, death:19, jump:9 };
+    const VW_FRAMES_MAP  = { idle:10, walk:8, run:8, attack:13, hurt:3, death:18, jump:3 };
 
     ch2VoidWardens.forEach(vw => {
         if (vw.alpha <= 0) return;
@@ -6792,7 +6808,7 @@ function drawCH2() {
         const img  = window._images[imgKey];
         const dx   = vw.x - (vw.drawWidth  - vw.width)  / 2;
         const dy   = vw.y + vw.height - vw.drawHeight;
-        const flipH = vw.facing === 'right'; // facing right = sprite faces right = no flip if sprite faces left by default
+        const flipH = vw.facing === 'left'; // sprite faces right by default, flip when going left (matches Shadow Chronicle boss)
 
         window._ctx.save();
         window._ctx.globalAlpha = vw.alpha;
